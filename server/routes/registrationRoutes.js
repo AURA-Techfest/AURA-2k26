@@ -9,7 +9,6 @@ router.post("/register", upload.single("paymentScreenshot"), async (req, res) =>
   try {
     const { teamName, college, phone, email } = req.body;
 
-    // teamMembers arrives as JSON string from FormData, or as separate fields
     let teamMembers = req.body.teamMembers;
     if (typeof teamMembers === "string") {
       teamMembers = JSON.parse(teamMembers);
@@ -29,7 +28,7 @@ router.post("/register", upload.single("paymentScreenshot"), async (req, res) =>
       college,
       phone,
       email,
-      paymentScreenshot: `/uploads/${req.file.filename}`,
+      paymentScreenshot: req.file.path, // Cloudinary hosted URL
     });
 
     res.status(201).json(registration);

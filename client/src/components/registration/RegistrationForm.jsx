@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { submitRegistration } from "../../api/registration";
 
 function RegistrationForm({ onClose }) {
   const [teamName, setTeamName] = useState("");
@@ -51,16 +52,7 @@ function RegistrationForm({ onClose }) {
       formData.append("email", email);
       formData.append("paymentScreenshot", paymentFile);
 
-      const res = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        body: formData, // no Content-Type header — browser sets multipart boundary automatically
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong");
-      }
+      await submitRegistration(formData);
 
       setSuccess(true);
     } catch (err) {
