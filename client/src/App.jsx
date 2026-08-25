@@ -6,7 +6,7 @@ import Lenis from "lenis";
 
 import MacTabWindow from "./components/ui/MacTabWindow";
 import ControlRoomHero from "./components/hero/ControlRoomHero";
-import RegistrationForm from "./components/registration/RegistrationForm";
+import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
 
 // Register ScrollTrigger
 gsap.registerPlugin(ScrollTrigger);
@@ -15,7 +15,7 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [systemState, setSystemState] = useState(0);
 
-  // Controls the registration form modal
+  // Controls the 9-section registration portal view
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   // Initialize Lenis smooth scroll and update scroll progress state
@@ -56,6 +56,8 @@ function App() {
 
   // 3D Card Fall and Register Button Rise Animation on Scroll
   useGSAP(() => {
+    if (showRegistrationForm) return;
+
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: "#viewport-pin-container",
@@ -80,7 +82,6 @@ function App() {
       },
       0
     )
-
       // 2. Register button rises from the bottom
       .fromTo(
         ".register-btn-container",
@@ -97,7 +98,7 @@ function App() {
         },
         0.15
       );
-  }, []);
+  }, [showRegistrationForm]);
 
   const handleStartCore = () => {
     if (systemState > 0) return;
@@ -113,15 +114,21 @@ function App() {
     }, 1000);
   };
 
-  // Open registration form
+  // Open registration portal
   const handleOpenRegistration = () => {
     setShowRegistrationForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Close registration form
+  // Close registration portal
   const handleCloseRegistration = () => {
     setShowRegistrationForm(false);
   };
+
+  // When active, render the full multi-step submission portal
+  if (showRegistrationForm) {
+    return <AuraSubmissionPortal onBack={handleCloseRegistration} />;
+  }
 
   return (
     <div className="bg-white min-h-screen text-cyber-text relative select-none">
@@ -165,11 +172,6 @@ function App() {
           </div>
         </div>
       </div>
-
-      {/* Registration Form Modal */}
-      {showRegistrationForm && (
-        <RegistrationForm onClose={handleCloseRegistration} />
-      )}
     </div>
   );
 }
