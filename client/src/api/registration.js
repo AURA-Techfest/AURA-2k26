@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "./config";
-
+// import { API_BASE_URL } from "./config";
+const API_BASE_URL="http://localhost:5000"; //test case
 export async function submitRegistration(formData) {
   const res = await fetch(`${API_BASE_URL}/api/register`, {
     method: "POST",

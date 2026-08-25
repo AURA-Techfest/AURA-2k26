@@ -225,9 +225,12 @@ importers:
       multer:
         specifier: ^2.2.0
         version: 2.2.0
+<<<<<<< HEAD
       multer-storage-cloudinary:
         specifier: ^4.0.0
         version: 4.0.0(cloudinary@2.10.1)
+=======
+>>>>>>> origin/main
     devDependencies:
       nodemon:
         specifier: ^3.1.14
@@ -569,11 +572,14 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
+<<<<<<< HEAD
   multer-storage-cloudinary@4.0.0:
     resolution: {integrity: sha512-25lm9R6o5dWrHLqLvygNX+kBOxprzpmZdnVKH4+r68WcfCt8XV6xfQaMuAg+kUE5Xmr8mJNA4gE0AcBj9FJyWA==}
     peerDependencies:
       cloudinary: ^1.21.0
 
+=======
+>>>>>>> origin/main
   multer@2.2.0:
     resolution: {integrity: sha512-6rdyFg2kLrMh9Jee7/BMPuV9lEAd7lLW2YUpF9/YxR7njyoUwwQ0ZPh3TaIY50Sw6vlyD2HW3wGOkTS4P79xrQ==}
     engines: {node: '>= 10.16.0'}
@@ -1095,10 +1101,13 @@ snapshots:
 
   ms@2.1.3: {}
 
+<<<<<<< HEAD
   multer-storage-cloudinary@4.0.0(cloudinary@2.10.1):
     dependencies:
       cloudinary: 2.10.1
 
+=======
+>>>>>>> origin/main
   multer@2.2.0:
     dependencies:
       append-field: 1.0.0

@@ -1,2 +1,16 @@
+<<<<<<< HEAD
 node_modules
 .env
+=======
+node_modules/
+.env
+.env.local
+.env.*.local
+
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+.DS_Store
+
+>>>>>>> origin/main
