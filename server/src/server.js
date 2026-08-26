@@ -1,9 +1,8 @@
+import "./config/env.js";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import registrationRouter from "./routes/registration.routes.js";
-dotenv.config();
 
 const app = express();
 
