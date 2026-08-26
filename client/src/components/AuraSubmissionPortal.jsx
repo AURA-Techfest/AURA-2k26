@@ -42,6 +42,55 @@ const SAFETY_HAZARDS = [
   "Water Near Electrical Equipment", "None of the Above"
 ];
 
+const HAS_WORKING_PROTOTYPE_MAP = {
+  "Yes, fully working": "fully_working",
+  "Yes, working with minor limitations": "minor_limitations",
+  "No": "no_prototype"
+};
+
+const TEAM_AFFILIATION_MAP = {
+  "All members are from Aliah University": "all_aliah",
+  "All members are from another institution": "all_other",
+  "Mixed team: Aliah University + other institution(s)": "mixed"
+};
+
+const POWER_SOURCE_MAP = {
+  "Battery": "battery",
+  "USB": "usb",
+  "DC Power Supply": "dc_power_supply",
+  "AC Supply": "ac_supply",
+  "Solar": "solar",
+  "Other": "other"
+};
+
+const PRODUCT_POTENTIAL_MAP = {
+  "Yes": "yes",
+  "Potentially": "potentially",
+  "No": "no"
+};
+
+const SAFETY_HAZARD_MAP = {
+  "High Voltage": "high_voltage",
+  "High Current": "high_current",
+  "High Temperature": "high_temperature",
+  "Moving / Rotating Machinery": "moving_rotating_machinery",
+  "Sharp Mechanical Components": "sharp_mechanical_components",
+  "High-Power Batteries": "high_power_batteries",
+  "Laser / Intense Light": "laser_intense_light",
+  "Chemicals": "chemicals",
+  "Pressurized Systems": "pressurized_systems",
+  "Drone / Flying Equipment": "drone_flying_equipment",
+  "Fire / Combustion": "fire_combustion",
+  "Water Near Electrical Equipment": "water_near_electrical_equipment",
+  "None of the Above": "none"
+};
+
+const DEVELOPED_BY_TEAM_MAP = {
+  "Yes": "yes",
+  "No": "no",
+  "External Assistance": "external_assistance"
+};
+
 const INITIAL_FORM_DATA = {
   // Section 1: Eligibility & Team Details
   teamSize: '4 Members',
@@ -264,6 +313,7 @@ const handleFileUpload = (e) => {
  const handleSubmit = async (e) => {
   e.preventDefault();
 
+  // 1. Declarations Validation
   if (
     !formData.declWorkingPrototype ||
     !formData.declOriginality ||
@@ -275,44 +325,149 @@ const handleFileUpload = (e) => {
     return;
   }
 
+  // Helper to parse numeric team size
+  const parsedTeamSize = parseInt(formData.teamSize) || 0;
+
+  // 2. Team Affiliation Mixed Constraints
+  const mappedAffiliation = TEAM_AFFILIATION_MAP[formData.teamAffiliation];
+  if (mappedAffiliation === "mixed") {
+    const totalMixedMembers = Number(formData.aliahMembersCount) + Number(formData.otherMembersCount);
+    if (totalMixedMembers !== parsedTeamSize) {
+      alert(`The sum of Aliah members (${formData.aliahMembersCount}) and other institution members (${formData.otherMembersCount}) must equal the total team size (${parsedTeamSize}).`);
+      return;
+    }
+    if (formData.aliahMembersCount < 1 || formData.aliahMembersCount > 3) {
+      alert("Aliah University members must be between 1 and 3 for a mixed team.");
+      return;
+    }
+    if (formData.otherMembersCount < 1 || formData.otherMembersCount > 3) {
+      alert("Other institution members must be between 1 and 3 for a mixed team.");
+      return;
+    }
+  }
+
+  // 3. Required Fields Client Validation
+  if (!formData.teamName.trim()) { alert("Team Name is required."); return; }
+  if (!formData.teamLeaderName.trim()) { alert("Team Leader Name is required."); return; }
+  if (!formData.teamLeaderEmail.trim()) { alert("Team Leader Email is required."); return; }
+  if (!/^\S+@\S+\.\S+$/.test(formData.teamLeaderEmail.trim())) { alert("Please enter a valid email address."); return; }
+  if (!formData.teamLeaderPhone.trim()) { alert("Team Leader Phone is required."); return; }
+  if (!formData.teamMembersDetails.trim()) { alert("Team Member Details are required."); return; }
+  if (!formData.projectTitle.trim()) { alert("Project Title is required."); return; }
+  if (formData.categories.length === 0) { alert("Please select at least one Hardware Project Category."); return; }
+  if (!formData.problemStatement.trim()) { alert("Problem Statement is required."); return; }
+  if (!formData.solutionDescription.trim()) { alert("Solution Description is required."); return; }
+  if (!formData.innovationDetails.trim()) { alert("Innovation Description is required."); return; }
+  if (formData.beneficiaries.length === 0) { alert("Please select at least one Intended User / Beneficiary."); return; }
+  if (!formData.workingPrinciple.trim()) { alert("Working Principle explanation is required."); return; }
+  if (!formData.hardwareComponents.trim()) { alert("Major Hardware Components are required."); return; }
+  if (!formData.realWorldImpact.trim()) { alert("Potential Real-World Impact is required."); return; }
+  if (formData.developmentCost === "" || isNaN(Number(formData.developmentCost)) || Number(formData.developmentCost) < 0) {
+    alert("Approx Development Cost must be a positive number.");
+    return;
+  }
+  if (!formData.whyWorthSeeing.trim()) { alert("Highlight explaining why this is worth seeing is required."); return; }
+  if (formData.safetyHazards.length === 0) { alert("Please select at least one Safety Hazard Involvement option."); return; }
+  if (!formData.safetyPrecautions.trim()) { alert("Safety Precautions details are required."); return; }
+  if (formData.previouslyExhibited === "Yes" && !formData.exhibitionDetails.trim()) {
+    alert("Please provide the previous exhibition details.");
+    return;
+  }
+
+  if (isExternalFeeApplicable) {
+    if (!formData.transactionId.trim()) {
+      alert("Transaction ID / UTR is required for paid registrations.");
+      return;
+    }
+    if (!formData.paymentScreenshotFile) {
+      alert("Payment screenshot image is required for paid registrations.");
+      return;
+    }
+  }
+
   try {
     const formDataToSend = new FormData();
 
-    formDataToSend.append("teamName", formData.teamName);
-    
-    const membersArray = formData.teamMembersDetails
-  .split("\n")
-  .map((member) => member.trim())
-  .filter(Boolean);
+    // Map exact fields for final backend schema
+    formDataToSend.append("teamName", formData.teamName.trim());
+    formDataToSend.append("teamSize", parsedTeamSize);
+    formDataToSend.append("hasWorkingPrototype", HAS_WORKING_PROTOTYPE_MAP[formData.hasWorkingPrototype]);
+    formDataToSend.append("teamAffiliation", mappedAffiliation);
 
-console.log("Members being sent:", membersArray);
-console.log("Member count:", membersArray.length);
-
-formDataToSend.append(
-  "members",
-  JSON.stringify(membersArray)
-);
-
-
-    formDataToSend.append("college", formData.teamAffiliation);
-
-    formDataToSend.append("phone", formData.teamLeaderPhone);
-
-    formDataToSend.append("email", formData.teamLeaderEmail);
-
-    if (formData.paymentScreenshotFile) {
-      formDataToSend.append(
-        "paymentScreenshot",
-        formData.paymentScreenshotFile
-      );
+    if (mappedAffiliation === "mixed") {
+      formDataToSend.append("aliahMembers", Number(formData.aliahMembersCount));
+      formDataToSend.append("otherInstitutionMembers", Number(formData.otherMembersCount));
     }
 
+    formDataToSend.append("teamLeaderName", formData.teamLeaderName.trim());
+    formDataToSend.append("teamLeaderEmail", formData.teamLeaderEmail.trim().toLowerCase());
+    formDataToSend.append("teamLeaderPhone", formData.teamLeaderPhone.trim());
+    formDataToSend.append("teamMemberDetails", formData.teamMembersDetails.trim());
+
+    formDataToSend.append("projectTitle", formData.projectTitle.trim());
+    formDataToSend.append("hardwareProjectCategories", JSON.stringify(formData.categories));
+    formDataToSend.append("prototypeType", formData.prototypeType);
+    formDataToSend.append("currentWorkingStatus", formData.workingStatus);
+
+    formDataToSend.append("problemStatement", formData.problemStatement.trim());
+    formDataToSend.append("solutionDescription", formData.solutionDescription.trim());
+    formDataToSend.append("innovationDescription", formData.innovationDetails.trim());
+    formDataToSend.append("intendedBeneficiaries", JSON.stringify(formData.beneficiaries));
+
+    formDataToSend.append("workingPrinciple", formData.workingPrinciple.trim());
+
+    const hardwareComponentsArray = formData.hardwareComponents
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+    formDataToSend.append("majorHardwareComponents", JSON.stringify(hardwareComponentsArray));
+
+    formDataToSend.append("useAi", formData.usesAI === "Yes");
+    formDataToSend.append("useIot", formData.usesIoT === "Yes");
+    formDataToSend.append("powerSource", POWER_SOURCE_MAP[formData.powerSource]);
+
+    formDataToSend.append("potentialImpact", formData.realWorldImpact.trim());
+    formDataToSend.append("productPotential", PRODUCT_POTENTIAL_MAP[formData.deployableSystem]);
+    formDataToSend.append("prototypeDevelopmentCost", Number(formData.developmentCost));
+    formDataToSend.append("auraDemoHighlight", formData.whyWorthSeeing.trim());
+
+    // Map safety hazards to lowercase enums
+    const mappedSafetyHazards = formData.safetyHazards.map(h => SAFETY_HAZARD_MAP[h]).filter(Boolean);
+    formDataToSend.append("safetyHazards", JSON.stringify(mappedSafetyHazards));
+    formDataToSend.append("safetyPrecautions", formData.safetyPrecautions.trim());
+    formDataToSend.append("requiresContinuousSupervision", formData.requiresSupervision === "Yes");
+
+    // Section 7: Originality
+    formDataToSend.append("prototypeDevelopedByTeam", DEVELOPED_BY_TEAM_MAP[formData.developedByTeam]);
+    const isPreviouslyExhibited = formData.previouslyExhibited === "Yes";
+    formDataToSend.append("previouslyExhibited", isPreviouslyExhibited);
+    if (isPreviouslyExhibited) {
+      formDataToSend.append("previousExhibitionDetails", formData.exhibitionDetails.trim());
+    }
+
+    // Section 8: Fees
+    const feeStatus = isExternalFeeApplicable ? "external_fee" : "no_fee";
+    formDataToSend.append("registrationFeeStatus", feeStatus);
+    formDataToSend.append("registrationFee", isExternalFeeApplicable ? 400 : 0);
+
+    if (isExternalFeeApplicable) {
+      formDataToSend.append("transactionId", formData.transactionId.trim());
+      if (formData.paymentScreenshotFile) {
+        formDataToSend.append("paymentScreenshot", formData.paymentScreenshotFile);
+      }
+    }
+
+    // Section 9: Declarations
+    formDataToSend.append("workingPrototypeDeclaration", formData.declWorkingPrototype);
+    formDataToSend.append("originalityDeclaration", formData.declOriginality);
+    formDataToSend.append("safetyEventRulesAgreement", formData.declSafetyRules);
+    formDataToSend.append("mediaPermission", formData.declMediaPermission);
+    formDataToSend.append("finalConfirmation", formData.declFinalConfirmation);
+
     console.log("🚀 Sending registration...");
-
-   for (const [key, value] of formDataToSend.entries()) {
-  console.log(key, value);
-   }
-
+    for (const [key, value] of formDataToSend.entries()) {
+      console.log(key, value);
+    }
 
     const response = await fetch(API_URL, {
       method: "POST",
@@ -320,7 +475,6 @@ formDataToSend.append(
     });
 
     const result = await response.json();
-
     console.log("📥 Backend response:", result);
 
     if (!response.ok) {
@@ -328,10 +482,8 @@ formDataToSend.append(
     }
 
     console.log("🎉 Registration successful!");
-
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_STEP_KEY);
-
     setSubmitted(true);
   } catch (error) {
     console.error("❌ Registration failed:", error);
@@ -936,6 +1088,52 @@ formDataToSend.append(
                     <option value="No">No</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Section 7: Originality */}
+              <div className="space-y-4 pt-4 border-t-2 border-[#091540]/10">
+                <h4 className="text-sm font-bold font-inter text-[#091540]">SECTION 7: ORIGINALITY</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">31. Was the prototype developed entirely by your team? *</label>
+                    <select
+                      name="developedByTeam"
+                      value={formData.developedByTeam}
+                      onChange={handleTextChange}
+                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                      <option value="External Assistance">Developed with External Assistance</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">32. Has this prototype been previously exhibited? *</label>
+                    <select
+                      name="previouslyExhibited"
+                      value={formData.previouslyExhibited}
+                      onChange={handleTextChange}
+                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                  </div>
+                </div>
+
+                {formData.previouslyExhibited === "Yes" && (
+                  <div>
+                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">33. Previous Exhibition Details *</label>
+                    <textarea
+                      rows={2}
+                      name="exhibitionDetails"
+                      value={formData.exhibitionDetails}
+                      onChange={handleTextChange}
+                      placeholder="Specify event name, year, and awards won (if any)"
+                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-2.5 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Section 8: Registration Fee Box */}
