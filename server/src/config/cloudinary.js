@@ -9,4 +9,23 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+export const uploadImage = (
+  fileBuffer,
+  folder = "aura-registrations/payment-screenshots",
+) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: "image",
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      },
+    );
+    uploadStream.end(fileBuffer);
+  });
+};
+
 export default cloudinary;
