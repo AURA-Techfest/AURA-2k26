@@ -1,7 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=Oxanium:wght@300;400;600;800&family=Rajdhani:wght@400;600;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Oxanium:wght@300;400;600;800&family=Rajdhani:wght@400;600;700&display=swap');
 @import "tailwindcss";
-
+@font-face {
+  font-family: 'LoveloBlack';
+  src: url('./assets/fonts/lovelo_black-webfont.woff2') format('woff2'),
+       url('./assets/fonts/lovelo_black-webfont.woff') format('woff'),
+       url('./assets/fonts/lovelo_black-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LoveloLineBold';
+  src: url('./assets/fonts/lovelo_line_bold-webfont.woff2') format('woff2'),
+       url('./assets/fonts/lovelo_line_bold-webfont.woff') format('woff'),
+       url('./assets/fonts/lovelo_line_bold-webfont.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'LoveloLineLight';
+  src: url('./assets/fonts/lovelo_line_light-webfont.woff2') format('woff2'),
+       url('./assets/fonts/lovelo_line_light-webfont.woff') format('woff'),
+       url('./assets/fonts/lovelo_line_light-webfont.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
 @theme {
   --color-cyber-bg: #171414;
   --color-cyber-dark: #2A1A17;
@@ -13,21 +39,27 @@
   --color-cyber-amber: #D5A23A;
   --color-cyber-text: #E8DED5;
   --color-cyber-muted: #9A8C83;
-
   --font-display: 'Oxanium', 'Rajdhani', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  --font-heading: 'LoveloBlack', 'Oxanium', sans-serif;
+  --font-heading-line: 'LoveloLineBold', 'Oxanium', sans-serif;
+  --font-body: 'Open Sans', sans-serif;
+  --color-sidebar: #6f2138;
+  --color-navbar-glass: rgba(115, 115, 115, 0.08);
+  --color-wrapper-opaque: rgba(0, 0, 0, 0.55);
 }
-
 /* Global resets for mechanical interface */
 html, body {
   background-color: #fafafa;
   color: #171414;
   font-family: var(--font-display);
+  background-color: #0b0909;
+  color: #ffffff;
+  font-family: var(--font-body);
   overflow-x: hidden;
   margin: 0;
   padding: 0;
 }
-
 body::-webkit-scrollbar {
   width: 10px;
 }
@@ -42,16 +74,13 @@ body::-webkit-scrollbar-thumb {
 body::-webkit-scrollbar-thumb:hover {
   background: var(--color-cyber-light-copper);
 }
-
 /* Tactile & Mechanical CSS Utilities */
-
 .grid-bg {
   background-image: 
     linear-gradient(rgba(90, 51, 41, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(90, 51, 41, 0.1) 1px, transparent 1px);
   background-size: 32px 32px;
 }
-
 /* Screw design */
 .cyber-screw {
   width: 8px;
@@ -70,7 +99,6 @@ body::-webkit-scrollbar-thumb:hover {
   background: #2a110a;
   transform: rotate(45deg);
 }
-
 /* Vent slots */
 .cyber-vent {
   background: repeating-linear-gradient(
@@ -83,7 +111,6 @@ body::-webkit-scrollbar-thumb:hover {
   border: 1px solid var(--color-cyber-brown);
   box-shadow: inset 0px 2px 4px rgba(0,0,0,0.8);
 }
-
 /* Warning stripes */
 .warning-stripes {
   background: repeating-linear-gradient(
@@ -95,7 +122,6 @@ body::-webkit-scrollbar-thumb:hover {
   );
   border: 2px solid var(--color-cyber-dark);
 }
-
 /* Bevel panel effects */
 .panel-bevel-out {
   background: linear-gradient(135deg, var(--color-cyber-dark), var(--color-cyber-brown));
@@ -105,7 +131,6 @@ body::-webkit-scrollbar-thumb:hover {
     inset -2px -2px 0px rgba(0,0,0,0.45),
     0px 10px 20px rgba(0, 0, 0, 0.6);
 }
-
 .panel-bevel-in {
   background: #151110;
   border: 2px solid var(--color-cyber-dark);
@@ -113,19 +138,16 @@ body::-webkit-scrollbar-thumb:hover {
     inset 3px 3px 6px rgba(0,0,0,0.8),
     1px 1px 0px rgba(255,255,255,0.03);
 }
-
 /* CRT monitor screens styling */
 @keyframes crt-flicker {
   0% { opacity: 0.975; }
   50% { opacity: 1; }
   100% { opacity: 0.985; }
 }
-
 @keyframes scanline-anim {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100%); }
 }
-
 .crt-screen-container {
   border-radius: 4px;
   background: #110e0e;
@@ -136,14 +158,12 @@ body::-webkit-scrollbar-thumb:hover {
   position: relative;
   overflow: hidden;
 }
-
 .crt-screen {
   position: relative;
   background-color: #0b1a1a;
   box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
   animation: crt-flicker 0.2s infinite;
 }
-
 .crt-screen::before {
   content: " ";
   display: block;
@@ -154,7 +174,6 @@ body::-webkit-scrollbar-thumb:hover {
   z-index: 10;
   pointer-events: none;
 }
-
 .crt-screen::after {
   content: " ";
   display: block;
@@ -164,7 +183,6 @@ body::-webkit-scrollbar-thumb:hover {
   z-index: 11;
   pointer-events: none;
 }
-
 .scanline {
   position: absolute;
   top: 0; left: 0; right: 0; height: 100px;
@@ -173,7 +191,6 @@ body::-webkit-scrollbar-thumb:hover {
   z-index: 9;
   pointer-events: none;
 }
-
 .crt-amber {
   background-color: #1a1205;
 }
@@ -184,15 +201,12 @@ body::-webkit-scrollbar-thumb:hover {
 .crt-amber .scanline {
   background: linear-gradient(to bottom, rgba(213, 162, 58, 0), rgba(213, 162, 58, 0.12), rgba(213, 162, 58, 0));
 }
-
 .glow-teal {
   text-shadow: 0 0 5px rgba(95, 166, 167, 0.8), 0 0 10px rgba(95, 166, 167, 0.4);
 }
-
 .glow-amber {
   text-shadow: 0 0 5px rgba(213, 162, 58, 0.8), 0 0 10px rgba(213, 162, 58, 0.4);
 }
-
 /* Glass panel overlay indicator */
 .glass-shield {
   background: linear-gradient(135deg, rgba(154, 214, 209, 0.15) 0%, rgba(95, 166, 167, 0.05) 50%, rgba(0, 0, 0, 0.2) 100%);
@@ -200,7 +214,6 @@ body::-webkit-scrollbar-thumb:hover {
   box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(1px);
 }
-
 /* Lenis Custom Smooth Scroll Style */
 html.lenis, html.lenis body {
   height: auto;
@@ -213,4 +226,14 @@ html.lenis, html.lenis body {
 }
 .lenis-smooth iframe {
   pointer-events: none;
+}
+/* Redesign custom styles */
+.navbar-glass {
+  background-color: rgba(115, 115, 115, 0.08);
+}
+.wrapper-opaque {
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
