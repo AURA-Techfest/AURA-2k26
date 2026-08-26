@@ -26,7 +26,7 @@ const registrationSchema = new mongoose.Schema(
     aliahMembers: {
       type: Number,
       min: 1,
-      Max: 3,
+      max: 3,
     },
     otherInstitutionMembers: {
       type: Number,
@@ -52,7 +52,7 @@ const registrationSchema = new mongoose.Schema(
     },
     teamMemberDetails: {
       type: String,
-      require: true,
+      required: true,
       trim: true,
     },
 
@@ -124,7 +124,7 @@ const registrationSchema = new mongoose.Schema(
     },
     solutionDescription: {
       type: String,
-      require: true,
+      required: true,
       trim: true,
       maxlength: 1300,
     },
@@ -316,11 +316,6 @@ const registrationSchema = new mongoose.Schema(
         validator: (value) => value === true,
         message: "Final Confirmation must be accepted",
       },
-    },
-
-    materialsUsed: {
-      type: [String],
-      required: true,
     },
   },
   {
