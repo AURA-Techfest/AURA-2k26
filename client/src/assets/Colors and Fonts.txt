@@ -1,0 +1,6 @@
+sidebar : #6f2138
+sticky-navbar : #737373, opacity : 8%
+wrapper-div : #000000, opacity : 55%
+text-color : #ffffff
+heading-font : LoveloBlack
+secondary-font : Open-Sans
