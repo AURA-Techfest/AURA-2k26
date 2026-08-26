@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+const API_URL = "http://localhost:5000/api/registrations";
 
 const STORAGE_KEY = 'aura_2026_hardware_submission_draft';
 const STORAGE_STEP_KEY = 'aura_2026_hardware_submission_step';
@@ -43,7 +44,7 @@ const SAFETY_HAZARDS = [
 
 const INITIAL_FORM_DATA = {
   // Section 1: Eligibility & Team Details
-  teamSize: '3 Members',
+  teamSize: '4 Members',
   hasWorkingPrototype: 'Yes, fully working',
   teamAffiliation: 'All members are from Aliah University',
   aliahMembersCount: 3,
@@ -214,16 +215,24 @@ export default function AuraSubmissionPortal({ onBack }) {
     });
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, paymentScreenshotPreview: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+const handleFileUpload = (e) => {
+  const file = e.target.files[0];
+
+  if (file) {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        paymentScreenshotPreview: reader.result,
+        paymentScreenshotFile: file,
+      }));
+    };
+
+    reader.readAsDataURL(file);
+  }
+};
+
 
   const countWords = (str) => (str && str.trim() ? str.trim().split(/\s+/).length : 0);
 
@@ -252,17 +261,84 @@ export default function AuraSubmissionPortal({ onBack }) {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.declWorkingPrototype || !formData.declOriginality || !formData.declSafetyRules || !formData.declMediaPermission || !formData.declFinalConfirmation) {
-      alert("Please review and accept all 5 mandatory declarations in Section 9.");
-      return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (
+    !formData.declWorkingPrototype ||
+    !formData.declOriginality ||
+    !formData.declSafetyRules ||
+    !formData.declMediaPermission ||
+    !formData.declFinalConfirmation
+  ) {
+    alert("Please review and accept all 5 mandatory declarations in Section 9.");
+    return;
+  }
+
+  try {
+    const formDataToSend = new FormData();
+
+    formDataToSend.append("teamName", formData.teamName);
+    
+    const membersArray = formData.teamMembersDetails
+  .split("\n")
+  .map((member) => member.trim())
+  .filter(Boolean);
+
+console.log("Members being sent:", membersArray);
+console.log("Member count:", membersArray.length);
+
+formDataToSend.append(
+  "members",
+  JSON.stringify(membersArray)
+);
+
+
+    formDataToSend.append("college", formData.teamAffiliation);
+
+    formDataToSend.append("phone", formData.teamLeaderPhone);
+
+    formDataToSend.append("email", formData.teamLeaderEmail);
+
+    if (formData.paymentScreenshotFile) {
+      formDataToSend.append(
+        "paymentScreenshot",
+        formData.paymentScreenshotFile
+      );
     }
+
+    console.log("🚀 Sending registration...");
+
+   for (const [key, value] of formDataToSend.entries()) {
+  console.log(key, value);
+   }
+
+
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: formDataToSend,
+    });
+
+    const result = await response.json();
+
+    console.log("📥 Backend response:", result);
+
+    if (!response.ok) {
+      throw new Error(result.message || "Registration failed");
+    }
+
+    console.log("🎉 Registration successful!");
 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_STEP_KEY);
+
     setSubmitted(true);
-  };
+  } catch (error) {
+    console.error("❌ Registration failed:", error);
+    alert(error.message);
+  }
+};
+
 
   if (submitted) {
     return (
@@ -891,6 +967,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                       <label className="block text-xs font-poppins font-semibold text-[#091540] mb-1">36. Payment Screenshot *</label>
                       <input
                         type="file"
+                        name="paymentScreenshot"
                         accept="image/*"
                         onChange={handleFileUpload}
                         className="w-full text-xs font-poppins text-[#091540] file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-2 file:border-[#091540] file:text-xs file:font-semibold file:bg-[#1B2CC1] file:text-white cursor-pointer"

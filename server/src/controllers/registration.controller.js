@@ -43,7 +43,9 @@ export const createRegistration = async (req, res) => {
 
     // Upload payment screenshot to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
+       console.log("Uploading payment screenshot to Cloudinary...");
+
+       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: "aura-registrations/payment-screenshots",
           resource_type: "image",
@@ -55,10 +57,12 @@ export const createRegistration = async (req, res) => {
             resolve(result);
           }
         }
+        
       );
-
+       console.log("Uploaded payment screenshot to Cloudinary...");
       uploadStream.end(req.file.buffer);
     });
+     
 
     // Create registration
     const registration = await Registration.create({
@@ -69,7 +73,9 @@ export const createRegistration = async (req, res) => {
       email,
       paymentScreenshot: uploadResult.secure_url,
     });
+    console.log("Registration saved to MongoDB:", registration._id);
 
+    
     return res.status(201).json({
       success: true,
       message: "Registration successful",
@@ -77,7 +83,9 @@ export const createRegistration = async (req, res) => {
     });
   } catch (error) {
     console.error("Registration error:", error);
-
+        console.log("📝 Form submission failed:", {
+          teamName
+        });
     return res.status(500).json({
       success: false,
       message: "Something went wrong while registering",
