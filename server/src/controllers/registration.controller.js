@@ -3,10 +3,95 @@ import Registration from "../models/Registration.js";
 
 export const createRegistration = async (req, res) => {
   try {
-    const { teamName, members, college, phone, email } = req.body;
+    const {
+      teamName,
+      teamSize,
+      hasWorkingPrototype,
+      teamAffiliation,
+      aliahMembers,
+      otherInstitutionMembers,
+      teamLeaderName,
+      teamLeaderEmail,
+      teamLeaderPhone,
+      teamMemberDetails,
+      projectTitle,
+      hardwareProjectCategories,
+      prototypeType,
+      currentWorkingStatus,
+      problemStatement,
+      solutionDescription,
+      innovationDescription,
+      intendedBeneficiaries,
+      workingPrinciple,
+      majorHardwareComponents,
+      useAi,
+      useIot,
+      powerSource,
+      potentialImpact,
+      productPotential,
+      prototypeDevelopmentCost,
+      auraDemoHighlight,
+      safetyHazards,
+      safetyPrecautions,
+      requiresContinuousSupervision,
+      prototypeDevelopedByTeam,
+      previouslyExhibited,
+      previousExhibitionDetails,
+      registrationFeeStatus,
+      transactionId,
+      paymentScreenshot,
+      registrationFee,
+      workingPrototypeDeclaration,
+      originalityDeclaration,
+      safetyEventRulesAgreement,
+      mediaPermission,
+      finalConfirmation,
+    } = req.body;
 
     // Check required fields
-    if (!teamName || !members || !college || !phone || !email) {
+    if (
+      !teamName ||
+      !teamSize ||
+      !hasWorkingPrototype ||
+      !teamAffiliation ||
+      !teamLeaderName ||
+      !teamLeaderEmail ||
+      !teamLeaderPhone ||
+      !teamMemberDetails ||
+      !projectTitle ||
+      !hardwareProjectCategories ||
+      !prototypeType ||
+      !currentWorkingStatus ||
+      !problemStatement ||
+      !solutionDescription ||
+      !innovationDescription ||
+      !intendedBeneficiaries ||
+      !workingPrinciple ||
+      !majorHardwareComponents ||
+      useAi === undefined ||
+      useAi === null ||
+      useIot === undefined ||
+      useIot === null ||
+      !powerSource ||
+      !potentialImpact ||
+      !productPotential ||
+      !prototypeDevelopmentCost ||
+      !auraDemoHighlight ||
+      !safetyHazards ||
+      !safetyPrecautions ||
+      requiresContinuousSupervision === undefined ||
+      requiresContinuousSupervision === null ||
+      !prototypeDevelopedByTeam ||
+      previouslyExhibited === undefined ||
+      previouslyExhibited === null ||
+      !registrationFeeStatus ||
+      !registrationFee ||
+      !workingPrototypeDeclaration ||
+      !originalityDeclaration ||
+      !safetyEventRulesAgreement ||
+      !mediaPermission ||
+      !finalConfirmation
+    ) {
       return res.status(400).json({
         success: false,
         message: "All required fields must be provided",
@@ -54,7 +139,7 @@ export const createRegistration = async (req, res) => {
           } else {
             resolve(result);
           }
-        }
+        },
       );
 
       uploadStream.end(req.file.buffer);
