@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useMutation } from '@tanstack/react-query';
 const API_URL = "http://localhost:5000/api/registrations";
 
 const STORAGE_KEY = 'aura_2026_hardware_submission_draft';
@@ -126,6 +127,30 @@ export default function AuraSubmissionPortal({ onBack }) {
 
   const [submitted, setSubmitted] = useState(false);
   const [draftSavedToast, setDraftSavedToast] = useState(false);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (formDataToSend) => {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: formDataToSend,
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Registration failed");
+      }
+      return result;
+    },
+    onSuccess: () => {
+      console.log("🎉 Registration successful!");
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_STEP_KEY);
+      setSubmitted(true);
+    },
+    onError: (error) => {
+      console.error("❌ Registration failed:", error);
+      alert(error.message);
+    }
+  });
 
   // 3. Persist form data updates automatically to localStorage
   useEffect(() => {
@@ -261,83 +286,56 @@ const handleFileUpload = (e) => {
     }
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (
-    !formData.declWorkingPrototype ||
-    !formData.declOriginality ||
-    !formData.declSafetyRules ||
-    !formData.declMediaPermission ||
-    !formData.declFinalConfirmation
-  ) {
-    alert("Please review and accept all 5 mandatory declarations in Section 9.");
-    return;
-  }
+    if (
+      !formData.declWorkingPrototype ||
+      !formData.declOriginality ||
+      !formData.declSafetyRules ||
+      !formData.declMediaPermission ||
+      !formData.declFinalConfirmation
+    ) {
+      alert("Please review and accept all 5 mandatory declarations in Section 9.");
+      return;
+    }
 
-  try {
-    const formDataToSend = new FormData();
+    try {
+      const formDataToSend = new FormData();
 
-    formDataToSend.append("teamName", formData.teamName);
-    
-    const membersArray = formData.teamMembersDetails
-  .split("\n")
-  .map((member) => member.trim())
-  .filter(Boolean);
+      formDataToSend.append("teamName", formData.teamName);
+      
+      const membersArray = formData.teamMembersDetails
+        .split("\n")
+        .map((member) => member.trim())
+        .filter(Boolean);
 
-console.log("Members being sent:", membersArray);
-console.log("Member count:", membersArray.length);
+      console.log("Members being sent:", membersArray);
+      console.log("Member count:", membersArray.length);
 
-formDataToSend.append(
-  "members",
-  JSON.stringify(membersArray)
-);
-
-
-    formDataToSend.append("college", formData.teamAffiliation);
-
-    formDataToSend.append("phone", formData.teamLeaderPhone);
-
-    formDataToSend.append("email", formData.teamLeaderEmail);
-
-    if (formData.paymentScreenshotFile) {
       formDataToSend.append(
-        "paymentScreenshot",
-        formData.paymentScreenshotFile
+        "members",
+        JSON.stringify(membersArray)
       );
+
+      formDataToSend.append("college", formData.teamAffiliation);
+      formDataToSend.append("phone", formData.teamLeaderPhone);
+      formDataToSend.append("email", formData.teamLeaderEmail);
+
+      if (formData.paymentScreenshotFile) {
+        formDataToSend.append(
+          "paymentScreenshot",
+          formData.paymentScreenshotFile
+        );
+      }
+
+      console.log("🚀 Triggering TanStack Query mutation...");
+      mutate(formDataToSend);
+    } catch (error) {
+      console.error("❌ Registration failed:", error);
+      alert(error.message);
     }
-
-    console.log("🚀 Sending registration...");
-
-   for (const [key, value] of formDataToSend.entries()) {
-  console.log(key, value);
-   }
-
-
-    const response = await fetch(API_URL, {
-      method: "POST",
-      body: formDataToSend,
-    });
-
-    const result = await response.json();
-
-    console.log("📥 Backend response:", result);
-
-    if (!response.ok) {
-      throw new Error(result.message || "Registration failed");
-    }
-
-    console.log("🎉 Registration successful!");
-
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(STORAGE_STEP_KEY);
-
-    setSubmitted(true);
-  } catch (error) {
-    console.error("❌ Registration failed:", error);
-    alert(error.message);
-  }
-};
+  };
 
 
   if (submitted) {
@@ -1030,10 +1028,11 @@ formDataToSend.append(
             ) : (
               <button
                 type="button"
+                disabled={isPending}
                 onClick={handleSubmit}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-lg text-xs font-poppins font-bold transition shadow-lg cursor-pointer"
+                className={`bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-lg text-xs font-poppins font-bold transition shadow-lg cursor-pointer ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Submit Project Registration
+                {isPending ? "Submitting..." : "Submit Project Registration"}
               </button>
             )}
           </div>
