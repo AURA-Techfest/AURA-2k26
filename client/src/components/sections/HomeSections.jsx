@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import heroBg from "../../assets/HERO_SECTION_BG.png";
 import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
@@ -32,7 +33,13 @@ function HomeSections({ onRegisterClick }) {
         {/* Left Side Overlay for dark-tint reading */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
 
-        <div className="relative z-20 max-w-2xl text-left flex flex-col justify-center mt-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-20 max-w-2xl text-left flex flex-col justify-center mt-8"
+        >
           {/* Typographic Title matching Image 1 */}
           <GiantAHeading topText="URA" bottomText="2K26" />
           
@@ -55,7 +62,7 @@ function HomeSections({ onRegisterClick }) {
               Login
             </button>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* 2. ABOUT THE EVENT SECTION - Normal WEBSITE_BG */}
@@ -63,28 +70,44 @@ function HomeSections({ onRegisterClick }) {
         id="event"
         className="h-screen w-full relative flex flex-col justify-between pt-12 pb-8 px-8 md:pt-16 md:pb-12 md:px-16 lg:pt-20 lg:pb-16 lg:px-24 overflow-hidden"
       >
+        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})` }}
         />
         
+        {/* Left Side Overlay gradient for matching opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
+
         {/* Top: Title */}
-        <div className="relative z-10 self-start mt-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative z-20 self-start mt-0"
+        >
           <GiantAHeading topText="BOUT" bottomText="THE EVENT" />
-        </div>
+        </motion.div>
 
         {/* Center: Empty Space (matching PDF design, no extra text) */}
-        <div className="flex-grow" />
+        <div className="flex-grow animate-pulse" />
 
         {/* Bottom: Centered Button */}
-        <div className="relative z-10 flex justify-center pb-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="relative z-20 flex justify-center pb-4"
+        >
           <button
             onClick={onRegisterClick}
             className="px-10 py-3.5 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
           >
             Register Now
           </button>
-        </div>
+        </motion.div>
       </section>
 
       {/* 3. ABOUT ALIAH UNIVERSITY SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
@@ -96,14 +119,29 @@ function HomeSections({ onRegisterClick }) {
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
+
+        {/* Left Side Overlay gradient for matching opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         {/* Top: Title */}
-        <div className="relative z-10 self-start mt-0">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative z-20 self-start mt-0"
+        >
           <GiantAHeading topText="BOUT" bottomText="ALIAH UNIVERSITY" />
-        </div>
+        </motion.div>
 
         {/* Center: Logo on the left, shifted up */}
-        <div className="relative z-10 flex items-start justify-start flex-grow -mt-4 md:-mt-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.85 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.15 }}
+          className="relative z-20 flex items-start justify-start flex-grow -mt-4 md:-mt-8"
+        >
           <div className="p-4 rounded-full bg-black/10 border border-white/5">
             <img
               src={aliahLogo}
@@ -111,12 +149,12 @@ function HomeSections({ onRegisterClick }) {
               className="w-36 h-36 md:w-48 md:h-48 object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.08)]"
             />
           </div>
-        </div>
+        </motion.div>
 
         <div className="h-10" />
       </section>
 
-      {/* 4. NOTIFICATIONS SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
+      {/* 4. NOTIFICATIONS SECTION - Reversed WEBSITE_BG */}
       <section
         id="notifications"
         className="h-screen w-full relative flex flex-col justify-start p-8 md:p-16 lg:p-24 overflow-hidden border-t border-white/5"
@@ -125,16 +163,25 @@ function HomeSections({ onRegisterClick }) {
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
+
+        {/* Left Side Overlay gradient for matching opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         {/* Top: Title */}
-        <div className="relative z-10 self-start mt-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative z-20 self-start mt-8"
+        >
           <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
             Notifications
           </h2>
-        </div>
+        </motion.div>
       </section>
 
-      {/* 5. GALLERY SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
+      {/* 5. GALLERY SECTION - Reversed WEBSITE_BG */}
       <section
         id="gallery"
         className="h-screen w-full relative flex flex-col justify-between p-8 md:p-16 lg:p-24 overflow-hidden border-t border-white/5"
@@ -143,25 +190,40 @@ function HomeSections({ onRegisterClick }) {
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
+
+        {/* Left Side Overlay gradient for matching opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         {/* Top: Title */}
-        <div className="relative z-10 self-start mt-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative z-20 self-start mt-8"
+        >
           <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
             Gallery
           </h2>
-        </div>
+        </motion.div>
 
         {/* Center: Coming Soon */}
-        <div className="relative z-10 flex flex-col items-center justify-center flex-grow text-center">
-          <h3 className="font-heading text-2xl md:text-4xl font-black text-white/90 tracking-[0.2em] uppercase select-none">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          className="relative z-20 flex flex-col items-center justify-center flex-grow text-center"
+        >
+          <h3 className="font-heading text-2xl md:text-4xl font-black text-white/90 tracking-[0.2em] uppercase select-none animate-pulse">
             Coming Soon
           </h3>
-        </div>
+        </motion.div>
 
         <div className="h-10" />
       </section>
 
-      {/* 6. CONTACT US SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
+      {/* 6. CONTACT US SECTION - Reversed WEBSITE_BG */}
       <section
         id="contact"
         className="h-screen w-full relative flex flex-col justify-start p-8 md:p-16 lg:p-24 overflow-hidden border-t border-white/5"
@@ -170,17 +232,26 @@ function HomeSections({ onRegisterClick }) {
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
+
+        {/* Left Side Overlay gradient for matching opacity */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         {/* Top: Title */}
-        <div className="relative z-10 self-start mt-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative z-20 self-start mt-8"
+        >
           <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
             Contact Us
           </h2>
-        </div>
+        </motion.div>
       </section>
 
       {/* 7. FOOTER SECTION - With message: footer will be here */}
-      <footer className="py-16 bg-[#080606] border-t border-white/5 flex items-center justify-center text-center">
+      <footer className="py-16 bg-[#080606] border-t border-white/5 flex items-center justify-center text-center relative z-20">
         <span className="font-heading text-xs uppercase tracking-[0.25em] text-white/30">
           footer will be here
         </span>
