@@ -43,7 +43,10 @@
   --font-mono: 'JetBrains Mono', monospace;
   --font-heading: 'LoveloBlack', 'Oxanium', sans-serif;
   --font-heading-line: 'LoveloLineBold', 'Oxanium', sans-serif;
-  --font-body: 'Open Sans', sans-serif;
+  --font-sans: 'Rajdhani', sans-serif;
+  --font-body: 'Rajdhani', sans-serif;
+  --font-poppins: 'Rajdhani', sans-serif;
+  --font-inter: 'Rajdhani', sans-serif;
   --color-sidebar: #6f2138;
   --color-navbar-glass: rgba(115, 115, 115, 0.08);
   --color-wrapper-opaque: rgba(0, 0, 0, 0.55);
@@ -236,4 +239,24 @@ html.lenis, html.lenis body {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar for high-contrast dark theme */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.viewport {
+  min-height: 100vh;
 }
