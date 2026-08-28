@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
+import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
 const API_URL = "http://localhost:5000/api/registrations";
 
 const STORAGE_KEY = 'aura_2026_hardware_submission_draft';
@@ -176,6 +178,42 @@ export default function AuraSubmissionPortal({ onBack }) {
 
   const [submitted, setSubmitted] = useState(false);
   const [draftSavedToast, setDraftSavedToast] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    function resizeCanvas() {
+      const canvas = document.querySelector(".canvas");
+      const viewport = document.querySelector(".viewport");
+      if (!canvas || !viewport) return;
+
+      const mobileMode = window.innerWidth < 768;
+      setIsMobile(mobileMode);
+
+      const baseWidth = mobileMode ? 680 : 1376;
+      const baseHeight = mobileMode ? 1209 : 768;
+
+      const scale = viewport.clientWidth / baseWidth;
+
+      canvas.style.transform = `scale(${scale})`;
+      canvas.style.transformOrigin = "top left";
+      canvas.style.width = `${baseWidth}px`;
+      canvas.style.height = `${baseHeight}px`;
+
+      viewport.style.height = `${baseHeight * scale}px`;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    // Run again with short timeouts to ensure DOM mounting completes
+    const timer1 = setTimeout(resizeCanvas, 100);
+    const timer2 = setTimeout(resizeCanvas, 500);
+
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formDataToSend) => {
@@ -500,750 +538,1075 @@ const handleFileUpload = (e) => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#ABD2FA] flex items-center justify-center p-6 text-[#091540] font-poppins">
-        <div className="max-w-xl w-full bg-[#FFFFFF] border-2 border-[#091540] rounded-2xl p-8 text-center shadow-2xl">
-          <div className="w-16 h-16 bg-[#1B2CC1] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-900/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="viewport w-full relative overflow-hidden bg-black flex justify-center items-start selection:bg-white selection:text-black">
+        <div 
+          className="canvas absolute top-0 left-0 bg-cover bg-center select-none"
+          style={{
+            backgroundImage: `url(${isMobile ? mobileBg : desktopBg})`,
+            width: isMobile ? '680px' : '1376px',
+            height: isMobile ? '1209px' : '768px'
+          }}
+        >
+          {/* Top Header Actions with Solid Contrast Background */}
+          <div className={`absolute z-30 flex items-center justify-between ${isMobile ? 'top-[25px] left-[70px] w-[540px]' : 'top-[15px] left-[348px] w-[680px]'}`}>
+            <button
+              onClick={onBack}
+              className="px-4 py-1.5 bg-black border border-white/30 rounded-full hover:bg-white hover:text-black text-white font-mono text-[10px] font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+            >
+              ← Back
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tracking-widest px-3 py-1.5 rounded-full bg-black border border-white/30 text-white uppercase select-none shadow-lg">
+                Fee Status: Subsidized
+              </span>
+            </div>
           </div>
-          <span className="text-xs font-bold uppercase tracking-widest text-[#1B2CC1] mb-2 block font-poppins">Application Received</span>
-          <h1 className="text-3xl font-extrabold font-inter text-[#091540] mb-4">YOU'RE IN. NOW BUILD BEYOND.</h1>
-          <p className="text-sm text-[#091540]/90 leading-relaxed mb-6 font-poppins">
-            Thank you for submitting your working hardware project to <strong>AURA 2026</strong> (The Annual Technical Festival of Aliah University, 19–20 November 2026)[cite: 1, 4].
-          </p>
-          <div className="bg-[#F8FAFC] border border-[#091540]/20 rounded-xl p-4 text-xs text-[#64748B] mb-8 leading-relaxed font-poppins">
-            Your submission has been received by the AURA 2026 Project Evaluation Committee[cite: 1, 4]. Please note: Submission does not guarantee selection[cite: 1, 4]. Shortlisted teams will be contacted separately regarding project evaluation, exhibition, and live demonstration[cite: 1, 4].
-          </div>
-          <p className="font-inter font-bold tracking-widest text-xs text-[#1B2CC1] mb-6">DISCOVER • DESIGN • DISRUPT</p>
-          <button
-            onClick={onBack}
-            className="bg-[#1B2CC1] hover:bg-[#1B2CC1]/90 text-white font-poppins font-semibold text-xs px-6 py-2.5 rounded-lg transition shadow-md cursor-pointer"
+
+          {/* Mac Terminal container centered inside the black slot */}
+          <div 
+            className={`flex flex-col bg-black/95 border border-white/15 rounded-lg shadow-2xl overflow-hidden ${
+              isMobile 
+                ? 'w-[540px] h-[960px] absolute left-[70px] top-[125px]' 
+                : 'w-[680px] h-[670px] absolute left-[348px] top-[49px]'
+            }`}
+            style={{ fontFamily: "'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
           >
-            ← Return to Homepage
-          </button>
+            {/* Terminal Header Bar */}
+            <div className="h-8 bg-[#1e1e1f] border-b border-white/5 flex items-center px-4 relative select-none flex-shrink-0">
+              <div className="flex items-center gap-1.5 z-10">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+              </div>
+              <div className="absolute left-0 right-0 text-center text-[10px] text-white/40 tracking-wider">
+                aura-2k26-terminal -- bash
+              </div>
+            </div>
+
+            {/* Terminal Body */}
+            <div className="flex-grow p-6 overflow-y-auto custom-scrollbar flex flex-col justify-between text-white text-sm">
+              <div className="space-y-4">
+                <div className="text-[#4682BF] font-bold select-none">
+                  aura@aliah-univ:~$ ./register --status
+                </div>
+                <div className="text-[#4682BF] font-semibold leading-relaxed">
+                  [SUCCESS] PROJECT SUBMISSION LOGGED SUCCESSFULLY!
+                </div>
+                <pre className="text-[11px] text-[#4682BF] leading-none select-none font-bold">
+{`   _  _  _  _  ___   _ 
+  | || || || || _ \\ / \\  
+  | \\/ || \\/ ||   // _ \\ 
+   \\__/  \\__/ |_|_|_/ \\_\\`}
+                </pre>
+                <div className="border-t border-white/10 pt-3 space-y-3 text-white/90">
+                  <p>
+                    Thank you for submitting your working hardware project to <strong className="text-white">AURA 2026</strong> (The Annual Technical Festival of Aliah University, 19–20 November 2026)[cite: 1, 4].
+                  </p>
+                  <p className="bg-white/5 border border-white/10 p-3 rounded text-[12px] leading-relaxed">
+                    Your submission has been logged by the AURA 2026 Project Evaluation Committee[cite: 1, 4]. Please note that shortlisted teams will be contacted separately regarding live evaluation and demo[cite: 1, 4].
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t border-white/10 pt-4 flex flex-col items-center gap-3">
+                <span className="text-[10px] text-white/40">DISCOVER • DESIGN • DISRUPT</span>
+                <button
+                  onClick={onBack}
+                  className="px-6 py-2 border border-white rounded hover:bg-white hover:text-black text-white font-mono text-[11px] font-bold uppercase transition duration-150 cursor-pointer bg-transparent"
+                >
+                  ← Return to Homepage
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#ABD2FA] text-[#091540] font-poppins pb-20 selection:bg-[#1B2CC1] selection:text-white">
-      {/* Top Header Bar */}
-      <header className="border-b-2 border-[#091540] bg-[#ABD2FA]/95 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack}
-              className="text-xs font-poppins font-semibold text-[#1B2CC1] hover:underline flex items-center gap-1.5 transition cursor-pointer"
-            >
-              ← Back to Main Page
-            </button>
+    <div className="viewport w-full relative overflow-hidden bg-black flex justify-center items-start selection:bg-white selection:text-black">
+      <div 
+        className="canvas absolute top-0 left-0 bg-cover bg-center select-none"
+        style={{
+          backgroundImage: `url(${isMobile ? mobileBg : desktopBg})`,
+          width: isMobile ? '680px' : '1376px',
+          height: isMobile ? '1209px' : '768px'
+        }}
+      >
+        {/* Top Header Actions with Solid Contrast Background */}
+        <div className={`absolute z-30 flex items-center justify-between ${isMobile ? 'top-[25px] left-[70px] w-[540px]' : 'top-[15px] left-[348px] w-[680px]'}`}>
+          <button
+            onClick={onBack}
+            className="px-4 py-1.5 bg-black border border-white/30 rounded-full hover:bg-white hover:text-black text-white font-mono text-[10px] font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+          >
+            ← Back
+          </button>
+          
+          <div className="flex items-center gap-2">
             {draftSavedToast && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-poppins text-emerald-800 bg-emerald-100 border border-emerald-400 px-2 py-0.5 rounded-md font-medium">
-                ✓ Draft auto-saved
+              <span className="text-[9px] font-mono tracking-widest text-[#4682BF] font-bold bg-black px-2 py-1.5 border border-white/20 rounded-full shadow-lg">
+                ✓ Saved
               </span>
             )}
-          </div>
-          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={handleResetDraft}
-              className="text-[11px] font-poppins font-medium text-[#64748B] hover:text-rose-600 transition cursor-pointer"
+              className="text-[10px] font-mono font-black tracking-widest text-white/50 hover:text-white uppercase transition cursor-pointer select-none bg-black px-3 py-1.5 border border-white/20 rounded-full shadow-lg"
               title="Clear stored data"
             >
               Clear Draft
             </button>
-            <span className="text-xs font-poppins font-semibold px-3 py-1 rounded-md bg-[#7692FF] border border-[#091540] text-white">
-              Fee Status: {isExternalFeeApplicable ? "₹400 (External Team)" : "₹0 (Aliah Subsidized)"}
+            <span className="text-[10px] font-mono font-black tracking-widest px-3 py-1.5 rounded-full bg-black border border-white/20 text-white uppercase select-none shadow-lg">
+              Fee: {isExternalFeeApplicable ? "₹400" : "₹0"}
             </span>
           </div>
         </div>
-      </header>
 
-      {/* Hero Header */}
-      <div className="max-w-4xl mx-auto px-6 pt-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7692FF] border border-[#091540] text-xs font-semibold text-white mb-3 font-poppins">
-          AURA 2026 • 19–20 November 2026
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold font-inter text-[#091540] tracking-tight">
-          Working Hardware Project Submission
-        </h1>
-        <p className="text-xs font-poppins text-[#091540]/80 mt-1 font-medium">The Annual Technical Festival of Aliah University • DISCOVER DESIGN DISRUPT</p>
-      </div>
-
-      {/* Multi-Step Wizard Indicator */}
-      <div className="max-w-4xl mx-auto px-6 mt-8">
-        <div className="grid grid-cols-4 gap-2 text-center text-xs font-poppins font-semibold">
-          {[
-            { id: 1, label: "1. Team & Eligibility" },
-            { id: 2, label: "2. Project Profile" },
-            { id: 3, label: "3. Technical Details" },
-            { id: 4, label: "4. Safety & Payment" }
-          ].map((step) => (
-            <button
-              key={step.id}
-              type="button"
-              onClick={() => handleStepJump(step.id)}
-              className={`p-3 rounded-xl border-2 transition-all cursor-pointer font-poppins ${
-                currentStep === step.id
-                  ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-lg shadow-indigo-900/20'
-                  : currentStep > step.id
-                  ? 'bg-[#7692FF] text-white border-[#091540] hover:bg-[#7692FF]/90'
-                  : 'bg-[#F8FAFC] text-[#64748B] border-[#091540]/30 hover:border-[#091540] hover:text-[#091540]'
-              }`}
-            >
-              {step.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Form Card Container */}
-      <main className="max-w-4xl mx-auto px-6 mt-6">
-        <div className="bg-[#FFFFFF] border-2 border-[#091540] rounded-2xl shadow-xl overflow-hidden">
-          
-          {/* STEP 1: SECTION 1 (ELIGIBILITY & TEAM DETAILS) */}
-          {currentStep === 1 && (
-            <div className="p-8 space-y-6">
-              <div className="border-b-2 border-[#091540]/20 pb-4">
-                <h2 className="text-xl font-bold font-inter text-[#091540]">SECTION 1: ELIGIBILITY & TEAM DETAILS</h2>
-                <p className="text-xs font-poppins text-[#64748B] mt-1">Only working physical hardware prototypes will be considered (Team size: 2-4 members)[cite: 1, 4].</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">1. Team Size *</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {["2 Members", "3 Members", "4 Members"].map((size) => (
-                      <button
-                        type="button"
-                        key={size}
-                        onClick={() => handleTeamSizeChange(size)}
-                        className={`py-2 px-3 text-xs font-poppins font-semibold rounded-lg border-2 transition cursor-pointer ${
-                          formData.teamSize === size
-                            ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-md'
-                            : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">2. Working Physical Prototype? *</label>
-                  <select
-                    name="hasWorkingPrototype"
-                    value={formData.hasWorkingPrototype}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  >
-                    <option value="Yes, fully working">Yes, fully working</option>
-                    <option value="Yes, working with minor limitations">Yes, working with minor limitations</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">3. Team Affiliation *</label>
-                <div className="space-y-2">
-                  {[
-                    "All members are from Aliah University",
-                    "All members are from another institution",
-                    "Mixed team: Aliah University + other institution(s)"
-                  ].map((affiliation) => (
-                    <button
-                      type="button"
-                      key={affiliation}
-                      onClick={() => handleAffiliationChange(affiliation)}
-                      className={`w-full text-left py-2.5 px-4 rounded-lg border-2 text-xs font-poppins font-medium transition cursor-pointer ${
-                        formData.teamAffiliation === affiliation
-                          ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-md'
-                          : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                      }`}
-                    >
-                      {affiliation}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Number of Members Button Lists: 0, 1, 2, 3, 4 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">
-                    4. Number of Aliah University Members *
-                  </label>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {[0, 1, 2, 3, 4].map((num) => (
-                      <button
-                        type="button"
-                        key={num}
-                        onClick={() => setFormData({ ...formData, aliahMembersCount: num })}
-                        className={`py-2 text-xs font-poppins font-bold rounded-lg border-2 transition cursor-pointer text-center ${
-                          Number(formData.aliahMembersCount) === num
-                            ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-md'
-                            : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">
-                    5. Number of Members from Other Institutions *
-                  </label>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {[0, 1, 2, 3, 4].map((num) => (
-                      <button
-                        type="button"
-                        key={num}
-                        onClick={() => setFormData({ ...formData, otherMembersCount: num })}
-                        className={`py-2 text-xs font-poppins font-bold rounded-lg border-2 transition cursor-pointer text-center ${
-                          Number(formData.otherMembersCount) === num
-                            ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-md'
-                            : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t-2 border-[#091540]/10">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">6. Team Name *</label>
-                  <input
-                    type="text"
-                    name="teamName"
-                    value={formData.teamName}
-                    onChange={handleTextChange}
-                    placeholder="Enter your team name"
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">7. Team Leader Name *</label>
-                    <input
-                      type="text"
-                      name="teamLeaderName"
-                      value={formData.teamLeaderName}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">8. Leader Email *</label>
-                    <input
-                      type="email"
-                      name="teamLeaderEmail"
-                      value={formData.teamLeaderEmail}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">9. Leader Phone / WhatsApp *</label>
-                    <input
-                      type="tel"
-                      name="teamLeaderPhone"
-                      value={formData.teamLeaderPhone}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">
-                    10. Team Member Details (Full Name | Institution | Department | Year | Contact) *
-                  </label>
-                  <textarea
-                    rows={3}
-                    name="teamMembersDetails"
-                    value={formData.teamMembersDetails}
-                    onChange={handleTextChange}
-                    placeholder="e.g. John Doe | Aliah University | CSE | 2nd Year | +91 9876543210"
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-              </div>
+        {/* Mac Terminal container centered inside the black slot */}
+        <div 
+          className={`flex flex-col bg-black/95 border border-white/15 rounded-lg shadow-2xl overflow-hidden ${
+            isMobile 
+              ? 'w-[540px] h-[960px] absolute left-[70px] top-[125px]' 
+              : 'w-[680px] h-[670px] absolute left-[348px] top-[49px]'
+          }`}
+          style={{ fontFamily: "'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
+        >
+          {/* Terminal Header Bar */}
+          <div className="h-8 bg-[#1e1e1f] border-b border-white/5 flex items-center px-4 relative select-none flex-shrink-0">
+            <div className="flex items-center gap-1.5 z-10">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
             </div>
-          )}
-
-          {/* STEP 2: SECTIONS 2 & 3 (PROJECT PROFILE & INNOVATION) */}
-          {currentStep === 2 && (
-            <div className="p-8 space-y-6">
-              <div className="border-b-2 border-[#091540]/20 pb-4">
-                <h2 className="text-xl font-bold font-inter text-[#091540]">SECTION 2 & 3: HARDWARE PROJECT PROFILE & INNOVATION</h2>
-              </div>
-
-              <div>
-                <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">11. Project Title *</label>
-                <input
-                  type="text"
-                  name="projectTitle"
-                  value={formData.projectTitle}
-                  onChange={handleTextChange}
-                  placeholder="Enter your hardware project title"
-                  className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">12. Hardware Project Category (Select applicable) *</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {CATEGORIES.map((cat) => {
-                    const selected = formData.categories.includes(cat);
-                    return (
-                      <button
-                        type="button"
-                        key={cat}
-                        onClick={() => toggleArrayItem("categories", cat)}
-                        className={`text-left p-2.5 rounded-lg border-2 text-[11px] font-poppins font-medium transition cursor-pointer ${
-                          selected
-                            ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-sm'
-                            : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">13. Type of Hardware Prototype *</label>
-                  <select
-                    name="prototypeType"
-                    value={formData.prototypeType}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  >
-                    {PROTOTYPE_TYPES.map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">14. Current Working Status *</label>
-                  <select
-                    name="workingStatus"
-                    value={formData.workingStatus}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  >
-                    {WORKING_STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t-2 border-[#091540]/10">
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-poppins font-semibold text-[#091540] uppercase">15. What problem does your project solve? *</label>
-                    <span className="text-[11px] font-poppins text-[#64748B] font-medium">{countWords(formData.problemStatement)} / 150 words</span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    name="problemStatement"
-                    value={formData.problemStatement}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-poppins font-semibold text-[#091540] uppercase">16. How does your prototype solve this problem? *</label>
-                    <span className="text-[11px] font-poppins text-[#64748B] font-medium">{countWords(formData.solutionDescription)} / 200 words</span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    name="solutionDescription"
-                    value={formData.solutionDescription}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">17. What is innovative about your hardware? *</label>
-                  <textarea
-                    rows={2}
-                    name="innovationDetails"
-                    value={formData.innovationDetails}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">18. Intended Users / Beneficiaries</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {BENEFICIARIES.map((ben) => (
-                      <button
-                        type="button"
-                        key={ben}
-                        onClick={() => toggleArrayItem("beneficiaries", ben)}
-                        className={`text-left p-2 rounded-lg border-2 text-[11px] font-poppins transition cursor-pointer ${
-                          formData.beneficiaries.includes(ben)
-                            ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-sm'
-                            : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                        }`}
-                      >
-                        {ben}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            <div className="absolute left-0 right-0 text-center text-[10px] text-white/40 tracking-wider">
+              aura-2k26-terminal -- bash
             </div>
-          )}
+          </div>
 
-          {/* STEP 3: SECTIONS 4 & 5 (TECHNICAL DETAILS & REAL WORLD POTENTIAL) */}
-          {currentStep === 3 && (
-            <div className="p-8 space-y-6">
-              <div className="border-b-2 border-[#091540]/20 pb-4">
-                <h2 className="text-xl font-bold font-inter text-[#091540]">SECTION 4 & 5: TECHNICAL DETAILS & POTENTIAL</h2>
+          {/* Terminal body content */}
+          <div className="flex-grow p-5 overflow-y-auto custom-scrollbar flex flex-col justify-between">
+            <div className="space-y-4">
+              
+              {/* Heading Printout inside Terminal */}
+              <div className="text-center select-none border-b border-white/10 pb-3 mb-2">
+                <h2 className="text-sm font-bold tracking-[0.15em] text-white uppercase leading-normal">
+                  AURA 2K26 REGISTRATION FORM
+                </h2>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-poppins font-semibold text-[#091540] uppercase">19. Explain how the prototype works (Max 250 words) *</label>
-                  <span className="text-[11px] font-poppins text-[#64748B] font-medium">{countWords(formData.workingPrinciple)} / 250 words</span>
+              {/* Progress Terminal Indicator */}
+              <div className="border border-[#4682BF]/20 bg-[#4682BF]/5 px-3.5 py-2.5 rounded font-mono text-xs text-[#4682BF] select-none">
+                <div className="flex justify-between mb-1.5 font-bold">
+                  <span>STATUS: ACTIVE_SESSION</span>
+                  <span>STEP {currentStep} OF 4</span>
                 </div>
-                <textarea
-                  rows={4}
-                  name="workingPrinciple"
-                  value={formData.workingPrinciple}
-                  onChange={handleTextChange}
-                  className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">20. Major Hardware Components *</label>
-                <input
-                  type="text"
-                  name="hardwareComponents"
-                  value={formData.hardwareComponents}
-                  onChange={handleTextChange}
-                  placeholder="e.g. ESP32, Arduino, Raspberry Pi, motors, sensors, PCB, battery..."
-                  className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3.5 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">21. Uses AI / ML? *</label>
-                  <select
-                    name="usesAI"
-                    value={formData.usesAI}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                <div className="flex items-center gap-2">
+                  <span>[</span>
+                  <div className="flex-grow flex text-white/20 text-[9px] tracking-tighter">
+                    <span className="text-[#4682BF]">{'#'.repeat(currentStep * 5)}</span>
+                    <span>{'-'.repeat((4 - currentStep) * 5)}</span>
+                  </div>
+                  <span>] {Math.round((currentStep / 4) * 100)}%</span>
+                </div>
+                <div className="flex justify-between mt-2.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleStepJump(1)}
+                    className={`hover:underline cursor-pointer transition-all ${currentStep === 1 ? "text-[#4682BF] font-black" : "text-white/50"}`}
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">22. Uses IoT / Wireless? *</label>
-                  <select
-                    name="usesIoT"
-                    value={formData.usesIoT}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    01.Team
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepJump(2)}
+                    className={`hover:underline cursor-pointer transition-all ${currentStep === 2 ? "text-[#4682BF] font-black" : "text-white/50"}`}
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">23. Power Source *</label>
-                  <select
-                    name="powerSource"
-                    value={formData.powerSource}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    02.Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepJump(3)}
+                    className={`hover:underline cursor-pointer transition-all ${currentStep === 3 ? "text-[#4682BF] font-black" : "text-white/50"}`}
                   >
-                    {POWER_SOURCES.map((p) => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t-2 border-[#091540]/10">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">24. Potential Real-World Impact *</label>
-                  <textarea
-                    rows={2}
-                    name="realWorldImpact"
-                    value={formData.realWorldImpact}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">25. Developable into practical product? *</label>
-                    <select
-                      name="deployableSystem"
-                      value={formData.deployableSystem}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="Potentially">Potentially</option>
-                      <option value="No">No</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">26. Approx Development Cost (INR ₹) *</label>
-                    <input
-                      type="number"
-                      name="developmentCost"
-                      value={formData.developmentCost}
-                      onChange={handleTextChange}
-                      placeholder="Amount in ₹"
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-poppins font-semibold text-[#091540] uppercase">27. What makes this project worth seeing at AURA 2026? (Max 100 words) *</label>
-                    <span className="text-[11px] font-poppins text-[#64748B] font-medium">{countWords(formData.whyWorthSeeing)} / 100 words</span>
-                  </div>
-                  <textarea
-                    rows={2}
-                    name="whyWorthSeeing"
-                    value={formData.whyWorthSeeing}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-3 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: SECTIONS 6 TO 9 (SAFETY, ORIGINALITY, FEE, DECLARATION) */}
-          {currentStep === 4 && (
-            <div className="p-8 space-y-6">
-              <div className="border-b-2 border-[#091540]/20 pb-4">
-                <h2 className="text-xl font-bold font-inter text-[#091540]">SECTION 6 TO 9: SAFETY, FEE & DECLARATION</h2>
-              </div>
-
-              {/* Safety Section */}
-              <div>
-                <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-2">28. Safety Hazard Involvements *</label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {SAFETY_HAZARDS.map((hazard) => (
-                    <button
-                      type="button"
-                      key={hazard}
-                      onClick={() => toggleArrayItem("safetyHazards", hazard)}
-                      className={`text-left p-2.5 rounded-lg border-2 text-[11px] font-poppins transition cursor-pointer ${
-                        formData.safetyHazards.includes(hazard)
-                          ? 'bg-[#1B2CC1] text-white border-[#091540] shadow-sm'
-                          : 'bg-[#F8FAFC] text-[#091540] border-[#091540]/30 hover:border-[#091540]'
-                      }`}
-                    >
-                      {hazard}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">29. Safety Precautions Taken</label>
-                  <textarea
-                    rows={2}
-                    name="safetyPrecautions"
-                    value={formData.safetyPrecautions}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-2.5 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">30. Requires Continuous Supervision? *</label>
-                  <select
-                    name="requiresSupervision"
-                    value={formData.requiresSupervision}
-                    onChange={handleTextChange}
-                    className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                    03.Specs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStepJump(4)}
+                    className={`hover:underline cursor-pointer transition-all ${currentStep === 4 ? "text-[#4682BF] font-black" : "text-white/50"}`}
                   >
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
+                    04.Submit
+                  </button>
                 </div>
               </div>
 
-              {/* Section 7: Originality */}
-              <div className="space-y-4 pt-4 border-t-2 border-[#091540]/10">
-                <h4 className="text-sm font-bold font-inter text-[#091540]">SECTION 7: ORIGINALITY</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">31. Was the prototype developed entirely by your team? *</label>
-                    <select
-                      name="developedByTeam"
-                      value={formData.developedByTeam}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                      <option value="External Assistance">Developed with External Assistance</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">32. Has this prototype been previously exhibited? *</label>
-                    <select
-                      name="previouslyExhibited"
-                      value={formData.previouslyExhibited}
-                      onChange={handleTextChange}
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    >
-                      <option value="No">No</option>
-                      <option value="Yes">Yes</option>
-                    </select>
-                  </div>
-                </div>
+              {/* Form Content Area (With Terminal Scroll Class) */}
+              <div className="terminal-scroll-area space-y-4 text-white text-sm max-h-[420px] overflow-y-auto custom-scrollbar pr-1.5">
+                {/* STEP 1: TEAM DETAILS */}
+                {currentStep === 1 && (
+                  <div className="space-y-4">
+                    <div className="text-[11px] text-white/40 uppercase tracking-wider border-b border-white/5 pb-1 select-none">
+                      // TEAM CONFIGURATION AND ELIGIBILITY
+                    </div>
 
-                {formData.previouslyExhibited === "Yes" && (
-                  <div>
-                    <label className="block text-xs font-poppins font-semibold text-[#091540] uppercase mb-1">33. Previous Exhibition Details *</label>
-                    <textarea
-                      rows={2}
-                      name="exhibitionDetails"
-                      value={formData.exhibitionDetails}
-                      onChange={handleTextChange}
-                      placeholder="Specify event name, year, and awards won (if any)"
-                      className="w-full bg-[#F8FAFC] border-2 border-[#091540]/30 rounded-lg p-2.5 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
-                    />
+                    <div id="field-group-1" className="space-y-1.5">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">1. Team Size *</label>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {["2 Members", "3 Members", "4 Members"].map((size) => (
+                          <button
+                            type="button"
+                            key={size}
+                            onClick={() => {
+                              handleTeamSizeChange(size);
+                              scrollToNextField(1);
+                            }}
+                            className={`py-2 text-center text-xs rounded transition-all cursor-pointer select-none ${
+                              formData.teamSize === size
+                                ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                            }`}
+                          >
+                            [ {formData.teamSize === size ? 'X' : ' '} ] {size}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div id="field-group-2" className="space-y-1.5">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">2. Working Physical Prototype? *</label>
+                      </div>
+                      <div className="relative">
+                        <select
+                          name="hasWorkingPrototype"
+                          value={formData.hasWorkingPrototype}
+                          onChange={(e) => {
+                            handleTextChange(e);
+                            scrollToNextField(2);
+                          }}
+                          className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                        >
+                          <option value="Yes, fully working">Yes, fully working</option>
+                          <option value="Yes, working with minor limitations">Yes, working with minor limitations</option>
+                          <option value="No">No</option>
+                        </select>
+                        <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                      </div>
+                    </div>
+
+                    <div id="field-group-3" className="space-y-1.5">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">3. Team Affiliation *</label>
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          "All members are from Aliah University",
+                          "All members are from another institution",
+                          "Mixed team: Aliah University + other institution(s)"
+                        ].map((affiliation) => (
+                          <button
+                            type="button"
+                            key={affiliation}
+                            onClick={() => {
+                              handleAffiliationChange(affiliation);
+                              scrollToNextField(3);
+                            }}
+                            className={`w-full text-left py-2 px-3.5 rounded text-xs transition-all cursor-pointer select-none ${
+                              formData.teamAffiliation === affiliation
+                                ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                            }`}
+                          >
+                            [ {formData.teamAffiliation === affiliation ? 'X' : ' '} ] {affiliation}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Member counts details grids */}
+                    <div id="field-group-4" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">4. Aliah Members *</label>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {[0, 1, 2, 3, 4].map((num) => (
+                            <button
+                              type="button"
+                              key={num}
+                              onClick={() => {
+                                setFormData({ ...formData, aliahMembersCount: num });
+                                scrollToNextField(4);
+                              }}
+                              className={`py-1.5 text-center text-xs rounded transition-all cursor-pointer select-none ${
+                                Number(formData.aliahMembersCount) === num
+                                  ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                  : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                              }`}
+                            >
+                              [{num}]
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">5. Other Members *</label>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {[0, 1, 2, 3, 4].map((num) => (
+                            <button
+                              type="button"
+                              key={num}
+                              onClick={() => {
+                                setFormData({ ...formData, otherMembersCount: num });
+                                scrollToNextField(4);
+                              }}
+                              className={`py-1.5 text-center text-xs rounded transition-all cursor-pointer select-none ${
+                                Number(formData.otherMembersCount) === num
+                                  ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                  : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                              }`}
+                            >
+                              [{num}]
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-white/5">
+                      <div id="field-group-5" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">6. Team Name *</label>
+                        </div>
+                        <input
+                          type="text"
+                          name="teamName"
+                          value={formData.teamName}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(5)}
+                          onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(5)}
+                          placeholder="Enter team name"
+                          className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div id="field-group-6" className="space-y-1">
+                          <div className="flex items-center gap-1.5 select-none">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold font-semibold">7. Leader Name *</label>
+                          </div>
+                          <input
+                            type="text"
+                            name="teamLeaderName"
+                            value={formData.teamLeaderName}
+                            onChange={handleTextChange}
+                            onBlur={() => scrollToNextField(6)}
+                            onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(6)}
+                            placeholder="Full Name"
+                            className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                          />
+                        </div>
+                        <div id="field-group-7" className="space-y-1">
+                          <div className="flex items-center gap-1.5 select-none">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">8. Email *</label>
+                          </div>
+                          <input
+                            type="email"
+                            name="teamLeaderEmail"
+                            value={formData.teamLeaderEmail}
+                            onChange={handleTextChange}
+                            onBlur={() => scrollToNextField(7)}
+                            onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(7)}
+                            placeholder="leader@gmail.com"
+                            className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                          />
+                        </div>
+                        <div id="field-group-8" className="space-y-1">
+                          <div className="flex items-center gap-1.5 select-none">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">9. Phone *</label>
+                          </div>
+                          <input
+                            type="tel"
+                            name="teamLeaderPhone"
+                            value={formData.teamLeaderPhone}
+                            onChange={handleTextChange}
+                            onBlur={() => scrollToNextField(8)}
+                            onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(8)}
+                            placeholder="10-digit number"
+                            className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                          />
+                        </div>
+                      </div>
+
+                      <div id="field-group-9" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">10. Other Members details *</label>
+                        </div>
+                        <textarea
+                          rows={3}
+                          name="teamMembersDetails"
+                          value={formData.teamMembersDetails}
+                          onChange={handleTextChange}
+                          placeholder="e.g. John Doe | Aliah University | CSE | Year 2 | +91 9876543210"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
 
-              {/* Section 8: Registration Fee Box */}
-              <div className="bg-[#ABD2FA]/40 border-2 border-[#091540] p-5 rounded-xl">
-                <div className="flex justify-between items-center mb-2">
-                  <h4 className="text-sm font-bold font-inter text-[#091540]">SECTION 8: REGISTRATION FEE</h4>
-                  <span className={`px-4 py-1 rounded-full text-xs font-poppins font-bold ${isExternalFeeApplicable ? 'bg-amber-100 text-amber-900 border-2 border-amber-600' : 'bg-emerald-100 text-emerald-900 border-2 border-emerald-600'}`}>
-                    {isExternalFeeApplicable ? "₹400 Fee Applicable" : "₹0 (No external fee applicable)"}
-                  </span>
-                </div>
-                <p className="text-xs font-poppins text-[#091540]/80 mb-4 font-medium">
-                  ₹400 per team applies when 50% or more of team members are from outside Aliah University[cite: 1, 4].
-                </p>
+                {/* STEP 2: PROJECT PROFILE */}
+                {currentStep === 2 && (
+                  <div className="space-y-4">
+                    <div className="text-[11px] text-white/40 uppercase tracking-wider border-b border-white/5 pb-1 select-none">
+                      // HARDWARE PROJECT PROFILE & PROBLEMS
+                    </div>
 
-                {isExternalFeeApplicable && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t-2 border-[#091540]/10">
-                    <div>
-                      <label className="block text-xs font-poppins font-semibold text-[#091540] mb-1">35. Transaction ID / UTR *</label>
+                    <div id="field-group-11" className="space-y-1">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">11. Project Title *</label>
+                      </div>
                       <input
                         type="text"
-                        name="transactionId"
-                        value={formData.transactionId}
+                        name="projectTitle"
+                        value={formData.projectTitle}
                         onChange={handleTextChange}
-                        placeholder="Enter 12-digit UTR/Ref ID"
-                        className="w-full bg-[#FFFFFF] border-2 border-[#091540]/30 rounded-lg px-3 py-2 text-xs font-poppins text-[#091540] focus:outline-none focus:border-[#1B2CC1]"
+                        onBlur={() => scrollToNextField(11)}
+                        onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(11)}
+                        placeholder="Enter project name"
+                        className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-poppins font-semibold text-[#091540] mb-1">36. Payment Screenshot *</label>
-                      <input
-                        type="file"
-                        name="paymentScreenshot"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="w-full text-xs font-poppins text-[#091540] file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-2 file:border-[#091540] file:text-xs file:font-semibold file:bg-[#1B2CC1] file:text-white cursor-pointer"
+
+                    <div id="field-group-12" className="space-y-1.5">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">12. Project Categories *</label>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto custom-scrollbar bg-black/30 p-2.5 border border-white/25 rounded">
+                        {CATEGORIES.map((cat) => {
+                          const selected = formData.categories.includes(cat);
+                          return (
+                            <button
+                              type="button"
+                              key={cat}
+                              onClick={() => {
+                                toggleArrayItem("categories", cat);
+                                scrollToNextField(12);
+                              }}
+                              className={`text-left py-1.5 px-2 rounded text-xs transition-all cursor-pointer select-none ${
+                                selected
+                                  ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                  : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                              }`}
+                            >
+                              [ {selected ? 'X' : ' '} ] {cat}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div id="field-group-13" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">13. Prototype Type *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="prototypeType"
+                            value={formData.prototypeType}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(13);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            {PROTOTYPE_TYPES.map((t) => (
+                              <option key={t} value={t}>{t}</option>
+                            ))}
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+
+                      <div id="field-group-14" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">14. Working Status *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="workingStatus"
+                            value={formData.workingStatus}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(14);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            {WORKING_STATUSES.map((status) => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-white/5">
+                      <div id="field-group-15" className="space-y-1">
+                        <div className="flex justify-between items-center select-none">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">15. Problem Solved *</label>
+                          </div>
+                          <span className="text-[9px] text-white/40">{countWords(formData.problemStatement)}/150 words</span>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="problemStatement"
+                          value={formData.problemStatement}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(15)}
+                          placeholder="Describe the exact problem your hardware is solving"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div id="field-group-16" className="space-y-1">
+                        <div className="flex justify-between items-center select-none">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">16. Solution Description *</label>
+                          </div>
+                          <span className="text-[9px] text-white/40">{countWords(formData.solutionDescription)}/200 words</span>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="solutionDescription"
+                          value={formData.solutionDescription}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(16)}
+                          placeholder="How does your hardware prototype solve the problem?"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div id="field-group-17" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">17. Innovation Details *</label>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="innovationDetails"
+                          value={formData.innovationDetails}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(17)}
+                          placeholder="What is unique about your hardware compared to existing systems?"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div id="field-group-18" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">18. Intended Beneficiaries *</label>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[110px] overflow-y-auto custom-scrollbar bg-black/30 p-2.5 border border-white/25 rounded">
+                          {BENEFICIARIES.map((ben) => {
+                            const selected = formData.beneficiaries.includes(ben);
+                            return (
+                              <button
+                                type="button"
+                                key={ben}
+                                onClick={() => {
+                                  toggleArrayItem("beneficiaries", ben);
+                                  scrollToNextField(18);
+                                }}
+                                className={`text-left py-1.5 px-2 rounded text-xs transition-all cursor-pointer select-none ${
+                                  selected
+                                    ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                    : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                                }`}
+                              >
+                                [ {selected ? 'X' : ' '} ] {ben}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: TECHNICAL DETAILS */}
+                {currentStep === 3 && (
+                  <div className="space-y-4">
+                    <div className="text-[11px] text-white/40 uppercase tracking-wider border-b border-white/5 pb-1 select-none">
+                      // SYSTEM SPECIFICATIONS AND WORKINGS
+                    </div>
+
+                    <div id="field-group-21" className="space-y-1">
+                      <div className="flex justify-between items-center select-none">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">19. Working Principle *</label>
+                        </div>
+                        <span className="text-[9px] text-white/40">{countWords(formData.workingPrinciple)}/250 words</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        name="workingPrinciple"
+                        value={formData.workingPrinciple}
+                        onChange={handleTextChange}
+                        onBlur={() => scrollToNextField(21)}
+                        placeholder="Explain the technical principle / workflow of your system"
+                        className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
                       />
-                      {formData.paymentScreenshotPreview && (
-                        <span className="text-[11px] font-poppins text-emerald-700 font-semibold mt-1 block">✓ Screenshot attached</span>
-                      )}
+                    </div>
+
+                    <div id="field-group-22" className="space-y-1">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">20. Major Hardware Components *</label>
+                      </div>
+                      <input
+                        type="text"
+                        name="hardwareComponents"
+                        value={formData.hardwareComponents}
+                        onChange={handleTextChange}
+                        onBlur={() => scrollToNextField(22)}
+                        onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(22)}
+                        placeholder="e.g. ESP32, Arduino, motors, sensors, PCB, battery..."
+                        className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div id="field-group-23" className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">21. Uses AI? *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="usesAI"
+                            value={formData.usesAI}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(23);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+
+                      <div id="field-group-24" className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">22. Uses IoT? *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="usesIoT"
+                            value={formData.usesIoT}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(24);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+
+                      <div id="field-group-25" className="space-y-1.5">
+                        <div className="flex items-center gap-1.5 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">23. Power Source *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="powerSource"
+                            value={formData.powerSource}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(25);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            {POWER_SOURCES.map((p) => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 pt-2 border-t border-white/5">
+                      <div id="field-group-26" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">24. Potential Real-World Impact *</label>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="realWorldImpact"
+                          value={formData.realWorldImpact}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(26)}
+                          placeholder="Who benefits from this? How does it improve current standards?"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div id="field-group-27" className="space-y-1.5">
+                          <div className="flex items-center gap-2 select-none">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">25. Practical product potential? *</label>
+                          </div>
+                          <div className="relative">
+                            <select
+                              name="deployableSystem"
+                              value={formData.deployableSystem}
+                              onChange={(e) => {
+                                handleTextChange(e);
+                                scrollToNextField(27);
+                              }}
+                              className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                            >
+                              <option value="Yes">Yes</option>
+                              <option value="Potentially">Potentially</option>
+                              <option value="No">No</option>
+                            </select>
+                            <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                          </div>
+                        </div>
+
+                        <div id="field-group-28" className="space-y-1">
+                          <div className="flex items-center gap-2 select-none">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">26. Dev Cost (INR ₹) *</label>
+                          </div>
+                          <input
+                            type="number"
+                            name="developmentCost"
+                            value={formData.developmentCost}
+                            onChange={handleTextChange}
+                            onBlur={() => scrollToNextField(28)}
+                            onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(28)}
+                            placeholder="Amount in ₹"
+                            className="w-full bg-black/40 border border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-3 rounded placeholder:text-white/25"
+                          />
+                        </div>
+                      </div>
+
+                      <div id="field-group-29" className="space-y-1">
+                        <div className="flex justify-between items-center select-none">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#4682BF] font-bold">$</span>
+                            <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">27. Why worth seeing at live demo? *</label>
+                          </div>
+                          <span className="text-[9px] text-white/40">{countWords(formData.whyWorthSeeing)}/100 words</span>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="whyWorthSeeing"
+                          value={formData.whyWorthSeeing}
+                          onChange={handleTextChange}
+                          placeholder="Highlight what will stand out during live assessment"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4: SAFETY, ORIGINALITY, FEES, DECLARATIONS */}
+                {currentStep === 4 && (
+                  <div className="space-y-4">
+                    <div className="text-[11px] text-white/40 uppercase tracking-wider border-b border-white/5 pb-1 select-none">
+                      // HAZARDS, ORIGINALITY, FEES & CONFIRMATION
+                    </div>
+
+                    <div id="field-group-31" className="space-y-1.5">
+                      <div className="flex items-center gap-2 select-none">
+                        <span className="text-[#4682BF] font-bold">$</span>
+                        <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">28. Safety Hazard Involvements *</label>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[110px] overflow-y-auto custom-scrollbar bg-black/30 p-2.5 border border-white/25 rounded">
+                        {SAFETY_HAZARDS.map((hazard) => {
+                          const selected = formData.safetyHazards.includes(hazard);
+                          return (
+                            <button
+                              type="button"
+                              key={hazard}
+                              onClick={() => {
+                                toggleArrayItem("safetyHazards", hazard);
+                                scrollToNextField(31);
+                              }}
+                              className={`text-left py-1.5 px-2 rounded text-xs transition-all cursor-pointer select-none ${
+                                selected
+                                  ? 'bg-[#4682BF]/20 text-[#4682BF] border border-[#4682BF] font-bold shadow'
+                                  : 'bg-black/50 text-white/80 border border-white/20 hover:border-white/40 hover:bg-white/5'
+                              }`}
+                            >
+                              [ {selected ? 'X' : ' '} ] {hazard}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div id="field-group-32" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">29. Safety Precautions</label>
+                        </div>
+                        <textarea
+                          rows={1}
+                          name="safetyPrecautions"
+                          value={formData.safetyPrecautions}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(32)}
+                          placeholder="List precautions taken to safeguard observers"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+
+                      <div id="field-group-33" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">30. Constant Supervision? *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="requiresSupervision"
+                            value={formData.requiresSupervision}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(33);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                      <div id="field-group-34" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">31. Solely Team Developed? *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="developedByTeam"
+                            value={formData.developedByTeam}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(34);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="External Assistance">Developed with External Assistance</option>
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+
+                      <div id="field-group-35" className="space-y-1.5">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">32. Previously Exhibited? *</label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            name="previouslyExhibited"
+                            value={formData.previouslyExhibited}
+                            onChange={(e) => {
+                              handleTextChange(e);
+                              scrollToNextField(35);
+                            }}
+                            className="w-full bg-[#111] border border-white/25 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-2 px-2.5 appearance-none cursor-pointer rounded"
+                          >
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                          </select>
+                          <span className="absolute right-3 top-2.5 text-[8px] text-white/40 pointer-events-none select-none">▼</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {formData.previouslyExhibited === "Yes" && (
+                      <div id="field-group-36" className="space-y-1">
+                        <div className="flex items-center gap-2 select-none">
+                          <span className="text-[#4682BF] font-bold">$</span>
+                          <label className="text-xs tracking-wider text-white/90 uppercase font-semibold">32a. Previous Exhibition Details *</label>
+                        </div>
+                        <textarea
+                          rows={2}
+                          name="exhibitionDetails"
+                          value={formData.exhibitionDetails}
+                          onChange={handleTextChange}
+                          onBlur={() => scrollToNextField(36)}
+                          placeholder="Specify festival name, year, awards won (if any)"
+                          className="w-full bg-black/40 border border-white/20 rounded p-2.5 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all placeholder:text-white/25"
+                        />
+                      </div>
+                    )}
+
+                    {/* Fees Details */}
+                    <div id="field-group-37" className="space-y-2 pt-2 border-t border-white/5">
+                      <div className="text-[11px] text-white/40 uppercase tracking-wider select-none">// REGISTRATION FEE STATUS</div>
+                      <div className="bg-white/5 border border-white/10 p-3 rounded space-y-2">
+                        <div className="flex justify-between items-center select-none">
+                          <span className={`px-3 py-1 border rounded-full text-[9px] font-bold tracking-widest uppercase ${isExternalFeeApplicable ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-[#4682BF]/20 text-[#4682BF] border-2 border-[#4682BF]/40'}`}>
+                            {isExternalFeeApplicable ? "₹400 Fee Applicable" : "₹0 (No external fee)"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/80 leading-normal select-none">
+                          A ₹400 registration fee applies to teams where 50% or more members are from outside Aliah University[cite: 1, 4]. Other teams are fully subsidized[cite: 1, 4].
+                        </p>
+
+                        {isExternalFeeApplicable && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-white/5">
+                            <div id="field-group-38" className="space-y-1">
+                              <label className="block text-[9px] text-white/60 uppercase">UTR / Transaction ID *</label>
+                              <input
+                                type="text"
+                                name="transactionId"
+                                value={formData.transactionId}
+                                onChange={handleTextChange}
+                                onBlur={() => scrollToNextField(38)}
+                                onKeyDown={(e) => e.key === 'Enter' && scrollToNextField(38)}
+                                placeholder="Enter 12-digit UTR"
+                                className="w-full bg-black/40 border-b border-white/20 focus:border-[#4682BF] text-white text-sm focus:outline-none transition-all py-1.5 px-0.5"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-[9px] text-white/60 uppercase">Screenshot Upload *</label>
+                              <input
+                                type="file"
+                                name="paymentScreenshot"
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                className="w-full text-xs text-white/50 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border file:border-white/20 file:text-[9px] file:bg-white/5 file:text-white cursor-pointer"
+                              />
+                              {formData.paymentScreenshotPreview && (
+                                <span className="text-[9px] text-[#4682BF] font-bold block mt-0.5">✓ Screenshot attached</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mandatory Declarations */}
+                    <div id="field-group-39" className="space-y-2 pt-2 border-t border-white/5">
+                      <div className="text-[11px] text-white/40 uppercase tracking-wider select-none">// MANDATORY DECLARATIONS</div>
+                      <div className="space-y-2 bg-black/35 p-3 border border-white/10 rounded">
+                        {[
+                          { key: "declWorkingPrototype", text: "33. Working Prototype: We confirm that this is a working physical prototype." },
+                          { key: "declOriginality", text: "34. Originality: We certify that this prototype was primarily developed by us." },
+                          { key: "declSafetyRules", text: "35. Safety & Event Rules: We agree to follow all safety regulations of AURA 2026." },
+                          { key: "declMediaPermission", text: "36. Media Permission: We permit AURA 2026 to showcase our project." },
+                          { key: "declFinalConfirmation", text: "37. Final Confirmation: We confirm that all info provided is accurate." }
+                        ].map((decl) => (
+                          <label key={decl.key} className="flex items-start gap-2.5 cursor-pointer text-xs text-white hover:text-[#4682BF] transition select-none leading-relaxed">
+                            <input
+                              type="checkbox"
+                              checked={formData[decl.key]}
+                              onChange={(e) => setFormData({ ...formData, [decl.key]: e.target.checked })}
+                              className="mt-0.5 w-3.5 h-3.5 bg-black border border-white/25 rounded text-[#4682BF] focus:ring-0 cursor-pointer"
+                            />
+                            <span>{decl.text}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Section 9: Declarations */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-poppins font-bold text-[#091540] uppercase mb-2">SECTION 9: DECLARATIONS *</label>
-                {[
-                  { key: "declWorkingPrototype", text: "37. Working Prototype Declaration: I/We confirm that the project submitted is a physical hardware prototype with a working principal function and can be demonstrated as required by AURA 2026." },
-                  { key: "declOriginality", text: "38. Originality Declaration: I/We certify that the information provided is accurate and that the prototype has been primarily developed by the participating team." },
-                  { key: "declSafetyRules", text: "39. Safety & Event Rules: I/We agree to follow all safety requirements, technical instructions and event regulations of AURA 2026." },
-                  { key: "declMediaPermission", text: "40. Media Permission: I/We permit AURA 2026 and Aliah University to use the project title, description, photographs and non-confidential project information for publicity." },
-                  { key: "declFinalConfirmation", text: "41. Final Confirmation: I/We have reviewed the information provided and confirm that it is complete and accurate." }
-                ].map((decl) => (
-                  <label key={decl.key} className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={formData[decl.key]}
-                      onChange={(e) => setFormData({ ...formData, [decl.key]: e.target.checked })}
-                      className="mt-1 w-4 h-4 rounded border-2 border-[#091540] bg-[#F8FAFC] text-[#1B2CC1] focus:ring-0 cursor-pointer"
-                    />
-                    <span className="text-xs font-poppins text-[#091540]/85 group-hover:text-[#091540] transition leading-relaxed">{decl.text}</span>
-                  </label>
-                ))}
-              </div>
             </div>
-          )}
 
-          {/* Wizard Footer Controls */}
-          <div className="bg-[#ABD2FA]/20 p-6 border-t-2 border-[#091540]/20 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={handleBack}
-              disabled={currentStep === 1}
-              className={`px-5 py-2.5 rounded-lg border-2 text-xs font-poppins font-semibold transition cursor-pointer ${
-                currentStep === 1
-                  ? 'opacity-40 cursor-not-allowed border-[#091540]/20 text-[#64748B]'
-                  : 'border-[#091540] text-[#091540] hover:bg-[#7692FF] hover:text-white'
-              }`}
-            >
-              Previous Step
-            </button>
-
-            {currentStep < 4 ? (
+            {/* Wizard Footer Controls */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10 select-none flex-shrink-0">
               <button
                 type="button"
-                onClick={handleNext}
-                className="bg-[#1B2CC1] hover:bg-[#1B2CC1]/90 text-white px-6 py-2.5 rounded-lg text-xs font-poppins font-semibold transition shadow-md cursor-pointer"
+                onClick={handleBack}
+                disabled={currentStep === 1}
+                className={`px-4 py-1.5 border text-[10px] font-bold tracking-widest uppercase transition-all duration-150 cursor-pointer ${
+                  currentStep === 1
+                    ? 'opacity-20 cursor-not-allowed border-white/10 text-white/30 bg-transparent'
+                    : 'border-white bg-black/40 hover:bg-white hover:text-black text-white shadow-lg'
+                }`}
               >
-                Next Step →
+                ← Prev
               </button>
-            ) : (
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={handleSubmit}
-                className={`bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-lg text-xs font-poppins font-bold transition shadow-lg cursor-pointer ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {isPending ? "Submitting..." : "Submit Project Registration"}
-              </button>
-            )}
+
+              {currentStep < 4 ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-5 py-1.5 border border-[#4682BF] rounded bg-transparent hover:bg-[#4682BF] hover:text-black text-white text-[10px] font-bold tracking-widest uppercase transition-all duration-150 cursor-pointer shadow-lg"
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={handleSubmit}
+                  className={`border rounded px-6 py-1.5 text-[10px] font-bold tracking-widest uppercase transition-all duration-150 cursor-pointer shadow-lg ${
+                    isPending 
+                      ? 'opacity-40 cursor-not-allowed border-white/20 bg-transparent text-white/40' 
+                      : 'border-[#4682BF] bg-[#4682BF]/20 text-[#4682BF] hover:bg-[#4682BF] hover:text-black hover:border-[#4682BF]'
+                  }`}
+                >
+                  {isPending ? "Running..." : "Execute Submit"}
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
