@@ -531,7 +531,7 @@ function HomeSections({ onRegisterClick }) {
       </section>
 
       {/* 6. CONTACT US SECTION - Reversed WEBSITE_BG */}
-      <section
+      {/* <section
         id="contact"
         className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-start py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
@@ -540,10 +540,8 @@ function HomeSections({ onRegisterClick }) {
           style={{ backgroundImage: `url(${websiteBg})` }}
         />
 
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        {/* Top: Title */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -555,21 +553,18 @@ function HomeSections({ onRegisterClick }) {
             Contact Us
           </h2>
         </motion.div>
-      </section>
+      </section> */}
 
-      {/* 7. FOOTER SECTION */}
       <footer className="py-12 sm:py-20 relative overflow-hidden border-t border-white/10 text-white font-body">
-        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         <div className="max-w-6xl mx-auto px-4 sm:px-8 md:px-16 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center relative z-20">
           
-          {/* Left Column: AURA Logo (Increased size with entry animation and hover tilt effect) */}
+          
           <div className="flex flex-col items-start gap-4 pl-0 md:pl-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.85, rotate: -2 }}
