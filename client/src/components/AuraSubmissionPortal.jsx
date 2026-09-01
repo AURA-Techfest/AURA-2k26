@@ -348,6 +348,17 @@ const handleFileUpload = (e) => {
 
   const countWords = (str) => (str && str.trim() ? str.trim().split(/\s+/).length : 0);
 
+  const scrollToNextField = (currentIndex) => {
+    try {
+      const nextElement = document.getElementById(`field-group-${currentIndex + 1}`);
+      if (nextElement) {
+        nextElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } catch (err) {
+      console.warn("Could not scroll to next field:", err);
+    }
+  };
+
   // Free Step Navigation Handlers
   const handleStepJump = (stepNumber) => {
     setCurrentStep(stepNumber);
