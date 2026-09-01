@@ -5,16 +5,16 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 
-// Reusable typographic heading matching the exact design
+// Reusable typographic heading matching the exact design with fluid responsive sizing
 const GiantAHeading = ({ topText, bottomText }) => {
   return (
-    <div className="flex items-center text-left font-heading text-white select-none h-[7.5rem] md:h-[10rem]">
+    <div className="flex items-center text-left font-heading text-white select-none h-[4rem] sm:h-[6rem] md:h-[7.5rem] lg:h-[10rem]">
       {/* Giant letter 'A' */}
-      <span className="text-[10rem] md:text-[13rem] font-black leading-[0.68] tracking-tighter">A</span>
+      <span className="text-[5.5rem] sm:text-[8rem] md:text-[10rem] lg:text-[13rem] font-black leading-[0.68] tracking-tighter shrink-0">A</span>
       {/* Container for the two stacked lines */}
-      <div className="flex flex-col justify-between h-[4.2rem] md:h-[5.8rem] pl-2 md:pl-3">
-        <span className="text-2xl md:text-5xl font-black tracking-widest uppercase leading-none">{topText}</span>
-        <span className="text-2xl md:text-5xl font-black tracking-widest uppercase leading-none">{bottomText}</span>
+      <div className="flex flex-col justify-between h-[2.5rem] sm:h-[3.6rem] md:h-[4.2rem] lg:h-[5.8rem] pl-2 md:pl-3 min-w-0">
+        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{topText}</span>
+        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{bottomText}</span>
       </div>
     </div>
   );
@@ -208,18 +208,20 @@ function HomeSections({ onRegisterClick }) {
       {/* 1. HERO SECTION */}
       <section
         id="hero"
-        className="h-screen w-full relative flex items-center justify-start px-8 md:px-24 overflow-hidden"
-        style={{
-          background: `url(${heroBg}) no-repeat center right/cover`,
-        }}
+        className="min-h-screen w-full relative flex items-center justify-start px-4 sm:px-8 md:px-24 py-20 overflow-hidden"
       >
+        {/* Background Image Container with mobile-optimized position over the robot art */}
+        <div 
+          className="absolute inset-0 bg-cover bg-[position:82%_center] md:bg-[position:center_right] pointer-events-none z-0" 
+          style={{ backgroundImage: `url(${heroBg})` }}
+        />
         {/* Left Side Overlay for dark-tint reading */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/75 to-transparent md:via-[#0b0909]/80 z-10 pointer-events-none" />
 
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative z-20 max-w-2xl text-left flex flex-col justify-center mt-8"
         >
@@ -251,7 +253,7 @@ function HomeSections({ onRegisterClick }) {
       {/* 2. ABOUT THE EVENT SECTION - Normal WEBSITE_BG */}
       <section
         id="event"
-        className="min-h-screen w-full relative flex flex-col justify-between pt-20 pb-16 px-8 md:px-16 lg:px-24 overflow-hidden"
+        className="min-h-screen w-full relative flex flex-col justify-between pt-16 sm:pt-20 pb-16 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden"
       >
         {/* Background Image Container */}
         <div 
@@ -266,7 +268,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
           className="relative z-20 self-start mt-0"
         >
@@ -277,7 +279,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
           className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-5xl mt-8 flex-grow flex flex-col justify-center select-text"
         >
@@ -301,7 +303,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.3 }}
           className="relative z-20 flex justify-center pt-8 pb-4"
         >
@@ -317,7 +319,7 @@ function HomeSections({ onRegisterClick }) {
       {/* 3. ABOUT ALIAH UNIVERSITY SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
       <section
         id="about"
-        className="min-h-screen w-full relative flex flex-col justify-start py-20 px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
+        className="min-h-screen w-full relative flex flex-col justify-start py-16 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -331,7 +333,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
           className="relative z-20 self-start mt-0"
         >
@@ -342,7 +344,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
           className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-6xl mt-8 flex-grow flex flex-col justify-center select-text w-full"
         >
@@ -373,7 +375,7 @@ function HomeSections({ onRegisterClick }) {
       <section
         id="notifications"
         ref={timelineRef}
-        className="min-h-[135vh] w-full relative flex flex-col justify-start py-20 px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
+        className="min-h-[135vh] w-full relative flex flex-col justify-start py-16 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -387,7 +389,7 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
           className="relative z-20 self-start mt-4 mb-2"
         >
@@ -489,7 +491,7 @@ function HomeSections({ onRegisterClick }) {
       {/* 5. GALLERY SECTION - Reversed WEBSITE_BG */}
       <section
         id="gallery"
-        className="min-h-screen w-full relative flex flex-col justify-between p-8 md:p-16 lg:p-24 overflow-hidden border-t border-white/5"
+        className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-between py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -503,9 +505,9 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-8"
+          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8"
         >
           <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
             Gallery
@@ -516,22 +518,22 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.1 }}
-          className="relative z-20 flex flex-col items-center justify-center flex-grow text-center"
+          className="relative z-20 flex flex-col items-center justify-center flex-grow text-center py-12"
         >
           <h3 className="font-heading text-2xl md:text-4xl font-black text-white/90 tracking-[0.2em] uppercase select-none animate-pulse">
             Coming Soon
           </h3>
         </motion.div>
 
-        <div className="h-10" />
+        <div className="h-4" />
       </section>
 
       {/* 6. CONTACT US SECTION - Reversed WEBSITE_BG */}
       <section
         id="contact"
-        className="min-h-screen w-full relative flex flex-col justify-start p-8 md:p-16 lg:p-24 overflow-hidden border-t border-white/5"
+        className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-start py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -545,9 +547,9 @@ function HomeSections({ onRegisterClick }) {
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-8"
+          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8"
         >
           <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
             Contact Us
@@ -556,7 +558,7 @@ function HomeSections({ onRegisterClick }) {
       </section>
 
       {/* 7. FOOTER SECTION */}
-      <footer className="py-20 relative overflow-hidden border-t border-white/10 text-white font-body">
+      <footer className="py-12 sm:py-20 relative overflow-hidden border-t border-white/10 text-white font-body">
         {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -565,14 +567,14 @@ function HomeSections({ onRegisterClick }) {
         {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        <div className="max-w-6xl mx-auto px-8 md:px-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center relative z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 md:px-16 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center relative z-20">
           
           {/* Left Column: AURA Logo (Increased size with entry animation and hover tilt effect) */}
           <div className="flex flex-col items-start gap-4 pl-0 md:pl-12">
             <motion.div
               initial={{ opacity: 0, scale: 0.85, rotate: -2 }}
               whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: false }}
               transition={{ duration: 1.2, ease: "easeOut" }}
               whileHover={{ scale: 1.05, rotate: 1 }}
               className="relative cursor-pointer select-none"
