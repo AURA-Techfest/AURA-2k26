@@ -52,14 +52,12 @@
   --color-wrapper-opaque: rgba(0, 0, 0, 0.55);
 }
 /* Global resets for mechanical interface */
-html, body {
-  background-color: #fafafa;
-  color: #171414;
-  font-family: var(--font-display);
+html, body, #root {
   background-color: #0b0909;
   color: #ffffff;
   font-family: var(--font-body);
   overflow-x: hidden;
+  max-width: 100vw;
   margin: 0;
   padding: 0;
 }
@@ -259,4 +257,13 @@ html.lenis, html.lenis body {
 
 .viewport {
   min-height: 100vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
