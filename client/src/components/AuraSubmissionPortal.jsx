@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
 import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
-const API_URL = "http://localhost:5000/api/registrations";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const STORAGE_KEY = 'aura_2026_hardware_submission_draft';
 const STORAGE_STEP_KEY = 'aura_2026_hardware_submission_step';
@@ -217,7 +217,7 @@ export default function AuraSubmissionPortal({ onBack }) {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formDataToSend) => {
-      const response = await fetch(API_URL, {
+      const response = await fetch(`${API_URL}/api/registrations`, {
         method: "POST",
         body: formDataToSend,
       });
