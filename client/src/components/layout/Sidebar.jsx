@@ -8,11 +8,11 @@ import auraLogo from "../../assets/AURA_26_LOGO.png";
 
 function Sidebar() {
   const sidebarItems = [
-    { icon: eventIcon, target: "event", tooltip: "The Event" },
-    { icon: notificationIcon, target: "notifications", tooltip: "Notifications" },
-    { icon: aboutIcon, target: "about", tooltip: "About Us" },
-    { icon: galleryIcon, target: "gallery", tooltip: "Gallery" },
-    { icon: mailIcon, target: "contact", tooltip: "Contact Us" }
+    { icon: eventIcon, target: "event", tooltip: "The Event", isSvg: false },
+    { icon: "timeline", target: "notifications", tooltip: "Timeline", isSvg: true },
+    { icon: aboutIcon, target: "about", tooltip: "About Us", isSvg: false },
+    { icon: galleryIcon, target: "gallery", tooltip: "Gallery", isSvg: false },
+    { icon: mailIcon, target: "contact", tooltip: "Contact Us", isSvg: false }
   ];
 
   const handleScroll = (id) => {
@@ -23,7 +23,7 @@ function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-16 bg-[#6f2138] border-r border-[#8d2a47] flex flex-col items-center z-40 shadow-[4px_0_24px_rgba(111,33,56,0.3)]">
+    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-16 bg-[#6f2138] border-r border-[#8d2a47] flex-col items-center z-40 shadow-[4px_0_24px_rgba(111,33,56,0.3)]">
       {/* Top logo block matching the screenshot */}
       <div className="h-18 flex items-center justify-center w-full px-2">
         <img 
@@ -41,11 +41,24 @@ function Sidebar() {
               onClick={() => handleScroll(item.target)}
               className="w-11 h-11 flex items-center justify-center rounded-lg bg-black/10 hover:bg-white/10 active:bg-white/20 border border-white/5 hover:border-white/20 transition-all duration-200 cursor-pointer shadow-inner"
             >
-              <img
-                src={item.icon}
-                alt={item.tooltip}
-                className="w-6 h-6 object-contain filter invert brightness-200 transition-transform duration-200 group-hover:scale-110"
-              />
+              {item.isSvg ? (
+                <svg
+                  className="w-5 h-5 text-white filter brightness-200 transition-transform duration-200 group-hover:scale-110"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <polyline points="12 7 12 12 15 15" />
+                </svg>
+              ) : (
+                <img
+                  src={item.icon}
+                  alt={item.tooltip}
+                  className="w-6 h-6 object-contain filter invert brightness-200 transition-transform duration-200 group-hover:scale-110"
+                />
+              )}
             </button>
             
             {/* Tooltip */}
