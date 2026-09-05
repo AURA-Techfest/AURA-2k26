@@ -210,9 +210,9 @@ function HomeSections({ onRegisterClick }) {
         id="hero"
         className="min-h-screen w-full relative flex items-center justify-start px-4 sm:px-8 md:px-24 py-20 overflow-hidden"
       >
-        {/* Background Image Container with mobile-optimized position over the robot art */}
+        {/* Background Image Container with mobile-optimized position placing robot directly in the middle */}
         <div 
-          className="absolute inset-0 bg-cover bg-[position:82%_center] md:bg-[position:center_right] pointer-events-none z-0" 
+          className="absolute inset-0 bg-cover bg-[position:74%_center] md:bg-[position:center_right] pointer-events-none z-0" 
           style={{ backgroundImage: `url(${heroBg})` }}
         />
         {/* Left Side Overlay for dark-tint reading */}
