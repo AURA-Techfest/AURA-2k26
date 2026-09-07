@@ -476,17 +476,14 @@ export default function AuraSubmissionPortal({ onBack }) {
   // Step Navigation Handlers
   const handleStepJump = (stepNumber) => {
     setCurrentStep(stepNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNext = () => {
     setCurrentStep((prev) => Math.min(prev + 1, 4));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleResetDraft = () => {
@@ -782,7 +779,7 @@ export default function AuraSubmissionPortal({ onBack }) {
   return (
     <div 
       className="min-h-screen w-full relative bg-cover bg-center overflow-y-auto custom-scrollbar py-8 px-4 sm:px-6 md:px-10 flex flex-col items-center justify-start text-white select-none selection:bg-white selection:text-black"
-      style={{ backgroundImage: `url(${websiteBg})` }}
+      style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: 'fixed' }}
     >
       {/* Dark Overlay for optimal readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none z-0" />
@@ -825,48 +822,49 @@ export default function AuraSubmissionPortal({ onBack }) {
         </div>
       </div>
 
-      {/* Main Mirror Glass Panel Container */}
+      {/* Main Mirror Glass Panel Container (Static Min-Height to prevent background shifts) */}
       <div 
-        className="relative z-20 w-full max-w-4xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12"
+        className="relative z-20 w-full max-w-4xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12 min-h-[720px] flex flex-col justify-between"
         style={{
           background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.78), rgba(60, 86, 175, 0.78))",
           padding: "clamp(1.25rem, 3.5vw, 2.5rem)"
         }}
       >
-        {/* Form Title */}
-        <h1 
-          className="font-heading font-black text-white tracking-widest uppercase text-center mb-6 drop-shadow-md"
-          style={{ fontSize: "clamp(1.25rem, 3.2vw, 2.25rem)" }}
-        >
-          AURA 2K26 REGISTRATION FORM
-        </h1>
+        <div>
+          {/* Form Title */}
+          <h1 
+            className="font-heading font-black text-white tracking-widest uppercase text-center mb-6 drop-shadow-md"
+            style={{ fontSize: "clamp(1.25rem, 3.2vw, 2.25rem)" }}
+          >
+            AURA 2K26 REGISTRATION FORM
+          </h1>
 
-        {/* 4-Tab Navigation Bar */}
-        <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 border-b border-white/20 pb-4 mb-8">
-          {[
-            { step: 1, label: "TEAM" },
-            { step: 2, label: "PROFILE" },
-            { step: 3, label: "SPECS" },
-            { step: 4, label: "SUBMIT" }
-          ].map((tab) => (
-            <button
-              key={tab.step}
-              type="button"
-              onClick={() => handleStepJump(tab.step)}
-              style={{ fontSize: "clamp(0.75rem, 1.4vw, 1rem)" }}
-              className={`font-heading font-black tracking-widest uppercase transition-all cursor-pointer select-none relative ${
-                currentStep === tab.step
-                  ? "text-white border-b-2 border-white pb-1 -mb-[17px] shadow-sm"
-                  : "text-white/60 hover:text-white pb-1"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          {/* 4-Tab Navigation Bar */}
+          <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 border-b border-white/20 pb-4 mb-8">
+            {[
+              { step: 1, label: "TEAM" },
+              { step: 2, label: "PROFILE" },
+              { step: 3, label: "SPECS" },
+              { step: 4, label: "SUBMIT" }
+            ].map((tab) => (
+              <button
+                key={tab.step}
+                type="button"
+                onClick={() => handleStepJump(tab.step)}
+                style={{ fontSize: "clamp(0.75rem, 1.4vw, 1rem)" }}
+                className={`font-heading font-black tracking-widest uppercase transition-all cursor-pointer select-none relative ${
+                  currentStep === tab.step
+                    ? "text-white border-b-2 border-white pb-1 -mb-[17px] shadow-sm"
+                    : "text-white/60 hover:text-white pb-1"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-        {/* Inner Form Card Container */}
-        <div className="bg-black/60 border border-white/20 rounded-2xl p-4 sm:p-6 md:p-8 backdrop-blur-md shadow-2xl space-y-6 text-white font-body">
+          {/* Inner Form Card Container (Consistent Min-Height across steps) */}
+          <div className="bg-black/60 border border-white/20 rounded-2xl p-4 sm:p-6 md:p-8 backdrop-blur-md shadow-2xl space-y-6 text-white font-body min-h-[500px] flex flex-col justify-between">
 
           {/* STEP 1: TEAM */}
           {currentStep === 1 && (
@@ -1782,6 +1780,7 @@ export default function AuraSubmissionPortal({ onBack }) {
               </div>
             </div>
           )}
+        </div>
         </div>
 
         {/* Panel Footer Controls */}
