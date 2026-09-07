@@ -295,7 +295,7 @@ export default function AuraSubmissionPortal({ onBack }) {
     return otherCount * 400;
   }, [formData.otherMembersCount]);
 
-  // Word counting & limiting helpers
+  // Word counting & strict limiting helpers (Cap at 250 words)
   const countWords = (str) => {
     if (!str || typeof str !== 'string') return 0;
     return str.trim().split(/\s+/).filter(Boolean).length;
@@ -324,6 +324,29 @@ export default function AuraSubmissionPortal({ onBack }) {
     }
   };
 
+  const handleWordLimitedKeyDown = (e, currentValue, maxWords = 250) => {
+    // Always allow navigation and deletion keys
+    if (
+      e.key === 'Backspace' ||
+      e.key === 'Delete' ||
+      e.key.startsWith('Arrow') ||
+      e.key === 'Tab' ||
+      e.key === 'Escape' ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+
+    const currentCount = countWords(currentValue);
+    if (currentCount >= maxWords) {
+      // If trailing space exists or pressing space/enter key, prevent typing new word
+      if (/\s$/.test(currentValue) || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+      }
+    }
+  };
+
   // Team Affiliation Auto-Adjustment Logic
   const handleAffiliationChange = (affiliation) => {
     const numericTeamSize = parseInt(formData.teamSize) || 4;
@@ -342,11 +365,13 @@ export default function AuraSubmissionPortal({ onBack }) {
         otherMembersCount: numericTeamSize,
       }));
     } else {
+      const defaultAliah = Math.max(1, Math.floor(numericTeamSize / 2));
+      const defaultOther = numericTeamSize - defaultAliah;
       setFormData((prev) => ({
         ...prev,
         teamAffiliation: affiliation,
-        aliahMembersCount: Math.max(1, Math.floor(numericTeamSize / 2)),
-        otherMembersCount: Math.max(1, numericTeamSize - Math.floor(numericTeamSize / 2)),
+        aliahMembersCount: defaultAliah,
+        otherMembersCount: defaultOther,
       }));
     }
   };
@@ -364,10 +389,8 @@ export default function AuraSubmissionPortal({ onBack }) {
         aliah = 0;
         other = numericSize;
       } else {
-        if (aliah + other !== numericSize) {
-          aliah = Math.min(aliah, numericSize - 1) || 1;
-          other = numericSize - aliah;
-        }
+        aliah = Math.max(1, Math.min(aliah, numericSize - 1));
+        other = numericSize - aliah;
       }
       return {
         ...prev,
@@ -681,7 +704,7 @@ export default function AuraSubmissionPortal({ onBack }) {
               ← Back
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tracking-widest px-3 py-1.5 rounded-full bg-black border border-white/30 text-white uppercase select-none shadow-lg">
+              <span className="text-[10px] font-mono tracking-widest px-3 py-1.5 rounded-full bg-black border border-purple-400/40 text-purple-200 uppercase select-none shadow-lg">
                 Fee Status: {calculatedFee > 0 ? `Paid (₹${calculatedFee})` : "Subsidized (₹0)"}
               </span>
             </div>
@@ -909,56 +932,98 @@ export default function AuraSubmissionPortal({ onBack }) {
               </div>
 
               {/* Member Counts */}
-              <div id="field-group-4" className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div id="field-group-4" className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-black/40 p-4 rounded-xl border border-white/20">
                 <div className="space-y-2">
-                  <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
-                    Aliah Members Count *
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
+                      Aliah Members Count *
+                    </label>
+                    <span className="text-[10px] font-mono text-purple-300 font-bold">
+                      {formData.aliahMembersCount} Member(s)
+                    </span>
+                  </div>
                   <div className="grid grid-cols-5 gap-2">
-                    {[0, 1, 2, 3, 4].map((num) => (
-                      <button
-                        type="button"
-                        key={num}
-                        onClick={() => {
-                          const total = parseInt(formData.teamSize) || 4;
-                          const other = Math.max(0, total - num);
-                          setFormData({ ...formData, aliahMembersCount: num, otherMembersCount: other });
-                        }}
-                        className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all cursor-pointer ${
-                          Number(formData.aliahMembersCount) === num
-                            ? 'bg-white text-black border-2 border-white'
-                            : 'bg-black/50 text-white border border-white/30 hover:border-white'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
+                    {[0, 1, 2, 3, 4].map((num) => {
+                      const totalSize = parseInt(formData.teamSize) || 4;
+                      let isDisabled = false;
+                      if (num > totalSize) isDisabled = true;
+                      else if (formData.teamAffiliation === "All members are from Aliah University") {
+                        isDisabled = (num !== totalSize);
+                      } else if (formData.teamAffiliation === "All members are from another institution") {
+                        isDisabled = (num !== 0);
+                      } else if (formData.teamAffiliation.includes("Mixed")) {
+                        isDisabled = (num === 0 || num === totalSize);
+                      }
+
+                      return (
+                        <button
+                          type="button"
+                          key={num}
+                          disabled={isDisabled}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            const other = Math.max(0, totalSize - num);
+                            setFormData((prev) => ({ ...prev, aliahMembersCount: num, otherMembersCount: other }));
+                          }}
+                          className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all ${
+                            Number(formData.aliahMembersCount) === num
+                              ? 'bg-white text-black border-2 border-white shadow-md'
+                              : isDisabled
+                              ? 'bg-black/20 text-white/20 border border-white/10 cursor-not-allowed opacity-40'
+                              : 'bg-black/50 text-white border border-white/30 hover:border-white cursor-pointer'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
-                    Other Members Count *
-                  </label>
+                  <div className="flex justify-between items-center">
+                    <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
+                      Other Members Count *
+                    </label>
+                    <span className="text-[10px] font-mono text-purple-300 font-bold">
+                      {formData.otherMembersCount} Member(s)
+                    </span>
+                  </div>
                   <div className="grid grid-cols-5 gap-2">
-                    {[0, 1, 2, 3, 4].map((num) => (
-                      <button
-                        type="button"
-                        key={num}
-                        onClick={() => {
-                          const total = parseInt(formData.teamSize) || 4;
-                          const aliah = Math.max(0, total - num);
-                          setFormData({ ...formData, otherMembersCount: num, aliahMembersCount: aliah });
-                        }}
-                        className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all cursor-pointer ${
-                          Number(formData.otherMembersCount) === num
-                            ? 'bg-white text-black border-2 border-white'
-                            : 'bg-black/50 text-white border border-white/30 hover:border-white'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
+                    {[0, 1, 2, 3, 4].map((num) => {
+                      const totalSize = parseInt(formData.teamSize) || 4;
+                      let isDisabled = false;
+                      if (num > totalSize) isDisabled = true;
+                      else if (formData.teamAffiliation === "All members are from Aliah University") {
+                        isDisabled = (num !== 0);
+                      } else if (formData.teamAffiliation === "All members are from another institution") {
+                        isDisabled = (num !== totalSize);
+                      } else if (formData.teamAffiliation.includes("Mixed")) {
+                        isDisabled = (num === 0 || num === totalSize);
+                      }
+
+                      return (
+                        <button
+                          type="button"
+                          key={num}
+                          disabled={isDisabled}
+                          onClick={() => {
+                            if (isDisabled) return;
+                            const aliah = Math.max(0, totalSize - num);
+                            setFormData((prev) => ({ ...prev, otherMembersCount: num, aliahMembersCount: aliah }));
+                          }}
+                          className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all ${
+                            Number(formData.otherMembersCount) === num
+                              ? 'bg-white text-black border-2 border-white shadow-md'
+                              : isDisabled
+                              ? 'bg-black/20 text-white/20 border border-white/10 cursor-not-allowed opacity-40'
+                              : 'bg-black/50 text-white border border-white/30 hover:border-white cursor-pointer'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1042,7 +1107,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   <label className="block font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
                     College ID Verification Uploads (JPG/PNG, Max 5MB each) *
                   </label>
-                  <span className="text-[11px] font-mono text-amber-300 font-bold">
+                  <span className="text-[11px] font-mono text-purple-300 font-bold">
                     Mandatory for all {parseInt(formData.teamSize) || 4} members
                   </span>
                 </div>
@@ -1210,13 +1275,13 @@ export default function AuraSubmissionPortal({ onBack }) {
                 </div>
               </div>
 
-              {/* Combined Problem Statement, Solution & Innovation Details Textarea with 250-word Limit */}
+              {/* Combined Problem Statement, Solution & Innovation Details Textarea with Strict 250-word Limit */}
               <div id="field-group-15" className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                     Problem Statement, Solution & Innovation Details *
                   </label>
-                  <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
                     {countWords(formData.problemSolutionInnovation)} / 250 words
                   </span>
                 </div>
@@ -1225,7 +1290,8 @@ export default function AuraSubmissionPortal({ onBack }) {
                   name="problemSolutionInnovation"
                   value={formData.problemSolutionInnovation}
                   onChange={(e) => handleWordLimitedChange(e, 250)}
-                  placeholder="Describe the problem your project addresses, your hardware solution, and what makes your system innovative (Max 250 words)"
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.problemSolutionInnovation, 250)}
+                  placeholder="Describe the problem your project addresses, your hardware solution, and what makes your system innovative (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30 leading-relaxed"
                 />
               </div>
@@ -1298,7 +1364,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                     Working Principle *
                   </label>
-                  <span className={`text-xs font-mono font-bold ${countWords(formData.workingPrinciple) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.workingPrinciple) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
                     {countWords(formData.workingPrinciple)} / 250 words
                   </span>
                 </div>
@@ -1307,7 +1373,8 @@ export default function AuraSubmissionPortal({ onBack }) {
                   name="workingPrinciple"
                   value={formData.workingPrinciple}
                   onChange={(e) => handleWordLimitedChange(e, 250)}
-                  placeholder="Explain the technical principle / workflow of your system (Max 250 words)"
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.workingPrinciple, 250)}
+                  placeholder="Explain the technical principle / workflow of your system (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
@@ -1425,7 +1492,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                     Highlight Why This Is Worth Seeing *
                   </label>
-                  <span className={`text-xs font-mono font-bold ${countWords(formData.whyWorthSeeing) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.whyWorthSeeing) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
                     {countWords(formData.whyWorthSeeing)} / 250 words
                   </span>
                 </div>
@@ -1435,7 +1502,8 @@ export default function AuraSubmissionPortal({ onBack }) {
                   name="whyWorthSeeing"
                   value={formData.whyWorthSeeing}
                   onChange={(e) => handleWordLimitedChange(e, 250)}
-                  placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect (Max 250 words)."
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.whyWorthSeeing, 250)}
+                  placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect (Strict Max 250 words)."
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
@@ -1576,7 +1644,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                       {formData.otherMembersCount} external member(s) selected (₹400 per external member).
                     </p>
                   </div>
-                  <span className={`self-start sm:self-center px-4 py-1.5 border rounded-full font-heading text-xs font-black uppercase tracking-widest ${calculatedFee > 0 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`}>
+                  <span className={`self-start sm:self-center px-4 py-1.5 border rounded-full font-heading text-xs font-black uppercase tracking-widest ${calculatedFee > 0 ? 'bg-purple-500/25 text-purple-200 border-purple-400/50' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`}>
                     {calculatedFee > 0 ? `Payable Amount: ₹${calculatedFee}` : "₹0 (Fully Subsidized)"}
                   </span>
                 </div>
@@ -1595,10 +1663,10 @@ export default function AuraSubmissionPortal({ onBack }) {
                     {/* Payment QR Section */}
                     <div className="bg-black/60 border border-white/20 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-6">
                       <div className="flex flex-col items-center gap-2">
-                        <span className="font-heading text-xs font-bold uppercase tracking-wider text-amber-300">
+                        <span className="font-heading text-xs font-bold uppercase tracking-wider text-purple-300">
                           PAYMENT QR
                         </span>
-                        <div className="p-3 bg-white rounded-xl shadow-2xl border-2 border-amber-400">
+                        <div className="p-3 bg-white rounded-xl shadow-[0_0_25px_rgba(168,85,247,0.35)] border-2 border-purple-400">
                           <img
                             src={paymentQr}
                             alt="Payment QR Code"
@@ -1615,9 +1683,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                           Scan & Pay ₹{calculatedFee}
                         </h5>
                         <p className="text-xs text-white/80 leading-relaxed font-body">
-                          Please scan the QR code to complete the fee payment of <strong className="text-amber-300">₹{calculatedFee}</strong> (₹400 × {formData.otherMembersCount} outside member{formData.otherMembersCount > 1 ? 's' : ''}). After payment, enter your 12-digit UTR/Transaction ID and attach the payment screenshot below.
+                          Please scan the QR code to complete the fee payment of <strong className="text-purple-300">₹{calculatedFee}</strong> (₹400 × {formData.otherMembersCount} outside member{formData.otherMembersCount > 1 ? 's' : ''}). After payment, enter your 12-digit UTR/Transaction ID and attach the payment screenshot below.
                         </p>
-                        <div className="inline-block bg-amber-500/10 border border-amber-400/30 px-3 py-1.5 rounded-lg text-amber-300 font-mono text-xs font-bold">
+                        <div className="inline-block bg-purple-600/20 border border-purple-400/40 px-3 py-1.5 rounded-lg text-purple-200 font-mono text-xs font-bold">
                           Fee Breakdown: {formData.otherMembersCount} Outside Member(s) × ₹400 = ₹{calculatedFee}
                         </div>
                       </div>
