@@ -1060,8 +1060,39 @@ const handleFileUpload = (e) => {
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
+              
+                           {/* Intended Users / Beneficiaries */}
+              <div id="field-group-18" className="space-y-2">
+                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                  Intended Users / Beneficiaries *
+                </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto custom-scrollbar bg-black/40 p-3 border border-white/30 rounded-xl">
+                  {BENEFICIARIES.map((beneficiary) => {
+                    const selected = formData.beneficiaries.includes(beneficiary);
+
+                    return (
+                      <button
+                        type="button"
+                        key={beneficiary}
+                        onClick={() => toggleArrayItem("beneficiaries", beneficiary)}
+                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer ${
+                          selected
+                            ? "bg-white text-black font-bold shadow"
+                            : "bg-black/50 text-white border border-white/20 hover:border-white/50"
+                        }`}
+                      >
+                        [ {selected ? "✓" : " "} ] {beneficiary}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
           )}
+
+          
 
           {/* STEP 3: SPECS */}
           {currentStep === 3 && (
@@ -1196,6 +1227,144 @@ const handleFileUpload = (e) => {
                   />
                 </div>
               </div>
+
+
+                {/* Highlight Why This Is Worth Seeing */}
+<div id="field-group-29" className="space-y-2">
+  <div className="flex justify-between items-center">
+    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+      Highlight Why This Is Worth Seeing *
+    </label>
+    <span className="text-xs font-mono text-white/50">
+      {countWords(formData.whyWorthSeeing)}/100 words
+    </span>
+  </div>
+
+  <textarea
+    rows={3}
+    name="whyWorthSeeing"
+    value={formData.whyWorthSeeing}
+    onChange={handleTextChange}
+    placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect."
+    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+  />
+</div>
+
+              {/* Section 6: Safety — was validated in handleSubmit but had no inputs */}
+              <div className="border-t border-white/10 pt-4 mt-2">
+                <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white mb-3">
+                  Safety & Hazard Details
+                </h4>
+              </div>
+
+              <div id="field-group-30" className="space-y-2">
+                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                  Safety Hazards Involved *
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto custom-scrollbar bg-black/40 p-3 border border-white/30 rounded-xl">
+                  {SAFETY_HAZARDS.map((hazard) => {
+                    const selected = formData.safetyHazards.includes(hazard);
+                    return (
+                      <button
+                        type="button"
+                        key={hazard}
+                        onClick={() => toggleArrayItem("safetyHazards", hazard)}
+                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer ${
+                          selected
+                            ? 'bg-white text-black font-bold shadow'
+                            : 'bg-black/50 text-white border border-white/20 hover:border-white/50'
+                        }`}
+                      >
+                        [ {selected ? '✓' : ' '} ] {hazard}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div id="field-group-31" className="space-y-2">
+                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                  Safety Precautions Taken *
+                </label>
+                <textarea
+                  rows={2}
+                  name="safetyPrecautions"
+                  value={formData.safetyPrecautions}
+                  onChange={handleTextChange}
+                  placeholder="Describe the precautions/safeguards built into your prototype"
+                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                />
+              </div>
+
+              <div id="field-group-32" className="space-y-2">
+                <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
+                  Requires Continuous Supervision During Demo? *
+                </label>
+                <select
+                  name="requiresSupervision"
+                  value={formData.requiresSupervision}
+                  onChange={handleTextChange}
+                  className="w-full bg-black/60 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg cursor-pointer"
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+
+              {/* Section 7: Originality — also had no inputs */}
+              <div className="border-t border-white/10 pt-4 mt-2">
+                <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white mb-3">
+                  Originality & Prior Exhibition
+                </h4>
+              </div>
+
+              <div id="field-group-33" className="space-y-2">
+                <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
+                  Was the Prototype Developed by Your Team? *
+                </label>
+                <select
+                  name="developedByTeam"
+                  value={formData.developedByTeam}
+                  onChange={handleTextChange}
+                  className="w-full bg-black/60 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg cursor-pointer"
+                >
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="External Assistance">External Assistance</option>
+                </select>
+              </div>
+
+              <div id="field-group-34" className="space-y-2">
+                <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
+                  Previously Exhibited Elsewhere? *
+                </label>
+                <select
+                  name="previouslyExhibited"
+                  value={formData.previouslyExhibited}
+                  onChange={handleTextChange}
+                  className="w-full bg-black/60 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg cursor-pointer"
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+
+              {formData.previouslyExhibited === "Yes" && (
+                <div id="field-group-35" className="space-y-2">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Previous Exhibition Details *
+                  </label>
+                  <textarea
+                    rows={2}
+                    name="exhibitionDetails"
+                    value={formData.exhibitionDetails}
+                    onChange={handleTextChange}
+                    placeholder="Where and when was this previously exhibited?"
+                    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                  />
+                </div>
+              )}
+
             </div>
           )}
 
