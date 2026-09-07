@@ -76,7 +76,7 @@ const TIMELINE_EVENTS = [
     title: "Abstract Submission (Online)",
     detail: "Last Date of Submission",
     date: "August 31, 2026",
-    t: 0.08,
+    t: 0.05,
     x: 100,
     y: 0,
     dotX: 100,
@@ -87,7 +87,7 @@ const TIMELINE_EVENTS = [
     title: "Abstract Acceptance Notification",
     detail: "Screening results announcement",
     date: "August 31, 2026",
-    t: 0.20,
+    t: 0.14,
     x: 480,
     y: 0,
     dotX: 480,
@@ -98,7 +98,7 @@ const TIMELINE_EVENTS = [
     title: "Registration Opens",
     detail: "Shortlisted teams registration start",
     date: "August 31, 2026",
-    t: 0.32,
+    t: 0.23,
     x: 860,
     y: 0,
     dotX: 860,
@@ -109,7 +109,7 @@ const TIMELINE_EVENTS = [
     title: "Registration Ends",
     detail: "Standard registration window closes",
     date: "August 31, 2026",
-    t: 0.44,
+    t: 0.32,
     x: 860,
     y: 380,
     dotX: 860,
@@ -120,7 +120,7 @@ const TIMELINE_EVENTS = [
     title: "Preliminary Round (Physical Mode)",
     detail: "Live prototype demonstration and presentation",
     date: "August 31, 2026",
-    t: 0.56,
+    t: 0.41,
     x: 480,
     y: 380,
     dotX: 480,
@@ -131,7 +131,7 @@ const TIMELINE_EVENTS = [
     title: "Registration Closes",
     detail: "Registration Kits for all registered participants",
     date: "August 31, 2026",
-    t: 0.68,
+    t: 0.50,
     x: 100,
     y: 380,
     dotX: 100,
@@ -142,7 +142,7 @@ const TIMELINE_EVENTS = [
     title: "Final Round (Physical Mode)",
     detail: "Grand finale assessment",
     date: "August 31, 2026",
-    t: 0.80,
+    t: 0.60,
     x: 100,
     y: 560,
     dotX: 100,
@@ -153,7 +153,7 @@ const TIMELINE_EVENTS = [
     title: "Participation Certificates",
     detail: "To all registered participants",
     date: "August 31, 2026",
-    t: 0.88,
+    t: 0.70,
     x: 480,
     y: 560,
     dotX: 480,
@@ -164,7 +164,7 @@ const TIMELINE_EVENTS = [
     title: "For Top Three Teams",
     detail: "Lucrative Prizes and certificates of excellence based on ranking",
     date: "August 31, 2026",
-    t: 0.96,
+    t: 0.80,
     x: 860,
     y: 560,
     dotX: 860,
@@ -176,7 +176,7 @@ function HomeSections({ onRegisterClick }) {
   const timelineRef = React.useRef(null);
   const { scrollYProgress } = useScroll({
     target: timelineRef,
-    offset: ["start center", "end center"]
+    offset: ["start 70%", "end 80%"]
   });
 
   const smoothProgress = useSpring(scrollYProgress, {
@@ -375,7 +375,7 @@ function HomeSections({ onRegisterClick }) {
       <section
         id="notifications"
         ref={timelineRef}
-        className="min-h-[135vh] w-full relative flex flex-col justify-start py-16 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
+        className="min-h-screen w-full relative flex flex-col justify-start py-12 sm:py-16 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
