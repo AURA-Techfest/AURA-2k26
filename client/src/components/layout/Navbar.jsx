@@ -7,8 +7,8 @@ function Navbar({ onRegisterClick }) {
 
   const navItems = [
     { label: "The Event", target: "event" },
-    { label: "Timeline", target: "notifications" },
     { label: "About Us", target: "about" },
+    { label: "Timeline", target: "notifications" },
     { label: "Gallery", target: "gallery" },
     { label: "Contact Us", target: "contact" }
   ];

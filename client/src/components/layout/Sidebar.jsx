@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import eventIcon from "../../assets/event.png";
 import notificationIcon from "../../assets/notification.png";
 import aboutIcon from "../../assets/about.png";
@@ -7,10 +8,21 @@ import mailIcon from "../../assets/mail.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 
 function Sidebar() {
+  const { scrollYProgress } = useScroll();
+  const smoothScrollProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+  
+  // Outer track = 48px height, 2px padding top/bottom (44px inner), inner dot = 14px height.
+  // Travel distance = 44px - 14px = 30px
+  const dotY = useTransform(smoothScrollProgress, [0, 1], [0, 30]);
+
   const sidebarItems = [
     { icon: eventIcon, target: "event", tooltip: "The Event", isSvg: false },
-    { icon: "timeline", target: "notifications", tooltip: "Timeline", isSvg: true },
     { icon: aboutIcon, target: "about", tooltip: "About Us", isSvg: false },
+    { icon: "timeline", target: "notifications", tooltip: "Timeline", isSvg: true },
     { icon: galleryIcon, target: "gallery", tooltip: "Gallery", isSvg: false },
     { icon: mailIcon, target: "contact", tooltip: "Contact Us", isSvg: false }
   ];
@@ -69,9 +81,16 @@ function Sidebar() {
         ))}
       </div>
       
-      {/* Decorative indicator at bottom of sidebar */}
-      <div className="w-1.5 h-12 bg-white/20 rounded-full flex flex-col justify-between p-0.5 overflow-hidden mb-8">
-        <div className="w-full h-1/3 bg-rose-400 rounded-full animate-pulse" />
+      {/* Functional Scroll Indicator at bottom of sidebar */}
+      <div 
+        className="w-1.5 h-12 bg-white/20 rounded-full p-0.5 overflow-hidden mb-8 relative cursor-pointer group"
+        title="Scroll to Top"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      >
+        <motion.div 
+          style={{ y: dotY }}
+          className="w-full h-3.5 bg-rose-400 rounded-full shadow-[0_0_8px_rgba(251,113,133,0.9)] transition-colors group-hover:bg-white" 
+        />
       </div>
     </aside>
   );

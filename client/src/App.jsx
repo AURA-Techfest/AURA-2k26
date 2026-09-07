@@ -9,9 +9,13 @@ import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
 function App() {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
-  // Initialize Lenis smooth scroll
+  // Initialize Lenis smooth scroll for desktop viewports
   useEffect(() => {
     if (showRegistrationForm) return;
+
+    // Skip Lenis on mobile/touch devices for 60fps/120fps native touch momentum scroll
+    const isTouchMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.navigator.maxTouchPoints > 0);
+    if (isTouchMobile) return;
 
     const lenis = new Lenis({
       duration: 1.2,
