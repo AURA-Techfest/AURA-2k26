@@ -3,6 +3,8 @@ import { useMutation } from '@tanstack/react-query';
 import websiteBg from "../assets/WEBSITE_BG.png";
 import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
 import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
+import paymentQr from "../assets/payment_qr.jpeg";
+
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL = (rawApiUrl && rawApiUrl !== 'undefined') 
   ? rawApiUrl.replace(/\/$/, '') 
@@ -103,7 +105,7 @@ const INITIAL_FORM_DATA = {
   teamSize: '4 Members',
   hasWorkingPrototype: 'Yes, fully working',
   teamAffiliation: 'All members are from Aliah University',
-  aliahMembersCount: 3,
+  aliahMembersCount: 4,
   otherMembersCount: 0,
   teamName: '',
   teamLeaderName: '',
@@ -111,46 +113,49 @@ const INITIAL_FORM_DATA = {
   teamLeaderPhone: '',
   teamMembersDetails: '',
 
-  // Section 2: Hardware Project Profile
+  // College ID Previews
+  teamLeaderIdCardPreview: null,
+  member1IdCardPreview: null,
+  member2IdCardPreview: null,
+  member3IdCardPreview: null,
+
+  // Section 2: Hardware Project Profile & Problem Statement
   projectTitle: '',
   categories: [],
   prototypeType: 'Standalone Hardware Device',
   workingStatus: 'Fully functional and ready for live demonstration',
-
-  // Section 3: The Problem & Innovation
-  problemStatement: '',
-  solutionDescription: '',
-  innovationDetails: '',
+  problemSolutionInnovation: '',
+  abstractPdfName: '',
   beneficiaries: [],
 
-  // Section 4: Technical Details
+  // Section 3: Technical Details
   workingPrinciple: '',
   hardwareComponents: '',
   usesAI: 'No',
   usesIoT: 'No',
   powerSource: 'Battery',
 
-  // Section 5: Real-World Potential
+  // Section 4: Real-World Potential
   realWorldImpact: '',
   deployableSystem: 'Yes',
   developmentCost: '',
   whyWorthSeeing: '',
 
-  // Section 6: Safety
+  // Section 5: Safety
   safetyHazards: ['None of the Above'],
   safetyPrecautions: '',
   requiresSupervision: 'No',
 
-  // Section 7: Originality
+  // Section 6: Originality
   developedByTeam: 'Yes',
   previouslyExhibited: 'No',
   exhibitionDetails: '',
 
-  // Section 8: Registration Fee
+  // Section 7: Registration Fee & Payment
   transactionId: '',
   paymentScreenshotPreview: null,
 
-  // Section 9: Declarations
+  // Section 8: Declarations
   declWorkingPrototype: false,
   declOriginality: false,
   declSafetyRules: false,
@@ -168,6 +173,16 @@ export default function AuraSubmissionPortal({ onBack }) {
       console.error("Failed to load draft from localStorage:", err);
       return INITIAL_FORM_DATA;
     }
+  });
+
+  // Files state (kept separate from JSON-serializable draft)
+  const [files, setFiles] = useState({
+    teamLeaderIdCard: null,
+    member1IdCard: null,
+    member2IdCard: null,
+    member3IdCard: null,
+    abstractPdf: null,
+    paymentScreenshot: null,
   });
 
   // 2. Initialize current step from localStorage
@@ -208,7 +223,6 @@ export default function AuraSubmissionPortal({ onBack }) {
 
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
-    // Run again with short timeouts to ensure DOM mounting completes
     const timer1 = setTimeout(resizeCanvas, 100);
     const timer2 = setTimeout(resizeCanvas, 500);
 
@@ -275,21 +289,44 @@ export default function AuraSubmissionPortal({ onBack }) {
     }
   }, [currentStep]);
 
-  // Dynamic fee calculation: 400 INR applies when 50% or more members are external
-  const isExternalFeeApplicable = useMemo(() => {
-    const total = Number(formData.aliahMembersCount) + Number(formData.otherMembersCount);
-    if (total === 0) return false;
-    return (Number(formData.otherMembersCount) / total) >= 0.5;
-  }, [formData.aliahMembersCount, formData.otherMembersCount]);
+  // Dynamic fee calculation: ₹400 per outside member (0 outside -> ₹0)
+  const calculatedFee = useMemo(() => {
+    const otherCount = Number(formData.otherMembersCount) || 0;
+    return otherCount * 400;
+  }, [formData.otherMembersCount]);
+
+  // Word counting & limiting helpers
+  const countWords = (str) => {
+    if (!str || typeof str !== 'string') return 0;
+    return str.trim().split(/\s+/).filter(Boolean).length;
+  };
+
+  const limitWords = (str, maxWords = 250) => {
+    if (!str || typeof str !== 'string') return '';
+    const words = str.trim().split(/\s+/).filter(Boolean);
+    if (words.length <= maxWords) return str;
+    return words.slice(0, maxWords).join(' ');
+  };
 
   const handleTextChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleWordLimitedChange = (e, maxWords = 250) => {
+    const { name, value } = e.target;
+    const wordCount = countWords(value);
+    if (wordCount > maxWords) {
+      const truncated = limitWords(value, maxWords);
+      setFormData((prev) => ({ ...prev, [name]: truncated }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
   // Team Affiliation Auto-Adjustment Logic
   const handleAffiliationChange = (affiliation) => {
-    const numericTeamSize = parseInt(formData.teamSize) || 3;
+    const numericTeamSize = parseInt(formData.teamSize) || 4;
     if (affiliation === "All members are from Aliah University") {
       setFormData((prev) => ({
         ...prev,
@@ -308,12 +345,14 @@ export default function AuraSubmissionPortal({ onBack }) {
       setFormData((prev) => ({
         ...prev,
         teamAffiliation: affiliation,
+        aliahMembersCount: Math.max(1, Math.floor(numericTeamSize / 2)),
+        otherMembersCount: Math.max(1, numericTeamSize - Math.floor(numericTeamSize / 2)),
       }));
     }
   };
 
   const handleTeamSizeChange = (size) => {
-    const numericSize = parseInt(size) || 3;
+    const numericSize = parseInt(size) || 4;
     setFormData((prev) => {
       let aliah = prev.aliahMembersCount;
       let other = prev.otherMembersCount;
@@ -324,6 +363,11 @@ export default function AuraSubmissionPortal({ onBack }) {
       } else if (prev.teamAffiliation === "All members are from another institution") {
         aliah = 0;
         other = numericSize;
+      } else {
+        if (aliah + other !== numericSize) {
+          aliah = Math.min(aliah, numericSize - 1) || 1;
+          other = numericSize - aliah;
+        }
       }
       return {
         ...prev,
@@ -342,39 +386,64 @@ export default function AuraSubmissionPortal({ onBack }) {
     });
   };
 
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-
-  if (file) {
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      setFormData((prev) => ({
-        ...prev,
-        paymentScreenshotPreview: reader.result,
-        paymentScreenshotFile: file,
-      }));
-    };
-
-    reader.readAsDataURL(file);
-  }
-};
-
-
-  const countWords = (str) => (str && str.trim() ? str.trim().split(/\s+/).length : 0);
-
-  const scrollToNextField = (currentIndex) => {
-    try {
-      const nextElement = document.getElementById(`field-group-${currentIndex + 1}`);
-      if (nextElement) {
-        nextElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    } catch (err) {
-      console.warn("Could not scroll to next field:", err);
+  // College ID Card Upload Handler
+  const handleIdCardUpload = (e, memberKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert("Please upload a valid image file (JPG/PNG).");
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("College ID card image must be smaller than 5 MB.");
+      return;
+    }
+    setFiles((prev) => ({ ...prev, [memberKey]: file }));
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, [`${memberKey}Preview`]: reader.result }));
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Free Step Navigation Handlers
+  // Abstract Idea PDF Upload Handler
+  const handleAbstractPdfUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      alert("Please upload a valid PDF file for the Abstract Idea.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Abstract Idea PDF must be smaller than 10 MB.");
+      return;
+    }
+    setFiles((prev) => ({ ...prev, abstractPdf: file }));
+    setFormData((prev) => ({ ...prev, abstractPdfName: file.name }));
+  };
+
+  // Payment Screenshot Upload Handler
+  const handlePaymentScreenshotUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert("Please upload a valid image file (JPG/PNG) for payment screenshot.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Payment screenshot must be smaller than 5 MB.");
+      return;
+    }
+    setFiles((prev) => ({ ...prev, paymentScreenshot: file }));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({ ...prev, paymentScreenshotPreview: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Step Navigation Handlers
   const handleStepJump = (stepNumber) => {
     setCurrentStep(stepNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -395,6 +464,14 @@ const handleFileUpload = (e) => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_STEP_KEY);
       setFormData(INITIAL_FORM_DATA);
+      setFiles({
+        teamLeaderIdCard: null,
+        member1IdCard: null,
+        member2IdCard: null,
+        member3IdCard: null,
+        abstractPdf: null,
+        paymentScreenshot: null,
+      });
       setCurrentStep(1);
     }
   };
@@ -410,27 +487,18 @@ const handleFileUpload = (e) => {
       !formData.declMediaPermission ||
       !formData.declFinalConfirmation
     ) {
-      alert("Please review and accept all 5 mandatory declarations in Section 9.");
+      alert("Please review and accept all 5 mandatory declarations in Section 4.");
       return;
     }
 
-    // Helper to parse numeric team size
-    const parsedTeamSize = parseInt(formData.teamSize) || 0;
+    const parsedTeamSize = parseInt(formData.teamSize) || 4;
 
-    // 2. Team Affiliation Mixed Constraints
+    // 2. Team Affiliation Constraints
     const mappedAffiliation = TEAM_AFFILIATION_MAP[formData.teamAffiliation];
     if (mappedAffiliation === "mixed") {
       const totalMixedMembers = Number(formData.aliahMembersCount) + Number(formData.otherMembersCount);
       if (totalMixedMembers !== parsedTeamSize) {
-        alert(`The sum of Aliah members (${formData.aliahMembersCount}) and other institution members (${formData.otherMembersCount}) must equal the total team size (${parsedTeamSize}).`);
-        return;
-      }
-      if (formData.aliahMembersCount < 1 || formData.aliahMembersCount > 3) {
-        alert("Aliah University members must be between 1 and 3 for a mixed team.");
-        return;
-      }
-      if (formData.otherMembersCount < 1 || formData.otherMembersCount > 3) {
-        alert("Other institution members must be between 1 and 3 for a mixed team.");
+        alert(`The sum of Aliah members (${formData.aliahMembersCount}) and other institution members (${formData.otherMembersCount}) must equal total team size (${parsedTeamSize}).`);
         return;
       }
     }
@@ -442,12 +510,39 @@ const handleFileUpload = (e) => {
     if (!/^\S+@\S+\.\S+$/.test(formData.teamLeaderEmail.trim())) { alert("Please enter a valid email address."); return; }
     if (!formData.teamLeaderPhone.trim()) { alert("Team Leader Phone is required."); return; }
     if (!formData.teamMembersDetails.trim()) { alert("Team Member Details are required."); return; }
+
+    // College ID Card verification
+    if (!files.teamLeaderIdCard && !formData.teamLeaderIdCardPreview) {
+      alert("Please upload Team Leader College ID Card.");
+      return;
+    }
+    if (!files.member1IdCard && !formData.member1IdCardPreview) {
+      alert("Please upload Member 1 College ID Card.");
+      return;
+    }
+    if (parsedTeamSize >= 3 && !files.member2IdCard && !formData.member2IdCardPreview) {
+      alert("Please upload Member 2 College ID Card.");
+      return;
+    }
+    if (parsedTeamSize >= 4 && !files.member3IdCard && !formData.member3IdCardPreview) {
+      alert("Please upload Member 3 College ID Card.");
+      return;
+    }
+
+    // Step 2 validation
     if (!formData.projectTitle.trim()) { alert("Project Title is required."); return; }
     if (formData.categories.length === 0) { alert("Please select at least one Hardware Project Category."); return; }
-    if (!formData.problemStatement.trim()) { alert("Problem Statement is required."); return; }
-    if (!formData.solutionDescription.trim()) { alert("Solution Description is required."); return; }
-    if (!formData.innovationDetails.trim()) { alert("Innovation Description is required."); return; }
+    if (!formData.problemSolutionInnovation.trim()) {
+      alert("Problem Statement, Solution & Innovation Details is required.");
+      return;
+    }
+    if (!files.abstractPdf && !formData.abstractPdfName) {
+      alert("Please upload Abstract Idea PDF.");
+      return;
+    }
     if (formData.beneficiaries.length === 0) { alert("Please select at least one Intended User / Beneficiary."); return; }
+
+    // Step 3 validation
     if (!formData.workingPrinciple.trim()) { alert("Working Principle explanation is required."); return; }
     if (!formData.hardwareComponents.trim()) { alert("Major Hardware Components are required."); return; }
     if (!formData.realWorldImpact.trim()) { alert("Potential Real-World Impact is required."); return; }
@@ -463,13 +558,14 @@ const handleFileUpload = (e) => {
       return;
     }
 
-    if (isExternalFeeApplicable) {
+    // Step 4 validation (Fee)
+    if (calculatedFee > 0) {
       if (!formData.transactionId.trim()) {
-        alert("Transaction ID / UTR is required for paid registrations.");
+        alert("Transaction ID / UTR is required for fee submission.");
         return;
       }
-      if (!formData.paymentScreenshotFile) {
-        alert("Payment screenshot image is required for paid registrations.");
+      if (!files.paymentScreenshot && !formData.paymentScreenshotPreview) {
+        alert("Payment screenshot image is required for fee submission.");
         return;
       }
     }
@@ -477,16 +573,14 @@ const handleFileUpload = (e) => {
     try {
       const formDataToSend = new FormData();
 
-      // Map exact fields for final backend schema
+      // Map exact fields for backend schema
       formDataToSend.append("teamName", formData.teamName.trim());
       formDataToSend.append("teamSize", parsedTeamSize);
       formDataToSend.append("hasWorkingPrototype", HAS_WORKING_PROTOTYPE_MAP[formData.hasWorkingPrototype]);
       formDataToSend.append("teamAffiliation", mappedAffiliation);
 
-      if (mappedAffiliation === "mixed") {
-        formDataToSend.append("aliahMembers", Number(formData.aliahMembersCount));
-        formDataToSend.append("otherInstitutionMembers", Number(formData.otherMembersCount));
-      }
+      formDataToSend.append("aliahMembers", Number(formData.aliahMembersCount));
+      formDataToSend.append("otherInstitutionMembers", Number(formData.otherMembersCount));
 
       formDataToSend.append("teamLeaderName", formData.teamLeaderName.trim());
       formDataToSend.append("teamLeaderEmail", formData.teamLeaderEmail.trim().toLowerCase());
@@ -498,9 +592,10 @@ const handleFileUpload = (e) => {
       formDataToSend.append("prototypeType", formData.prototypeType);
       formDataToSend.append("currentWorkingStatus", formData.workingStatus);
 
-      formDataToSend.append("problemStatement", formData.problemStatement.trim());
-      formDataToSend.append("solutionDescription", formData.solutionDescription.trim());
-      formDataToSend.append("innovationDescription", formData.innovationDetails.trim());
+      // Pass combined text as problem statement, solution & innovation description
+      formDataToSend.append("problemStatement", formData.problemSolutionInnovation.trim());
+      formDataToSend.append("solutionDescription", formData.problemSolutionInnovation.trim());
+      formDataToSend.append("innovationDescription", formData.problemSolutionInnovation.trim());
       formDataToSend.append("intendedBeneficiaries", JSON.stringify(formData.beneficiaries));
 
       formDataToSend.append("workingPrinciple", formData.workingPrinciple.trim());
@@ -520,13 +615,11 @@ const handleFileUpload = (e) => {
       formDataToSend.append("prototypeDevelopmentCost", Number(formData.developmentCost));
       formDataToSend.append("auraDemoHighlight", formData.whyWorthSeeing.trim());
 
-      // Map safety hazards to lowercase enums
       const mappedSafetyHazards = formData.safetyHazards.map(h => SAFETY_HAZARD_MAP[h]).filter(Boolean);
       formDataToSend.append("safetyHazards", JSON.stringify(mappedSafetyHazards));
       formDataToSend.append("safetyPrecautions", formData.safetyPrecautions.trim());
       formDataToSend.append("requiresContinuousSupervision", formData.requiresSupervision === "Yes");
 
-      // Section 7: Originality
       formDataToSend.append("prototypeDevelopedByTeam", DEVELOPED_BY_TEAM_MAP[formData.developedByTeam]);
       const isPreviouslyExhibited = formData.previouslyExhibited === "Yes";
       formDataToSend.append("previouslyExhibited", isPreviouslyExhibited);
@@ -534,19 +627,26 @@ const handleFileUpload = (e) => {
         formDataToSend.append("previousExhibitionDetails", formData.exhibitionDetails.trim());
       }
 
-      // Section 8: Fees
-      const feeStatus = isExternalFeeApplicable ? "external_fee" : "no_fee";
+      // Fees
+      const feeStatus = calculatedFee > 0 ? "external_fee" : "no_fee";
       formDataToSend.append("registrationFeeStatus", feeStatus);
-      formDataToSend.append("registrationFee", isExternalFeeApplicable ? 400 : 0);
+      formDataToSend.append("registrationFee", calculatedFee);
 
-      if (isExternalFeeApplicable) {
+      if (calculatedFee > 0) {
         formDataToSend.append("transactionId", formData.transactionId.trim());
-        if (formData.paymentScreenshotFile) {
-          formDataToSend.append("paymentScreenshot", formData.paymentScreenshotFile);
+        if (files.paymentScreenshot) {
+          formDataToSend.append("paymentScreenshot", files.paymentScreenshot);
         }
       }
 
-      // Section 9: Declarations
+      // File uploads
+      if (files.teamLeaderIdCard) formDataToSend.append("teamLeaderIdCard", files.teamLeaderIdCard);
+      if (files.member1IdCard) formDataToSend.append("member1IdCard", files.member1IdCard);
+      if (files.member2IdCard) formDataToSend.append("member2IdCard", files.member2IdCard);
+      if (files.member3IdCard) formDataToSend.append("member3IdCard", files.member3IdCard);
+      if (files.abstractPdf) formDataToSend.append("abstractPdf", files.abstractPdf);
+
+      // Declarations
       formDataToSend.append("workingPrototypeDeclaration", formData.declWorkingPrototype);
       formDataToSend.append("originalityDeclaration", formData.declOriginality);
       formDataToSend.append("safetyEventRulesAgreement", formData.declSafetyRules);
@@ -561,7 +661,6 @@ const handleFileUpload = (e) => {
     }
   };
 
-
   if (submitted) {
     return (
       <div className="viewport w-full relative overflow-hidden bg-black flex justify-center items-start selection:bg-white selection:text-black">
@@ -573,7 +672,7 @@ const handleFileUpload = (e) => {
             height: isMobile ? '1209px' : '768px'
           }}
         >
-          {/* Top Header Actions with Solid Contrast Background */}
+          {/* Top Header Actions */}
           <div className={`absolute z-30 flex items-center justify-between ${isMobile ? 'top-[25px] left-[70px] w-[540px]' : 'top-[15px] left-[348px] w-[680px]'}`}>
             <button
               onClick={onBack}
@@ -583,12 +682,12 @@ const handleFileUpload = (e) => {
             </button>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono tracking-widest px-3 py-1.5 rounded-full bg-black border border-white/30 text-white uppercase select-none shadow-lg">
-                Fee Status: Subsidized
+                Fee Status: {calculatedFee > 0 ? `Paid (₹${calculatedFee})` : "Subsidized (₹0)"}
               </span>
             </div>
           </div>
 
-          {/* Mac Terminal container centered inside the black slot */}
+          {/* Mac Terminal container */}
           <div 
             className={`flex flex-col bg-black/95 border border-white/15 rounded-lg shadow-2xl overflow-hidden ${
               isMobile 
@@ -626,10 +725,10 @@ const handleFileUpload = (e) => {
                 </pre>
                 <div className="border-t border-white/10 pt-3 space-y-3 text-white/90">
                   <p>
-                    Thank you for submitting your working hardware project to <strong className="text-white">AURA 2026</strong> (The Annual Technical Festival of Aliah University, 19–20 November 2026)[cite: 1, 4].
+                    Thank you for submitting your hardware project to <strong className="text-white">AURA 2026</strong> (The Annual Technical Festival of Aliah University, 19–20 November 2026).
                   </p>
                   <p className="bg-white/5 border border-white/10 p-3 rounded text-[12px] leading-relaxed">
-                    Your submission has been logged by the AURA 2026 Project Evaluation Committee[cite: 1, 4]. Please note that shortlisted teams will be contacted separately regarding live evaluation and demo[cite: 1, 4].
+                    Your submission has been logged by the AURA 2026 Project Evaluation Committee. Please note that shortlisted teams will be contacted separately regarding live evaluation and demo.
                   </p>
                 </div>
               </div>
@@ -658,7 +757,7 @@ const handleFileUpload = (e) => {
       {/* Dark Overlay for optimal readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none z-0" />
 
-      {/* Top Header Actions (Above Mirror Glass Panel) */}
+      {/* Top Header Actions */}
       <div className="relative z-20 w-full max-w-4xl flex items-center justify-between mb-6">
         <button
           onClick={onBack}
@@ -730,7 +829,7 @@ const handleFileUpload = (e) => {
           ))}
         </div>
 
-        {/* Inner Form Card Container ("FORM TAG HERE") */}
+        {/* Inner Form Card Container */}
         <div className="bg-black/60 border border-white/20 rounded-2xl p-4 sm:p-6 md:p-8 backdrop-blur-md shadow-2xl space-y-6 text-white font-body">
 
           {/* STEP 1: TEAM */}
@@ -820,7 +919,11 @@ const handleFileUpload = (e) => {
                       <button
                         type="button"
                         key={num}
-                        onClick={() => setFormData({ ...formData, aliahMembersCount: num })}
+                        onClick={() => {
+                          const total = parseInt(formData.teamSize) || 4;
+                          const other = Math.max(0, total - num);
+                          setFormData({ ...formData, aliahMembersCount: num, otherMembersCount: other });
+                        }}
                         className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all cursor-pointer ${
                           Number(formData.aliahMembersCount) === num
                             ? 'bg-white text-black border-2 border-white'
@@ -842,7 +945,11 @@ const handleFileUpload = (e) => {
                       <button
                         type="button"
                         key={num}
-                        onClick={() => setFormData({ ...formData, otherMembersCount: num })}
+                        onClick={() => {
+                          const total = parseInt(formData.teamSize) || 4;
+                          const aliah = Math.max(0, total - num);
+                          setFormData({ ...formData, otherMembersCount: num, aliahMembersCount: aliah });
+                        }}
                         className={`py-2 text-center text-xs font-heading font-bold rounded-lg transition-all cursor-pointer ${
                           Number(formData.otherMembersCount) === num
                             ? 'bg-white text-black border-2 border-white'
@@ -924,9 +1031,99 @@ const handleFileUpload = (e) => {
                   name="teamMembersDetails"
                   value={formData.teamMembersDetails}
                   onChange={handleTextChange}
-                  placeholder="Format: Member Name | Institution | Department | Year | Phone"
+                  placeholder="Format: Member Name | Institution / College | Department | Year | Phone"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
+              </div>
+
+              {/* College ID Verification Section */}
+              <div id="field-group-10" className="space-y-4 pt-4 border-t border-white/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label className="block font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
+                    College ID Verification Uploads (JPG/PNG, Max 5MB each) *
+                  </label>
+                  <span className="text-[11px] font-mono text-amber-300 font-bold">
+                    Mandatory for all {parseInt(formData.teamSize) || 4} members
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Team Leader ID Card */}
+                  <div className="bg-black/40 border border-white/20 p-3.5 rounded-xl space-y-2">
+                    <label className="block font-heading text-xs font-bold text-white uppercase">
+                      Team Leader ID Card *
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg"
+                      onChange={(e) => handleIdCardUpload(e, 'teamLeaderIdCard')}
+                      className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
+                    />
+                    {formData.teamLeaderIdCardPreview && (
+                      <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                        <span>✓ Leader ID attached</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Member 1 ID Card */}
+                  <div className="bg-black/40 border border-white/20 p-3.5 rounded-xl space-y-2">
+                    <label className="block font-heading text-xs font-bold text-white uppercase">
+                      Member 1 ID Card *
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg"
+                      onChange={(e) => handleIdCardUpload(e, 'member1IdCard')}
+                      className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
+                    />
+                    {formData.member1IdCardPreview && (
+                      <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                        <span>✓ Member 1 ID attached</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Member 2 ID Card */}
+                  {(parseInt(formData.teamSize) || 4) >= 3 && (
+                    <div className="bg-black/40 border border-white/20 p-3.5 rounded-xl space-y-2">
+                      <label className="block font-heading text-xs font-bold text-white uppercase">
+                        Member 2 ID Card *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg"
+                        onChange={(e) => handleIdCardUpload(e, 'member2IdCard')}
+                        className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
+                      />
+                      {formData.member2IdCardPreview && (
+                        <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                          <span>✓ Member 2 ID attached</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Member 3 ID Card */}
+                  {(parseInt(formData.teamSize) || 4) >= 4 && (
+                    <div className="bg-black/40 border border-white/20 p-3.5 rounded-xl space-y-2">
+                      <label className="block font-heading text-xs font-bold text-white uppercase">
+                        Member 3 ID Card *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg"
+                        onChange={(e) => handleIdCardUpload(e, 'member3IdCard')}
+                        className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
+                      />
+                      {formData.member3IdCardPreview && (
+                        <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
+                          <span>✓ Member 3 ID attached</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -1013,56 +1210,51 @@ const handleFileUpload = (e) => {
                 </div>
               </div>
 
+              {/* Combined Problem Statement, Solution & Innovation Details Textarea with 250-word Limit */}
               <div id="field-group-15" className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                    Problem Solved *
+                    Problem Statement, Solution & Innovation Details *
                   </label>
-                  <span className="text-xs font-mono text-white/50">{countWords(formData.problemStatement)}/150 words</span>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                    {countWords(formData.problemSolutionInnovation)} / 250 words
+                  </span>
                 </div>
                 <textarea
-                  rows={3}
-                  name="problemStatement"
-                  value={formData.problemStatement}
-                  onChange={handleTextChange}
-                  placeholder="Describe the exact problem your hardware is solving"
-                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                  rows={5}
+                  name="problemSolutionInnovation"
+                  value={formData.problemSolutionInnovation}
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  placeholder="Describe the problem your project addresses, your hardware solution, and what makes your system innovative (Max 250 words)"
+                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30 leading-relaxed"
                 />
               </div>
 
-              <div id="field-group-16" className="space-y-2">
-                <div className="flex justify-between items-center">
+              {/* Abstract Idea Upload (PDF) */}
+              <div id="field-group-16" className="space-y-2 bg-black/40 border border-white/20 p-4 rounded-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                    Solution Description *
+                    Abstract Idea Upload (PDF) *
                   </label>
-                  <span className="text-xs font-mono text-white/50">{countWords(formData.solutionDescription)}/200 words</span>
+                  <span className="text-[11px] font-mono text-white/60">
+                    Format: PDF | Max size: 10MB
+                  </span>
                 </div>
-                <textarea
-                  rows={3}
-                  name="solutionDescription"
-                  value={formData.solutionDescription}
-                  onChange={handleTextChange}
-                  placeholder="How does your hardware prototype solve the problem?"
-                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={handleAbstractPdfUpload}
+                  className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
                 />
+                {formData.abstractPdfName && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold mt-1">
+                    <span>✓ Document attached: {formData.abstractPdfName}</span>
+                  </div>
+                )}
               </div>
 
+              {/* Intended Users / Beneficiaries */}
               <div id="field-group-17" className="space-y-2">
-                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                  Innovation Details *
-                </label>
-                <textarea
-                  rows={2}
-                  name="innovationDetails"
-                  value={formData.innovationDetails}
-                  onChange={handleTextChange}
-                  placeholder="What is unique about your hardware compared to existing systems?"
-                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
-                />
-              </div>
-              
-                           {/* Intended Users / Beneficiaries */}
-              <div id="field-group-18" className="space-y-2">
                 <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                   Intended Users / Beneficiaries *
                 </label>
@@ -1092,8 +1284,6 @@ const handleFileUpload = (e) => {
             </div>
           )}
 
-          
-
           {/* STEP 3: SPECS */}
           {currentStep === 3 && (
             <div className="space-y-6">
@@ -1108,14 +1298,16 @@ const handleFileUpload = (e) => {
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                     Working Principle *
                   </label>
-                  <span className="text-xs font-mono text-white/50">{countWords(formData.workingPrinciple)}/250 words</span>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.workingPrinciple) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                    {countWords(formData.workingPrinciple)} / 250 words
+                  </span>
                 </div>
                 <textarea
                   rows={3}
                   name="workingPrinciple"
                   value={formData.workingPrinciple}
-                  onChange={handleTextChange}
-                  placeholder="Explain the technical principle / workflow of your system"
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  placeholder="Explain the technical principle / workflow of your system (Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
@@ -1228,29 +1420,26 @@ const handleFileUpload = (e) => {
                 </div>
               </div>
 
+              <div id="field-group-29" className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Highlight Why This Is Worth Seeing *
+                  </label>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.whyWorthSeeing) >= 250 ? 'text-amber-400' : 'text-white/60'}`}>
+                    {countWords(formData.whyWorthSeeing)} / 250 words
+                  </span>
+                </div>
 
-                {/* Highlight Why This Is Worth Seeing */}
-<div id="field-group-29" className="space-y-2">
-  <div className="flex justify-between items-center">
-    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-      Highlight Why This Is Worth Seeing *
-    </label>
-    <span className="text-xs font-mono text-white/50">
-      {countWords(formData.whyWorthSeeing)}/100 words
-    </span>
-  </div>
+                <textarea
+                  rows={3}
+                  name="whyWorthSeeing"
+                  value={formData.whyWorthSeeing}
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect (Max 250 words)."
+                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                />
+              </div>
 
-  <textarea
-    rows={3}
-    name="whyWorthSeeing"
-    value={formData.whyWorthSeeing}
-    onChange={handleTextChange}
-    placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect."
-    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
-  />
-</div>
-
-              {/* Section 6: Safety — was validated in handleSubmit but had no inputs */}
               <div className="border-t border-white/10 pt-4 mt-2">
                 <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white mb-3">
                   Safety & Hazard Details
@@ -1311,7 +1500,6 @@ const handleFileUpload = (e) => {
                 </select>
               </div>
 
-              {/* Section 7: Originality — also had no inputs */}
               <div className="border-t border-white/10 pt-4 mt-2">
                 <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white mb-3">
                   Originality & Prior Exhibition
@@ -1373,50 +1561,97 @@ const handleFileUpload = (e) => {
             <div className="space-y-6">
               <div className="border-b border-white/10 pb-2">
                 <h3 className="font-heading text-base sm:text-lg font-black uppercase tracking-wider text-white">
-                  4. Fee Status, Declarations & Submission
+                  4. Fee Submission, Declarations & Final Submit
                 </h3>
               </div>
 
               {/* Registration Fee Box */}
-              <div className="bg-black/50 border border-white/20 rounded-xl p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className={`px-4 py-1.5 border rounded-full font-heading text-xs font-black uppercase tracking-widest ${isExternalFeeApplicable ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`}>
-                    {isExternalFeeApplicable ? "₹400 Fee Applicable" : "₹0 (Fully Subsidized)"}
+              <div className="bg-black/50 border border-white/20 rounded-xl p-5 space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
+                  <div>
+                    <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white">
+                      4. FEE SUBMISSION
+                    </h4>
+                    <p className="text-xs text-white/70 mt-0.5">
+                      {formData.otherMembersCount} external member(s) selected (₹400 per external member).
+                    </p>
+                  </div>
+                  <span className={`self-start sm:self-center px-4 py-1.5 border rounded-full font-heading text-xs font-black uppercase tracking-widest ${calculatedFee > 0 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`}>
+                    {calculatedFee > 0 ? `Payable Amount: ₹${calculatedFee}` : "₹0 (Fully Subsidized)"}
                   </span>
                 </div>
-                <p className="text-xs text-white/80 leading-relaxed font-body">
-                  A ₹400 registration fee applies to teams where 50% or more members are from outside Aliah University. Teams with &gt;50% Aliah University members are fully subsidized.
-                </p>
 
-                {isExternalFeeApplicable && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-white/10">
-                    <div id="field-group-38" className="space-y-2">
-                      <label className="block font-heading text-xs uppercase text-white font-bold">
-                        UTR / Transaction ID *
-                      </label>
-                      <input
-                        type="text"
-                        name="transactionId"
-                        value={formData.transactionId}
-                        onChange={handleTextChange}
-                        placeholder="Enter 12-digit UTR"
-                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
-                      />
+                {calculatedFee === 0 ? (
+                  <div className="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-xl text-emerald-200 text-xs sm:text-sm leading-relaxed space-y-1">
+                    <p className="font-bold flex items-center gap-2">
+                      <span>🎉</span> No Fee Required!
+                    </p>
+                    <p>
+                      All team members are registered from Aliah University. Your participation in AURA 2K26 is 100% subsidized and free of cost.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-5">
+                    {/* Payment QR Section */}
+                    <div className="bg-black/60 border border-white/20 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-6">
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="font-heading text-xs font-bold uppercase tracking-wider text-amber-300">
+                          PAYMENT QR
+                        </span>
+                        <div className="p-3 bg-white rounded-xl shadow-2xl border-2 border-amber-400">
+                          <img
+                            src={paymentQr}
+                            alt="Payment QR Code"
+                            className="w-44 h-44 object-contain rounded"
+                          />
+                        </div>
+                        <span className="text-[11px] font-mono text-white/60">
+                          Scan using any UPI App
+                        </span>
+                      </div>
+
+                      <div className="flex-1 space-y-3 text-center md:text-left">
+                        <h5 className="font-heading text-lg font-black text-white uppercase tracking-wider">
+                          Scan & Pay ₹{calculatedFee}
+                        </h5>
+                        <p className="text-xs text-white/80 leading-relaxed font-body">
+                          Please scan the QR code to complete the fee payment of <strong className="text-amber-300">₹{calculatedFee}</strong> (₹400 × {formData.otherMembersCount} outside member{formData.otherMembersCount > 1 ? 's' : ''}). After payment, enter your 12-digit UTR/Transaction ID and attach the payment screenshot below.
+                        </p>
+                        <div className="inline-block bg-amber-500/10 border border-amber-400/30 px-3 py-1.5 rounded-lg text-amber-300 font-mono text-xs font-bold">
+                          Fee Breakdown: {formData.otherMembersCount} Outside Member(s) × ₹400 = ₹{calculatedFee}
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="block font-heading text-xs uppercase text-white font-bold">
-                        Screenshot Upload *
-                      </label>
-                      <input
-                        type="file"
-                        name="paymentScreenshot"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
-                      />
-                      {formData.paymentScreenshotPreview && (
-                        <span className="text-xs text-emerald-400 font-bold block mt-1">✓ Screenshot attached</span>
-                      )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      <div id="field-group-38" className="space-y-2">
+                        <label className="block font-heading text-xs uppercase text-white font-bold">
+                          UTR / Transaction ID *
+                        </label>
+                        <input
+                          type="text"
+                          name="transactionId"
+                          value={formData.transactionId}
+                          onChange={handleTextChange}
+                          placeholder="Enter 12-digit UTR/Transaction ID"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30 font-mono"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block font-heading text-xs uppercase text-white font-bold">
+                          Payment Screenshot Upload *
+                        </label>
+                        <input
+                          type="file"
+                          name="paymentScreenshot"
+                          accept="image/png, image/jpeg, image/jpg"
+                          onChange={handlePaymentScreenshotUpload}
+                          className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
+                        />
+                        {formData.paymentScreenshotPreview && (
+                          <span className="text-xs text-emerald-400 font-bold block mt-1">✓ Screenshot attached</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

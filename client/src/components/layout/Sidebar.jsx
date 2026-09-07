@@ -55,10 +55,10 @@ function Sidebar() {
             >
               {item.isSvg ? (
                 <svg
-                  className="w-5 h-5 text-white filter brightness-200 transition-transform duration-200 group-hover:scale-110"
+                  className="w-7 h-7 text-white filter brightness-200 transition-transform duration-200 group-hover:scale-110"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.2"
                   viewBox="0 0 24 24"
                 >
                   <circle cx="12" cy="12" r="9" />
