@@ -351,24 +351,48 @@ function HomeSections({ onRegisterClick }) {
 
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        {/* Top: Giant A Heading & Borderless Logo directly under it */}
+        {/* Top: Giant A Heading & Borderless Logo with Key University Highlights */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-0 flex flex-col items-start gap-4"
+          className="relative z-20 self-start mt-0 flex flex-col items-start gap-4 w-full"
         >
           <GiantAHeading topText="BOUT" bottomText="ALIAH UNIVERSITY" />
 
-          {/* University Logo directly under heading without any border box */}
-          <div className="select-none my-2">
-            <img
-              src={aliahLogo}
-              alt="Aliah University Official Seal Logo"
-              style={{ width: 'clamp(9rem, 18vw, 16rem)', height: 'clamp(9rem, 18vw, 16rem)' }}
-              className="object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
-            />
+          {/* Header Content Row: Borderless Logo on Left + Key University Highlights on Right */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center w-full max-w-6xl mt-2 select-none">
+            {/* Borderless Logo directly under heading */}
+            <div className="md:col-span-4 lg:col-span-3 flex justify-start items-center">
+              <img
+                src={aliahLogo}
+                alt="Aliah University Official Seal Logo"
+                style={{ width: 'clamp(8.5rem, 16vw, 14rem)', height: 'clamp(8.5rem, 16vw, 14rem)' }}
+                className="object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+              />
+            </div>
+
+            {/* University Quick Facts / Legacy Highlights filling space to the right of logo */}
+            <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-center gap-2.5 text-left border-l-0 md:border-l border-white/20 pl-0 md:pl-8">
+              <div className="flex flex-wrap items-center gap-2.5 font-mono text-[11px] md:text-xs font-bold text-white/80 uppercase">
+                <span className="bg-white/10 px-3 py-1 rounded-full text-white border border-white/20">
+                  Heritage Est. 1780 • University Status 2008
+                </span>
+                <span className="bg-white/10 px-3 py-1 rounded-full text-white border border-white/20">
+                  State University • Govt. of West Bengal
+                </span>
+              </div>
+              <h3 className="font-heading text-sm md:text-base font-bold text-white uppercase tracking-wider mt-1">
+                240+ Years of Academic Heritage & Technological Excellence
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs md:text-sm font-body text-white/80 font-semibold pt-1">
+                <div>• <strong className="text-white">Main Hub:</strong> New Town Campus (Engineering & Science)</div>
+                <div>• <strong className="text-white">City Campuses:</strong> Park Circus & Taltala</div>
+                <div>• <strong className="text-white">Departments:</strong> CSE, ECE, Civil, ME, EE, Sciences</div>
+                <div>• <strong className="text-white">Recognition:</strong> Minority State Univ (Act XXVII, 2007)</div>
+              </div>
+            </div>
           </div>
         </motion.div>
 
