@@ -163,8 +163,16 @@ const INITIAL_FORM_DATA = {
   declFinalConfirmation: false,
 };
 
+function CheckIcon({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
 export default function AuraSubmissionPortal({ onBack }) {
-  // 1. Initialize formData from localStorage
+  // Initialize formData from localStorage
   const [formData, setFormData] = useState(() => {
     try {
       const savedData = localStorage.getItem(STORAGE_KEY);
@@ -185,7 +193,7 @@ export default function AuraSubmissionPortal({ onBack }) {
     paymentScreenshot: null,
   });
 
-  // 2. Initialize current step from localStorage
+  // Initialize current step from localStorage
   const [currentStep, setCurrentStep] = useState(() => {
     try {
       const savedStep = localStorage.getItem(STORAGE_STEP_KEY);
@@ -236,7 +244,7 @@ export default function AuraSubmissionPortal({ onBack }) {
   const { mutate, isPending } = useMutation({
     mutationFn: async (formDataToSend) => {
       const endpoint = `${API_URL}/api/registrations`;
-      console.log("🚀 Sending registration request to:", endpoint);
+      console.log("Sending registration request to:", endpoint);
       const response = await fetch(endpoint, {
         method: "POST",
         body: formDataToSend,
@@ -257,18 +265,18 @@ export default function AuraSubmissionPortal({ onBack }) {
       return result;
     },
     onSuccess: () => {
-      console.log("🎉 Registration successful!");
+      console.log("Registration successful!");
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STORAGE_STEP_KEY);
       setSubmitted(true);
     },
     onError: (error) => {
-      console.error("❌ Registration failed:", error);
+      console.error("Registration failed:", error);
       alert(error.message);
     }
   });
 
-  // 3. Persist form data updates automatically to localStorage
+  // Persist form data updates automatically to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
@@ -280,7 +288,7 @@ export default function AuraSubmissionPortal({ onBack }) {
     }
   }, [formData]);
 
-  // 4. Persist step navigation
+  // Persist step navigation
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_STEP_KEY, currentStep.toString());
@@ -340,7 +348,6 @@ export default function AuraSubmissionPortal({ onBack }) {
 
     const currentCount = countWords(currentValue);
     if (currentCount >= maxWords) {
-      // If trailing space exists or pressing space/enter key, prevent typing new word
       if (/\s$/.test(currentValue) || e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
       }
@@ -502,7 +509,7 @@ export default function AuraSubmissionPortal({ onBack }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // 1. Declarations Validation
+    // Declarations Validation
     if (
       !formData.declWorkingPrototype ||
       !formData.declOriginality ||
@@ -516,7 +523,7 @@ export default function AuraSubmissionPortal({ onBack }) {
 
     const parsedTeamSize = parseInt(formData.teamSize) || 4;
 
-    // 2. Team Affiliation Constraints
+    // Team Affiliation Constraints
     const mappedAffiliation = TEAM_AFFILIATION_MAP[formData.teamAffiliation];
     if (mappedAffiliation === "mixed") {
       const totalMixedMembers = Number(formData.aliahMembersCount) + Number(formData.otherMembersCount);
@@ -526,7 +533,7 @@ export default function AuraSubmissionPortal({ onBack }) {
       }
     }
 
-    // 3. Required Fields Client Validation
+    // Required Fields Client Validation
     if (!formData.teamName.trim()) { alert("Team Name is required."); return; }
     if (!formData.teamLeaderName.trim()) { alert("Team Leader Name is required."); return; }
     if (!formData.teamLeaderEmail.trim()) { alert("Team Leader Email is required."); return; }
@@ -676,10 +683,10 @@ export default function AuraSubmissionPortal({ onBack }) {
       formDataToSend.append("mediaPermission", formData.declMediaPermission);
       formDataToSend.append("finalConfirmation", formData.declFinalConfirmation);
 
-      console.log("🚀 Triggering TanStack Query mutation...");
+      console.log("Triggering TanStack Query mutation...");
       mutate(formDataToSend);
     } catch (error) {
-      console.error("❌ Registration failed:", error);
+      console.error("Registration failed:", error);
       alert(error.message);
     }
   };
@@ -791,8 +798,9 @@ export default function AuraSubmissionPortal({ onBack }) {
 
         <div className="flex items-center gap-3">
           {draftSavedToast && (
-            <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold bg-black/70 px-3 py-1.5 border border-emerald-400/40 rounded-full shadow-lg animate-pulse">
-              ✓ Saved
+            <span className="text-[10px] font-mono tracking-widest text-emerald-400 font-bold bg-black/70 px-3 py-1.5 border border-emerald-400/40 rounded-full shadow-lg animate-pulse flex items-center gap-1.5">
+              <CheckIcon className="w-3 h-3 text-emerald-400" />
+              SAVED
             </span>
           )}
           <button
@@ -919,13 +927,14 @@ export default function AuraSubmissionPortal({ onBack }) {
                       type="button"
                       key={affiliation}
                       onClick={() => handleAffiliationChange(affiliation)}
-                      className={`w-full text-left py-3 px-4 rounded-xl text-xs sm:text-sm font-body font-bold transition-all cursor-pointer ${
+                      className={`w-full text-left py-3 px-4 rounded-xl text-xs sm:text-sm font-body font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
                         formData.teamAffiliation === affiliation
                           ? 'bg-white text-black border-2 border-white shadow-lg'
                           : 'bg-black/50 text-white border border-white/30 hover:border-white hover:bg-white/10'
                       }`}
                     >
-                      ● {affiliation}
+                      <span className={`w-2 h-2 rounded-full ${formData.teamAffiliation === affiliation ? 'bg-black' : 'bg-white/40'}`} />
+                      <span>{affiliation}</span>
                     </button>
                   ))}
                 </div>
@@ -1125,8 +1134,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                       className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
                     />
                     {formData.teamLeaderIdCardPreview && (
-                      <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
-                        <span>✓ Leader ID attached</span>
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                        <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Team Leader ID Attached</span>
                       </div>
                     )}
                   </div>
@@ -1143,8 +1153,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                       className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
                     />
                     {formData.member1IdCardPreview && (
-                      <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
-                        <span>✓ Member 1 ID attached</span>
+                      <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                        <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Member 1 ID Attached</span>
                       </div>
                     )}
                   </div>
@@ -1162,8 +1173,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                         className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
                       />
                       {formData.member2IdCardPreview && (
-                        <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
-                          <span>✓ Member 2 ID attached</span>
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                          <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Member 2 ID Attached</span>
                         </div>
                       )}
                     </div>
@@ -1182,8 +1194,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                         className="w-full text-xs text-white/70 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-white/40 file:text-[11px] file:font-heading file:font-bold file:uppercase file:bg-white file:text-black cursor-pointer"
                       />
                       {formData.member3IdCardPreview && (
-                        <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold">
-                          <span>✓ Member 3 ID attached</span>
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
+                          <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Member 3 ID Attached</span>
                         </div>
                       )}
                     </div>
@@ -1228,13 +1241,16 @@ export default function AuraSubmissionPortal({ onBack }) {
                         type="button"
                         key={cat}
                         onClick={() => toggleArrayItem("categories", cat)}
-                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer ${
+                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer flex items-center gap-2 ${
                           selected
                             ? 'bg-white text-black font-bold shadow'
                             : 'bg-black/50 text-white border border-white/20 hover:border-white/50'
                         }`}
                       >
-                        [ {selected ? '✓' : ' '} ] {cat}
+                        <span className={`w-4 h-4 rounded flex items-center justify-center border text-[10px] ${selected ? 'bg-black text-white border-black' : 'border-white/40'}`}>
+                          {selected ? <CheckIcon className="w-3 h-3 text-white" /> : null}
+                        </span>
+                        <span>{cat}</span>
                       </button>
                     );
                   })}
@@ -1313,8 +1329,9 @@ export default function AuraSubmissionPortal({ onBack }) {
                   className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
                 />
                 {formData.abstractPdfName && (
-                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-bold mt-1">
-                    <span>✓ Document attached: {formData.abstractPdfName}</span>
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
+                    <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Document Attached: {formData.abstractPdfName}</span>
                   </div>
                 )}
               </div>
@@ -1334,13 +1351,16 @@ export default function AuraSubmissionPortal({ onBack }) {
                         type="button"
                         key={beneficiary}
                         onClick={() => toggleArrayItem("beneficiaries", beneficiary)}
-                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer ${
+                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer flex items-center gap-2 ${
                           selected
                             ? "bg-white text-black font-bold shadow"
                             : "bg-black/50 text-white border border-white/20 hover:border-white/50"
                         }`}
                       >
-                        [ {selected ? "✓" : " "} ] {beneficiary}
+                        <span className={`w-4 h-4 rounded flex items-center justify-center border text-[10px] ${selected ? 'bg-black text-white border-black' : 'border-white/40'}`}>
+                          {selected ? <CheckIcon className="w-3 h-3 text-white" /> : null}
+                        </span>
+                        <span>{beneficiary}</span>
                       </button>
                     );
                   })}
@@ -1526,13 +1546,16 @@ export default function AuraSubmissionPortal({ onBack }) {
                         type="button"
                         key={hazard}
                         onClick={() => toggleArrayItem("safetyHazards", hazard)}
-                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer ${
+                        className={`text-left py-2 px-3 rounded-lg text-xs font-body font-bold transition-all cursor-pointer flex items-center gap-2 ${
                           selected
                             ? 'bg-white text-black font-bold shadow'
                             : 'bg-black/50 text-white border border-white/20 hover:border-white/50'
                         }`}
                       >
-                        [ {selected ? '✓' : ' '} ] {hazard}
+                        <span className={`w-4 h-4 rounded flex items-center justify-center border text-[10px] ${selected ? 'bg-black text-white border-black' : 'border-white/40'}`}>
+                          {selected ? <CheckIcon className="w-3 h-3 text-white" /> : null}
+                        </span>
+                        <span>{hazard}</span>
                       </button>
                     );
                   })}
@@ -1651,8 +1674,9 @@ export default function AuraSubmissionPortal({ onBack }) {
 
                 {calculatedFee === 0 ? (
                   <div className="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-xl text-emerald-200 text-xs sm:text-sm leading-relaxed space-y-1">
-                    <p className="font-bold flex items-center gap-2">
-                      <span>🎉</span> No Fee Required!
+                    <p className="font-bold flex items-center gap-2 text-emerald-300">
+                      <CheckIcon className="w-4 h-4 text-emerald-400" />
+                      Registration Subsidized (No Fee Required)
                     </p>
                     <p>
                       All team members are registered from Aliah University. Your participation in AURA 2K26 is 100% subsidized and free of cost.
@@ -1717,7 +1741,10 @@ export default function AuraSubmissionPortal({ onBack }) {
                           className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
                         />
                         {formData.paymentScreenshotPreview && (
-                          <span className="text-xs text-emerald-400 font-bold block mt-1">✓ Screenshot attached</span>
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
+                            <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Payment Screenshot Attached</span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1779,7 +1806,7 @@ export default function AuraSubmissionPortal({ onBack }) {
               onClick={handleSubmit}
               className="px-10 py-3 border-2 border-white rounded-full bg-white text-black hover:bg-emerald-400 hover:border-emerald-400 hover:text-black font-heading text-sm font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-xl ml-auto disabled:opacity-50"
             >
-              {isPending ? "SUBMITTING..." : "SUBMIT REGISTRATION 🚀"}
+              {isPending ? "SUBMITTING..." : "SUBMIT REGISTRATION"}
             </button>
           )}
         </div>
