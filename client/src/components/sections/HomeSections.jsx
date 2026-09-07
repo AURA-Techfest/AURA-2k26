@@ -351,48 +351,43 @@ function HomeSections({ onRegisterClick }) {
 
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        {/* Top: Giant A Heading */}
+        {/* Top: Giant A Heading & Borderless Logo directly under it */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-0"
+          className="relative z-20 self-start mt-0 flex flex-col items-start gap-4"
         >
           <GiantAHeading topText="BOUT" bottomText="ALIAH UNIVERSITY" />
+
+          {/* University Logo directly under heading without any border box */}
+          <div className="select-none my-2">
+            <img
+              src={aliahLogo}
+              alt="Aliah University Official Seal Logo"
+              style={{ width: 'clamp(9rem, 18vw, 16rem)', height: 'clamp(9rem, 18vw, 16rem)' }}
+              className="object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+            />
+          </div>
         </motion.div>
 
-        {/* Center: University Description Text and Framed Logo Placement */}
+        {/* Center: University Description Text */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
-          className="relative z-20 text-white font-body font-bold max-w-6xl mt-8 flex-grow flex flex-col justify-center select-text w-full"
+          className="relative z-20 text-white font-body font-bold max-w-5xl mt-6 flex-grow flex flex-col justify-start select-text w-full text-left"
           style={{ fontSize: 'clamp(0.95rem, 1.4vw, 1.25rem)', lineHeight: 'clamp(1.6rem, 2.2vw, 2.2rem)' }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center w-full">
-            {/* Left description paragraphs */}
-            <div className="lg:col-span-7 flex flex-col gap-6 text-left">
-              <p>
-                Aliah University started its glorious journey from the academic session 2008-09 with great potential and immense visual. It is found that this university is harmonizing our tradition and have emerged as a unique institution for higher education and in research field.
-              </p>
-              <p>
-                As per the Parliament Act, 2007, Section 3 (3), it has conferred the status of a minority educational institution. It is an autonomous body under the Department of Minority Affairs and Madrasah Education, Government of West Bengal. The students belonging to any race, creed, caste or class, this University has played a crucial and leading role in the advancement of higher education in both socially and economically.
-              </p>
-            </div>
-            
-            {/* Right Logo Card Container with glassmorphic border & fluid clamp() scaling */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end items-center select-none py-4 lg:py-0">
-              <div className="relative p-6 sm:p-8 rounded-3xl bg-white/5 border border-white/15 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-center">
-                <img
-                  src={aliahLogo}
-                  alt="Aliah University Official Seal Logo"
-                  style={{ width: 'clamp(12rem, 22vw, 20rem)', height: 'clamp(12rem, 22vw, 20rem)' }}
-                  className="object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
+          <div className="columns-1 md:columns-2 gap-10 md:gap-16 w-full">
+            <p className="mb-6">
+              Aliah University started its glorious journey from the academic session 2008-09 with great potential and immense visual. It is found that this university is harmonizing our tradition and have emerged as a unique institution for higher education and in research field.
+            </p>
+            <p className="mb-6">
+              As per the Parliament Act, 2007, Section 3 (3), it has conferred the status of a minority educational institution. It is an autonomous body under the Department of Minority Affairs and Madrasah Education, Government of West Bengal. The students belonging to any race, creed, caste or class, this University has played a crucial and leading role in the advancement of higher education in both socially and economically.
+            </p>
           </div>
         </motion.div>
       </section>
