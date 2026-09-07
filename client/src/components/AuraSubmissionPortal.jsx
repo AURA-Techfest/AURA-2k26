@@ -827,13 +827,17 @@ export default function AuraSubmissionPortal({ onBack }) {
 
       {/* Main Mirror Glass Panel Container */}
       <div 
-        className="relative z-20 w-full max-w-4xl border-2 border-white rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-10 backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12"
+        className="relative z-20 w-full max-w-4xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12"
         style={{
-          background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.78), rgba(60, 86, 175, 0.78))"
+          background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.78), rgba(60, 86, 175, 0.78))",
+          padding: "clamp(1.25rem, 3.5vw, 2.5rem)"
         }}
       >
         {/* Form Title */}
-        <h1 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-widest uppercase text-center mb-6 drop-shadow-md">
+        <h1 
+          className="font-heading font-black text-white tracking-widest uppercase text-center mb-6 drop-shadow-md"
+          style={{ fontSize: "clamp(1.25rem, 3.2vw, 2.25rem)" }}
+        >
           AURA 2K26 REGISTRATION FORM
         </h1>
 
@@ -849,7 +853,8 @@ export default function AuraSubmissionPortal({ onBack }) {
               key={tab.step}
               type="button"
               onClick={() => handleStepJump(tab.step)}
-              className={`font-heading text-xs sm:text-sm md:text-base font-black tracking-widest uppercase transition-all cursor-pointer select-none relative ${
+              style={{ fontSize: "clamp(0.75rem, 1.4vw, 1rem)" }}
+              className={`font-heading font-black tracking-widest uppercase transition-all cursor-pointer select-none relative ${
                 currentStep === tab.step
                   ? "text-white border-b-2 border-white pb-1 -mb-[17px] shadow-sm"
                   : "text-white/60 hover:text-white pb-1"

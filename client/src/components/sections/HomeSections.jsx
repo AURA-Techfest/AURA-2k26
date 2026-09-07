@@ -5,16 +5,37 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 
-// Reusable typographic heading matching the exact design with fluid responsive sizing
+// Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
   return (
-    <div className="flex items-center text-left font-heading text-white select-none h-[4rem] sm:h-[6rem] md:h-[7.5rem] lg:h-[10rem]">
+    <div 
+      className="flex items-center text-left font-heading text-white select-none"
+      style={{ height: 'clamp(3.5rem, 9.5vw, 8.5rem)' }}
+    >
       {/* Giant letter 'A' */}
-      <span className="text-[5.5rem] sm:text-[8rem] md:text-[10rem] lg:text-[13rem] font-black leading-[0.68] tracking-tighter shrink-0">A</span>
+      <span 
+        className="font-black leading-[0.68] tracking-tighter shrink-0"
+        style={{ fontSize: 'clamp(4.5rem, 13vw, 12.5rem)' }}
+      >
+        A
+      </span>
       {/* Container for the two stacked lines */}
-      <div className="flex flex-col justify-between h-[2.5rem] sm:h-[3.6rem] md:h-[4.2rem] lg:h-[5.8rem] pl-2 md:pl-3 min-w-0">
-        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{topText}</span>
-        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{bottomText}</span>
+      <div 
+        className="flex flex-col justify-between pl-2 md:pl-3 min-w-0"
+        style={{ height: 'clamp(2.5rem, 6vw, 5.5rem)' }}
+      >
+        <span 
+          className="font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap"
+          style={{ fontSize: 'clamp(1.1rem, 3.2vw, 3.2rem)' }}
+        >
+          {topText}
+        </span>
+        <span 
+          className="font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap"
+          style={{ fontSize: 'clamp(1.1rem, 3.2vw, 3.2rem)' }}
+        >
+          {bottomText}
+        </span>
       </div>
     </div>
   );
@@ -210,7 +231,7 @@ function HomeSections({ onRegisterClick }) {
         id="hero"
         className="min-h-screen w-full relative flex items-center justify-start px-4 sm:px-8 md:px-24 py-20 overflow-hidden"
       >
-        {/* Background Image Container with mobile-optimized position placing robot directly in the middle */}
+        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-[position:74%_center] md:bg-[position:center_right] pointer-events-none z-0" 
           style={{ backgroundImage: `url(${heroBg})` }}
@@ -228,11 +249,14 @@ function HomeSections({ onRegisterClick }) {
           {/* Typographic Title matching Image 1 */}
           <GiantAHeading topText="URA" bottomText="2K26" />
           
-          <h2 className="font-heading text-sm md:text-lg tracking-widest text-white uppercase font-black mt-8">
+          <h2 
+            className="font-heading tracking-widest text-white uppercase font-black mt-8"
+            style={{ fontSize: 'clamp(0.85rem, 1.8vw, 1.25rem)' }}
+          >
             Hardware Hackathon of Aliah University
           </h2>
 
-          {/* Vertically stacked outline pill buttons matching Image 1 */}
+          {/* Vertically stacked outline pill buttons */}
           <div className="flex flex-col gap-4 mt-8 w-full max-w-[240px]">
             <button
               onClick={onRegisterClick}
@@ -250,18 +274,16 @@ function HomeSections({ onRegisterClick }) {
         </motion.div>
       </section>
 
-      {/* 2. ABOUT THE EVENT SECTION - Normal WEBSITE_BG */}
+      {/* 2. ABOUT THE EVENT SECTION */}
       <section
         id="event"
         className="min-h-screen w-full relative flex flex-col justify-between pt-16 sm:pt-20 pb-16 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden"
       >
-        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})` }}
         />
         
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
 
         {/* Top: Title */}
@@ -275,13 +297,14 @@ function HomeSections({ onRegisterClick }) {
           <GiantAHeading topText="BOUT" bottomText="THE EVENT" />
         </motion.div>
 
-        {/* Center content: Text description and details in newspaper columns */}
+        {/* Center content: Text description in columns with clamp() typography */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
-          className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-5xl mt-8 flex-grow flex flex-col justify-center select-text"
+          className="relative z-20 text-white font-body font-bold max-w-5xl mt-8 flex-grow flex flex-col justify-center select-text"
+          style={{ fontSize: 'clamp(0.95rem, 1.4vw, 1.25rem)', lineHeight: 'clamp(1.6rem, 2.2vw, 2.2rem)' }}
         >
           <div className="columns-1 md:columns-2 gap-10 md:gap-16 w-full">
             <p className="mb-6">
@@ -316,7 +339,7 @@ function HomeSections({ onRegisterClick }) {
         </motion.div>
       </section>
 
-      {/* 3. ABOUT ALIAH UNIVERSITY SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
+      {/* 3. ABOUT ALIAH UNIVERSITY SECTION */}
       <section
         id="about"
         className="min-h-screen w-full relative flex flex-col justify-start py-16 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
@@ -326,7 +349,6 @@ function HomeSections({ onRegisterClick }) {
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
 
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
         {/* Top: Giant A Heading */}
@@ -340,17 +362,18 @@ function HomeSections({ onRegisterClick }) {
           <GiantAHeading topText="BOUT" bottomText="ALIAH UNIVERSITY" />
         </motion.div>
 
-        {/* Center: University Description Text and Logo Grid (Larger Visibility) */}
+        {/* Center: University Description Text and Framed Logo Placement */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
-          className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-6xl mt-8 flex-grow flex flex-col justify-center select-text w-full"
+          className="relative z-20 text-white font-body font-bold max-w-6xl mt-8 flex-grow flex flex-col justify-center select-text w-full"
+          style={{ fontSize: 'clamp(0.95rem, 1.4vw, 1.25rem)', lineHeight: 'clamp(1.6rem, 2.2vw, 2.2rem)' }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-16 items-center w-full">
-            {/* Left description paragraphs (8 columns on lg) */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-center w-full">
+            {/* Left description paragraphs */}
+            <div className="lg:col-span-7 flex flex-col gap-6 text-left">
               <p>
                 Aliah University started its glorious journey from the academic session 2008-09 with great potential and immense visual. It is found that this university is harmonizing our tradition and have emerged as a unique institution for higher education and in research field.
               </p>
@@ -359,13 +382,16 @@ function HomeSections({ onRegisterClick }) {
               </p>
             </div>
             
-            {/* Right Logo (4 columns on lg) */}
-            <div className="lg:col-span-4 flex justify-center lg:justify-end items-center select-none">
-              <img
-                src={aliahLogo}
-                alt="Aliah University Seal Logo"
-                className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain"
-              />
+            {/* Right Logo Card Container with glassmorphic border & fluid clamp() scaling */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end items-center select-none py-4 lg:py-0">
+              <div className="relative p-6 sm:p-8 rounded-3xl bg-white/5 border border-white/15 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex items-center justify-center">
+                <img
+                  src={aliahLogo}
+                  alt="Aliah University Official Seal Logo"
+                  style={{ width: 'clamp(12rem, 22vw, 20rem)', height: 'clamp(12rem, 22vw, 20rem)' }}
+                  className="object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             </div>
           </div>
         </motion.div>
