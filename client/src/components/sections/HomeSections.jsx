@@ -94,101 +94,79 @@ const TimelineEventDot = ({ event, progress }) => {
 const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.1",
-    title: "Abstract Submission (Online)",
-    detail: "Last Date of Submission",
-    date: "August 31, 2026",
+    title: "Abstraction Submission Start",
+    detail: "",
+    date: "29 Aug, 2026",
     t: 0.05,
-    x: 100,
+    x: 60,
     y: 0,
     dotX: 100,
     dotY: 160
   },
   {
     stage: "Stage 1.2",
+    title: "Abstraction Submission End",
+    detail: "",
+    date: "30 Sep, 2026",
+    t: 0.20,
+    x: 460,
+    y: 0,
+    dotX: 500,
+    dotY: 160
+  },
+  {
+    stage: "Stage 2",
     title: "Abstract Acceptance Notification",
-    detail: "Screening results announcement",
-    date: "August 31, 2026",
-    t: 0.14,
-    x: 480,
-    y: 0,
-    dotX: 480,
-    dotY: 160
-  },
-  {
-    stage: "Stage 2.1",
-    title: "Registration Opens",
-    detail: "Shortlisted teams registration start",
-    date: "August 31, 2026",
-    t: 0.23,
+    detail: "",
+    date: "5 Oct, 2026",
+    t: 0.35,
     x: 860,
     y: 0,
-    dotX: 860,
+    dotX: 900,
     dotY: 160
-  },
-  {
-    stage: "Stage 2.2",
-    title: "Registration Ends",
-    detail: "Standard registration window closes",
-    date: "August 31, 2026",
-    t: 0.32,
-    x: 860,
-    y: 380,
-    dotX: 860,
-    dotY: 340
   },
   {
     stage: "Stage 3",
-    title: "Preliminary Round (Physical Mode)",
-    detail: "Live prototype demonstration and presentation",
-    date: "August 31, 2026",
-    t: 0.41,
-    x: 480,
-    y: 380,
-    dotX: 480,
-    dotY: 340
-  },
-  {
-    stage: "Stage 2.3",
-    title: "Registration Closes",
-    detail: "Registration Kits for all registered participants",
-    date: "August 31, 2026",
+    title: "Preliminary Round",
+    detail: "",
+    date: "19 Nov, 2026",
     t: 0.50,
-    x: 100,
+    x: 660,
     y: 380,
-    dotX: 100,
+    dotX: 700,
     dotY: 340
   },
   {
     stage: "Stage 4",
-    title: "Final Round (Physical Mode)",
-    detail: "Grand finale assessment",
-    date: "August 31, 2026",
-    t: 0.60,
-    x: 100,
-    y: 560,
-    dotX: 100,
-    dotY: 520
+    title: "Final Round",
+    detail: "",
+    date: "20 Nov, 2026",
+    t: 0.65,
+    x: 300,
+    y: 380,
+    dotX: 350,
+    dotY: 340
   },
   {
     stage: "Stage 4.1",
     title: "Participation Certificates",
-    detail: "To all registered participants",
-    date: "August 31, 2026",
-    t: 0.70,
-    x: 480,
+    detail: "To all participants",
+    date: "",
+    t: 0.80,
+    x: 350,
     y: 560,
-    dotX: 480,
+    dotX: 400,
     dotY: 520
   },
   {
     stage: "Stage 4.2",
-    title: "For Top Three Teams",
-    detail: "Lucrative Prizes and certificates of excellence based on ranking",
-    date: "August 31, 2026",
-    t: 0.80,
-    x: 860,
+    title: "Lucrative Prizes",
+    detail: "For top 3 teams",
+    date: "",
+    t: 0.95,
+    x: 780,
     y: 560,
-    dotX: 860,
+    dotX: 830,
     dotY: 520
   }
 ];
@@ -317,7 +295,7 @@ function HomeSections({ onRegisterClick }) {
             <div className="mt-4 select-none">
               <p className="uppercase tracking-[0.2em] text-white text-xs mb-3 font-mono font-black">// Venue & Dates</p>
               <p className="mb-2"><strong className="text-white">Venue [In-Person]:</strong> Aliah University, Newtown Campus</p>
-              <p className=""><strong className="text-white">Dates:</strong> 25th & 27th February, 2025</p>
+              <p className=""><strong className="text-white">Dates:</strong> 19th & 20th November, 2026</p>
             </div>
           </div>
         </motion.div>
@@ -483,7 +461,7 @@ function HomeSections({ onRegisterClick }) {
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1100 725" preserveAspectRatio="none">
               {/* Base grey line */}
               <path
-                d="M 100,160 L 860,160 C 940,160 1020,200 1020,250 C 1020,300 940,340 860,340 L 100,340 C 40,340 20,380 20,430 C 20,480 40,520 100,520 L 980,520"
+                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
                 fill="none"
                 stroke="rgba(255,255,255,0.12)"
                 strokeWidth="4"
@@ -491,7 +469,7 @@ function HomeSections({ onRegisterClick }) {
               />
               {/* Animated white drawing path */}
               <motion.path
-                d="M 100,160 L 860,160 C 940,160 1020,200 1020,250 C 1020,300 940,340 860,340 L 100,340 C 40,340 20,380 20,430 C 20,480 40,520 100,520 L 980,520"
+                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
                 fill="none"
                 stroke="white"
                 strokeWidth="4"
@@ -512,20 +490,20 @@ function HomeSections({ onRegisterClick }) {
           </div>
 
           {/* Mobile Linear Layout */}
-          <div className="grid grid-cols-1 gap-12 relative z-10 block md:hidden">
+          <div className="grid grid-cols-1 gap-10 relative z-10 block md:hidden">
             {TIMELINE_EVENTS.map((event, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, margin: "-80px" }}
-                transition={{ duration: 1.0, ease: "easeOut", delay: idx * 0.12 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
                 className="flex flex-col text-left justify-start pl-12 relative z-10 font-bold"
               >
                 <span className="text-xs font-mono font-black tracking-widest text-white uppercase">// {event.stage}</span>
                 <h3 className="font-heading text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
-                <p className="text-sm text-white mt-1 font-bold">{event.detail}</p>
-                <span className="font-mono text-sm font-bold text-white mt-2">{event.date}</span>
+                {event.detail && <p className="text-sm text-white/90 mt-1 font-bold">{event.detail}</p>}
+                {event.date && <span className="font-mono text-sm font-black text-cyan-300 mt-1.5">{event.date}</span>}
               </motion.div>
             ))}
           </div>
