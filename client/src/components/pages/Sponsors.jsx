@@ -17,9 +17,8 @@ const TIER_FEES = {
   Bronze: 10000
 };
 
-export default function Sponsors() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const modalScrollRef = useRef(null);
+export default function Sponsors({ initialFormOpen = false }) {
+  const [isFormOpen, setIsFormOpen] = useState(initialFormOpen);
 
   const [formData, setFormData] = useState({
     sponsoringFor: "Platinum",
@@ -36,12 +35,12 @@ export default function Sponsors() {
   const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
-  // Auto-scroll modal to top when opened
+  // Auto-scroll to top when opening form page
   useEffect(() => {
-    if (isModalOpen && modalScrollRef.current) {
-      modalScrollRef.current.scrollTop = 0;
+    if (isFormOpen) {
+      window.scrollTo(0, 0);
     }
-  }, [isModalOpen]);
+  }, [isFormOpen]);
 
   // TanStack Query useMutation for Sponsor Interest Form Submission
   const sponsorMutation = useMutation({
@@ -67,7 +66,7 @@ export default function Sponsors() {
       setSubmittedSuccess(true);
       setTimeout(() => {
         setSubmittedSuccess(false);
-        setIsModalOpen(false);
+        setIsFormOpen(false);
         setFormData({
           sponsoringFor: "Platinum",
           organizationName: "",
@@ -212,6 +211,305 @@ export default function Sponsors() {
 
   const currentFee = TIER_FEES[formData.sponsoringFor] || 100000;
 
+  // STANDALONE FULL-PAGE SPONSORSHIP FORM VIEW (MATCHING REGISTRATION FORM PORTAL)
+  if (isFormOpen) {
+    return (
+      <div 
+        className="min-h-screen w-full relative bg-cover bg-center overflow-y-auto custom-scrollbar py-8 px-4 sm:px-6 md:px-10 flex flex-col items-center justify-start text-white select-none selection:bg-white selection:text-black font-body"
+        style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: 'fixed' }}
+      >
+        {/* Dark Overlay for optimal readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none z-0" />
+
+        {/* Top Header Actions Bar */}
+        <div className="relative z-20 w-full max-w-4xl flex items-center justify-between mb-6">
+          <button
+            onClick={() => setIsFormOpen(false)}
+            className="px-6 py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg flex items-center gap-2"
+          >
+            ← BACK TO SPONSORS
+          </button>
+
+          <h1 
+            className="font-heading font-black text-white tracking-widest uppercase text-center drop-shadow-md hidden sm:block"
+            style={{ fontSize: "clamp(1.1rem, 2.5vw, 1.8rem)" }}
+          >
+            SPONSORSHIP FORM
+          </h1>
+
+          <Link
+            to="/"
+            className="px-6 py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+          >
+            HOME
+          </Link>
+        </div>
+
+        {/* Main Mirror Glass Panel Container (Static Min-Height & clamp sizing) */}
+        <div 
+          className="relative z-20 w-full border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12 flex flex-col justify-between"
+          style={{
+            width: "clamp(300px, 92vw, 896px)",
+            minHeight: "clamp(550px, 80vh, 760px)",
+            background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.78), rgba(60, 86, 175, 0.78))",
+            padding: "clamp(1.25rem, 3.5vw, 2.5rem)"
+          }}
+        >
+          {submittedSuccess ? (
+            <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 sm:p-12 rounded-2xl text-center space-y-4 my-auto shadow-2xl">
+              <div className="text-emerald-400 text-5xl font-black mb-2">✓</div>
+              <h4 className="font-heading font-black text-2xl text-white">Sponsorship Submitted Successfully!</h4>
+              <p className="font-body text-base font-bold text-white/90">
+                Thank you for partnering with AURA 2K26. Our team will verify your transaction and contact you shortly.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleFormSubmit} className="space-y-6">
+              
+              {/* TOP TABLE: DETAILS OF SPONSORSHIP CATEGORY */}
+              <div className="bg-black/40 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md shadow-lg">
+                <h4 className="font-heading font-black text-xs sm:text-sm text-white uppercase tracking-wider text-center">
+                  DETAILS OF SPONSORSHIP CATEGORY ARE AS FOLLOWS:
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-center border-collapse border border-white/20 text-xs sm:text-sm font-body">
+                    <thead>
+                      <tr className="bg-purple-900/70 text-white font-heading font-black uppercase border-b border-white/30">
+                        <th className="p-2 border-r border-white/20">Sr. No.</th>
+                        <th className="p-2 border-r border-white/20">Category</th>
+                        <th className="p-2">INR</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { sr: 1, category: "Platinum", inr: "100000" },
+                        { sr: 2, category: "Diamond", inr: "75000" },
+                        { sr: 3, category: "Gold", inr: "50000" },
+                        { sr: 4, category: "Silver", inr: "25000" },
+                        { sr: 5, category: "Bronze", inr: "10000" }
+                      ].map((row) => (
+                        <tr
+                          key={row.sr}
+                          onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: row.category }))}
+                          className={`border-b border-white/10 transition cursor-pointer font-bold ${
+                            formData.sponsoringFor === row.category
+                              ? "bg-white text-black font-black"
+                              : "hover:bg-white/20 text-white bg-black/20"
+                          }`}
+                        >
+                          <td className="p-2 border-r border-white/20">{row.sr}</td>
+                          <td className="p-2 border-r border-white/20 font-heading tracking-wider">{row.category}</td>
+                          <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-cyan-300"}`}>
+                            ₹ {row.inr}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* SPONSORING FOR CATEGORY SELECTION PILLS */}
+              <div className="space-y-2">
+                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                  Sponsoring for *
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {["Platinum", "Diamond", "Gold", "Silver", "Bronze"].map((cat) => (
+                    <button
+                      type="button"
+                      key={cat}
+                      onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: cat }))}
+                      className={`py-2.5 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
+                        formData.sponsoringFor === cat
+                          ? "bg-white text-black border-white shadow-lg scale-105"
+                          : "bg-black/50 text-white border-white/30 hover:border-white hover:bg-black/70"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ORGANISATION & PLACE / DISTRICT DETAILS */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                    Organisation Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="organizationName"
+                    required
+                    value={formData.organizationName}
+                    onChange={handleInputChange}
+                    placeholder="Full Organisation / Corporate Name"
+                    className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                      Place
+                    </label>
+                    <input
+                      type="text"
+                      name="place"
+                      value={formData.place}
+                      onChange={handleInputChange}
+                      placeholder="City / Location"
+                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                      District
+                    </label>
+                    <input
+                      type="text"
+                      name="district"
+                      value={formData.district}
+                      onChange={handleInputChange}
+                      placeholder="District Name"
+                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                      Contact Person *
+                    </label>
+                    <input
+                      type="text"
+                      name="contactPerson"
+                      required
+                      value={formData.contactPerson}
+                      onChange={handleInputChange}
+                      placeholder="Full Name"
+                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="partner@company.com"
+                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                      Phone (10 digits) *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      maxLength={10}
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      placeholder="10-digit number"
+                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* ONLINE UPI PAYMENT & QR VERIFICATION SECTION */}
+              <div className="bg-black/40 border border-white/30 p-5 rounded-2xl space-y-4 text-center backdrop-blur-md shadow-lg">
+                <h4 className="font-heading font-black text-sm text-white uppercase tracking-wider">
+                  FEE PAYMENT VIA UPI QR
+                </h4>
+                <p className="font-body text-xs sm:text-sm text-white/90 leading-relaxed">
+                  For online payment, you can directly pay through any UPI App to the QR displayed here for the selected <span className="font-heading font-black text-cyan-300">{formData.sponsoringFor}</span> package (Amount: <span className="font-mono font-black text-cyan-300">₹ {currentFee}</span>):
+                </p>
+
+                {/* IDBI UPI Payment QR Image */}
+                <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border-2 border-white max-w-xs mx-auto shadow-2xl">
+                  <img
+                    src={paymentQr}
+                    alt="AURA 2K26 IDBI UPI Payment QR"
+                    className="w-48 sm:w-56 h-auto object-contain rounded-lg"
+                  />
+                  <span className="text-[10px] font-heading font-black text-slate-900 uppercase tracking-widest mt-2">
+                    SCAN & PAY VIA ANY UPI APP
+                  </span>
+                </div>
+
+                {/* Transaction ID / UTR Input */}
+                <div className="space-y-1.5 text-left pt-2">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Transaction ID / UTR Number *
+                  </label>
+                  <input
+                    type="text"
+                    name="transactionId"
+                    required
+                    value={formData.transactionId}
+                    onChange={handleInputChange}
+                    placeholder="Enter 12-digit UTR / UPI Transaction ID"
+                    className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                  />
+                </div>
+
+                {/* Payment Screenshot Upload */}
+                <div className="space-y-1.5 text-left">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Upload Payment Screenshot (JPG/PNG, Max 5MB) *
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg"
+                    onChange={handlePaymentScreenshotUpload}
+                    className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
+                  />
+                  {formData.paymentScreenshotName && (
+                    <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
+                      <span>✓ Screenshot Attached: {formData.paymentScreenshotName}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* BOTTOM CONTROLS (BACK BUTTON & SUBMIT BUTTON) */}
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/20">
+                <button
+                  type="button"
+                  onClick={() => setIsFormOpen(false)}
+                  className="px-6 py-3 border-2 border-white rounded-full bg-black/50 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg w-full sm:w-auto text-center cursor-pointer"
+                >
+                  ← BACK TO SPONSORS
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={sponsorMutation.isPending}
+                  className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-cyan-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
+                >
+                  {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // MAIN SPONSORS PAGE VIEW
   return (
     <div
       className="min-h-screen w-full relative bg-cover bg-center overflow-x-hidden font-sans text-white select-none"
@@ -242,7 +540,7 @@ export default function Sponsors() {
 
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsFormOpen(true)}
             className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md cursor-pointer"
           >
             JOIN US
@@ -338,7 +636,7 @@ export default function Sponsors() {
                     type="button"
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, sponsoringFor: tier.categoryKey }));
-                      setIsModalOpen(true);
+                      setIsFormOpen(true);
                     }}
                     className="font-heading font-black text-sm sm:text-base md:text-lg text-cyan-300 tracking-widest uppercase bg-black/50 hover:bg-white hover:text-black px-4 py-1.5 rounded-full border border-cyan-400/50 transition cursor-pointer self-start sm:self-auto"
                   >
@@ -369,7 +667,7 @@ export default function Sponsors() {
         >
           <button
             type="button"
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsFormOpen(true)}
             className="px-12 py-4 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-sm sm:text-base font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-105"
           >
             SPONSOR NOW
@@ -411,307 +709,6 @@ export default function Sponsors() {
           <p>Contact us at <a href="mailto:aura@aliah.ac.in" className="text-white underline font-black hover:text-purple-300">aura@aliah.ac.in</a></p>
         </footer>
       </div>
-
-      {/* SPONSORSHIP FORM MODAL WITH AUTHENTIC WEBSITE_BG.PNG BACKGROUND TEXTURE */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              ref={modalScrollRef}
-              className="relative z-20 w-full border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] text-white text-left font-body bg-cover bg-center overflow-y-auto custom-scrollbar"
-              style={{
-                width: "clamp(300px, 92vw, 820px)",
-                maxHeight: "clamp(500px, 88vh, 850px)",
-                padding: "clamp(1rem, 2.5vw, 2rem)",
-                backgroundImage: `linear-gradient(to bottom, rgba(12, 4, 24, 0.45), rgba(24, 10, 42, 0.65)), url(${websiteBg})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              }}
-            >
-              {/* STICKY TOP CONTROL HEADER (ALWAYS VISIBLE BACK BUTTON & TITLE) */}
-              <div className="sticky top-0 z-30 bg-purple-950/85 backdrop-blur-lg pt-2 pb-3 mb-6 border-b border-white/30 flex items-center justify-between shadow-lg -mx-4 sm:-mx-8 px-4 sm:px-8 rounded-t-2xl md:rounded-t-3xl">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md cursor-pointer flex items-center gap-1.5"
-                >
-                  ← BACK TO SPONSORS
-                </button>
-
-                <h2 
-                  className="font-heading font-black text-white tracking-widest uppercase text-center drop-shadow-md hidden xs:block"
-                  style={{ fontSize: "clamp(0.95rem, 2.2vw, 1.5rem)" }}
-                >
-                  SPONSORSHIP FORM
-                </h2>
-
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="w-9 h-9 rounded-full border-2 border-white/40 bg-black/50 hover:bg-white hover:text-black text-white font-black text-sm flex items-center justify-center cursor-pointer transition shadow-md"
-                  aria-label="Close form"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {submittedSuccess ? (
-                <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 rounded-2xl text-center space-y-3 my-6">
-                  <div className="text-emerald-400 text-4xl font-black mb-2">✓</div>
-                  <h4 className="font-heading font-black text-xl text-white">Sponsorship Submitted Successfully!</h4>
-                  <p className="font-body text-sm font-bold text-white/90">
-                    Thank you for partnering with AURA 2K26. Our team will verify your transaction and contact you.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  
-                  {/* TOP TABLE: DETAILS OF SPONSORSHIP CATEGORY (NO MAX ALLOWABLE COLUMN) */}
-                  <div className="bg-purple-950/40 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md shadow-lg">
-                    <h4 className="font-heading font-black text-xs sm:text-sm text-white uppercase tracking-wider text-center">
-                      DETAILS OF SPONSORSHIP CATEGORY ARE AS FOLLOWS:
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-center border-collapse border border-white/20 text-xs sm:text-sm font-body">
-                        <thead>
-                          <tr className="bg-purple-900/70 text-white font-heading font-black uppercase border-b border-white/30">
-                            <th className="p-2 border-r border-white/20">Sr. No.</th>
-                            <th className="p-2 border-r border-white/20">Category</th>
-                            <th className="p-2">INR</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {[
-                            { sr: 1, category: "Platinum", inr: "100000" },
-                            { sr: 2, category: "Diamond", inr: "75000" },
-                            { sr: 3, category: "Gold", inr: "50000" },
-                            { sr: 4, category: "Silver", inr: "25000" },
-                            { sr: 5, category: "Bronze", inr: "10000" }
-                          ].map((row) => (
-                            <tr
-                              key={row.sr}
-                              onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: row.category }))}
-                              className={`border-b border-white/10 transition cursor-pointer font-bold ${
-                                formData.sponsoringFor === row.category
-                                  ? "bg-white text-black font-black"
-                                  : "hover:bg-white/20 text-white bg-black/20"
-                              }`}
-                            >
-                              <td className="p-2 border-r border-white/20">{row.sr}</td>
-                              <td className="p-2 border-r border-white/20 font-heading tracking-wider">{row.category}</td>
-                              <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-cyan-300"}`}>
-                                ₹ {row.inr}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  {/* SPONSORING FOR CATEGORY SELECTION PILLS */}
-                  <div className="space-y-2">
-                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                      Sponsoring for *
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      {["Platinum", "Diamond", "Gold", "Silver", "Bronze"].map((cat) => (
-                        <button
-                          type="button"
-                          key={cat}
-                          onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: cat }))}
-                          className={`py-2.5 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
-                            formData.sponsoringFor === cat
-                              ? "bg-white text-black border-white shadow-lg scale-105"
-                              : "bg-black/50 text-white border-white/30 hover:border-white hover:bg-black/70"
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* ORGANISATION & PLACE / DISTRICT DETAILS */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
-                        Organisation Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="organizationName"
-                        required
-                        value={formData.organizationName}
-                        onChange={handleInputChange}
-                        placeholder="Full Organisation / Corporate Name"
-                        className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
-                          Place
-                        </label>
-                        <input
-                          type="text"
-                          name="place"
-                          value={formData.place}
-                          onChange={handleInputChange}
-                          placeholder="City / Location"
-                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
-                          District
-                        </label>
-                        <input
-                          type="text"
-                          name="district"
-                          value={formData.district}
-                          onChange={handleInputChange}
-                          placeholder="District Name"
-                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
-                          Contact Person *
-                        </label>
-                        <input
-                          type="text"
-                          name="contactPerson"
-                          required
-                          value={formData.contactPerson}
-                          onChange={handleInputChange}
-                          placeholder="Full Name"
-                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
-                          Email Address *
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          required
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="partner@company.com"
-                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
-                          Phone (10 digits) *
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          required
-                          maxLength={10}
-                          value={formData.phone}
-                          onChange={handlePhoneChange}
-                          placeholder="10-digit number"
-                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ONLINE UPI PAYMENT & QR VERIFICATION SECTION */}
-                  <div className="bg-purple-950/40 border border-white/30 p-5 rounded-2xl space-y-4 text-center backdrop-blur-md shadow-lg">
-                    <h4 className="font-heading font-black text-sm text-white uppercase tracking-wider">
-                      FEE PAYMENT VIA UPI QR
-                    </h4>
-                    <p className="font-body text-xs sm:text-sm text-white/90 leading-relaxed">
-                      For online payment, you can directly pay through any UPI App to the QR displayed here for the selected <span className="font-heading font-black text-cyan-300">{formData.sponsoringFor}</span> package (Amount: <span className="font-mono font-black text-cyan-300">₹ {currentFee}</span>):
-                    </p>
-
-                    {/* IDBI UPI Payment QR Image */}
-                    <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border-2 border-white max-w-xs mx-auto shadow-2xl">
-                      <img
-                        src={paymentQr}
-                        alt="AURA 2K26 IDBI UPI Payment QR"
-                        className="w-48 sm:w-56 h-auto object-contain rounded-lg"
-                      />
-                      <span className="text-[10px] font-heading font-black text-slate-900 uppercase tracking-widest mt-2">
-                        SCAN & PAY VIA ANY UPI APP
-                      </span>
-                    </div>
-
-                    {/* Transaction ID / UTR Input */}
-                    <div className="space-y-1.5 text-left pt-2">
-                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                        Transaction ID / UTR Number *
-                      </label>
-                      <input
-                        type="text"
-                        name="transactionId"
-                        required
-                        value={formData.transactionId}
-                        onChange={handleInputChange}
-                        placeholder="Enter 12-digit UTR / UPI Transaction ID"
-                        className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
-                      />
-                    </div>
-
-                    {/* Payment Screenshot Upload */}
-                    <div className="space-y-1.5 text-left">
-                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                        Upload Payment Screenshot (JPG/PNG, Max 5MB) *
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/png, image/jpeg, image/jpg"
-                        onChange={handlePaymentScreenshotUpload}
-                        className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
-                      />
-                      {formData.paymentScreenshotName && (
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
-                          <span>✓ Screenshot Attached: {formData.paymentScreenshotName}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* BOTTOM CONTROLS (BACK BUTTON & SUBMIT BUTTON) */}
-                  <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/20">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-6 py-3 border-2 border-white rounded-full bg-black/50 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg w-full sm:w-auto text-center cursor-pointer"
-                    >
-                      ← BACK TO SPONSORS
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={sponsorMutation.isPending}
-                      className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-cyan-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
-                    >
-                      {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

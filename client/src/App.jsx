@@ -81,6 +81,26 @@ function App() {
           }
         />
         <Route
+          path="/sponsors/form"
+          element={
+            showRegistrationForm ? (
+              <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
+            ) : (
+              <Sponsors initialFormOpen={true} onRegisterClick={() => setShowRegistrationForm(true)} />
+            )
+          }
+        />
+        <Route
+          path="/sponsorship-form"
+          element={
+            showRegistrationForm ? (
+              <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
+            ) : (
+              <Sponsors initialFormOpen={true} onRegisterClick={() => setShowRegistrationForm(true)} />
+            )
+          }
+        />
+        <Route
           path="/people"
           element={
             showRegistrationForm ? (
