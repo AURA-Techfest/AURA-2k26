@@ -48,15 +48,17 @@ const TimelineEventCard = ({ event, progress }) => {
 
   return (
     <motion.div
-      className="absolute flex flex-col text-left justify-start max-w-[200px] select-text z-10 font-bold"
+      className="absolute flex flex-col text-center items-center justify-start w-[220px] select-text z-10 font-bold"
       style={{ left: `${event.x}px`, top: `${event.y}px`, opacity, scale, y }}
     >
       <span className="text-xs font-mono font-black tracking-widest text-white uppercase">// {event.stage}</span>
-      <h3 className="font-heading text-lg font-black uppercase mt-1 text-white">{event.title}</h3>
-      <p className={`text-white mt-1 font-bold ${event.stage === "Stage 3" ? "text-[11px] tracking-tight whitespace-nowrap" : "text-sm"}`}>
-        {event.detail}
-      </p>
-      <span className="font-mono text-sm font-bold text-white mt-2">{event.date}</span>
+      <h3 className="font-heading text-base sm:text-lg font-black uppercase mt-1 text-white leading-tight">{event.title}</h3>
+      {event.detail && (
+        <p className="text-sm text-white/90 mt-1 font-bold leading-normal">{event.detail}</p>
+      )}
+      {event.date && (
+        <span className="font-mono text-sm font-black text-cyan-300 mt-1.5">{event.date}</span>
+      )}
     </motion.div>
   );
 };
@@ -97,44 +99,44 @@ const TIMELINE_EVENTS = [
     title: "Abstraction Submission Start",
     detail: "",
     date: "29 Aug, 2026",
-    t: 0.05,
-    x: 60,
-    y: 0,
-    dotX: 100,
-    dotY: 160
+    t: 0.02,
+    x: 50,
+    y: 10,
+    dotX: 160,
+    dotY: 150
   },
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
     detail: "",
     date: "30 Sep, 2026",
-    t: 0.20,
-    x: 460,
-    y: 0,
-    dotX: 500,
-    dotY: 160
+    t: 0.15,
+    x: 440,
+    y: 10,
+    dotX: 550,
+    dotY: 150
   },
   {
     stage: "Stage 2",
     title: "Abstract Acceptance Notification",
     detail: "",
     date: "5 Oct, 2026",
-    t: 0.35,
-    x: 860,
-    y: 0,
-    dotX: 900,
-    dotY: 160
+    t: 0.28,
+    x: 830,
+    y: 10,
+    dotX: 940,
+    dotY: 150
   },
   {
     stage: "Stage 3",
     title: "Preliminary Round",
     detail: "",
     date: "19 Nov, 2026",
-    t: 0.50,
-    x: 660,
-    y: 380,
-    dotX: 700,
-    dotY: 340
+    t: 0.52,
+    x: 440,
+    y: 250,
+    dotX: 550,
+    dotY: 390
   },
   {
     stage: "Stage 4",
@@ -142,32 +144,32 @@ const TIMELINE_EVENTS = [
     detail: "",
     date: "20 Nov, 2026",
     t: 0.65,
-    x: 300,
-    y: 380,
-    dotX: 350,
-    dotY: 340
+    x: 50,
+    y: 250,
+    dotX: 160,
+    dotY: 390
   },
   {
     stage: "Stage 4.1",
     title: "Participation Certificates",
     detail: "To all participants",
     date: "",
-    t: 0.80,
-    x: 350,
-    y: 560,
-    dotX: 400,
-    dotY: 520
+    t: 0.84,
+    x: 440,
+    y: 490,
+    dotX: 550,
+    dotY: 630
   },
   {
     stage: "Stage 4.2",
     title: "Lucrative Prizes",
     detail: "For top 3 teams",
     date: "",
-    t: 0.95,
-    x: 780,
-    y: 560,
-    dotX: 830,
-    dotY: 520
+    t: 0.98,
+    x: 830,
+    y: 490,
+    dotX: 940,
+    dotY: 630
   }
 ];
 
@@ -461,7 +463,7 @@ function HomeSections({ onRegisterClick }) {
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1100 725" preserveAspectRatio="none">
               {/* Base grey line */}
               <path
-                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
+                d="M 160,150 L 940,150 C 1020,150 1020,390 940,390 L 160,390 C 80,390 80,630 160,630 L 940,630"
                 fill="none"
                 stroke="rgba(255,255,255,0.12)"
                 strokeWidth="4"
@@ -469,7 +471,7 @@ function HomeSections({ onRegisterClick }) {
               />
               {/* Animated white drawing path */}
               <motion.path
-                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
+                d="M 160,150 L 940,150 C 1020,150 1020,390 940,390 L 160,390 C 80,390 80,630 160,630 L 940,630"
                 fill="none"
                 stroke="white"
                 strokeWidth="4"
