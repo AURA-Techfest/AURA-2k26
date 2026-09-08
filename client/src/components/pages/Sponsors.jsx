@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
-import ieeePesLogo from "../../assets/ieee_pes_logo.jpg";
-import iicLogo from "../../assets/iic_logo.jpg";
-import ietLogo from "../../assets/iet_logo.jpg";
+import ieeePesLogo from "../../assets/ieee_pes_logo.png";
+import iicLogo from "../../assets/iic_logo.png";
+import ietLogo from "../../assets/iet_logo.png";
 
 export default function Sponsors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -157,7 +157,7 @@ export default function Sponsors() {
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS LOGO CARDS (Static White Background, Solid White Borders, Clean High-Res Logos) */}
+        {/* TOP SPONSORS LOGO CARDS (Pure Seamless White Background - Zero Color Difference) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -175,7 +175,7 @@ export default function Sponsors() {
               <img
                 src={item.src}
                 alt={item.name}
-                className="h-36 sm:h-48 md:h-56 w-auto object-contain rounded-xl"
+                className="h-36 sm:h-48 md:h-56 w-auto object-contain"
               />
             </motion.div>
           ))}
@@ -277,7 +277,7 @@ export default function Sponsors() {
           </button>
         </motion.div>
 
-        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH STATIC WHITE BG & SCALED LOGOS) */}
+        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH SEAMLESS PURE WHITE BG & SCALED LOGOS) */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -300,7 +300,7 @@ export default function Sponsors() {
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="h-32 sm:h-40 md:h-44 w-auto object-contain rounded-lg"
+                    className="h-32 sm:h-40 md:h-44 w-auto object-contain"
                   />
                 </div>
               ))}
