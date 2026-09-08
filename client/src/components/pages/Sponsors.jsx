@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
-import ieeePesLogo from "../../assets/ieee_pes_logo.jpg";
-import iicLogo from "../../assets/iic_logo.jpg";
-import ietLogo from "../../assets/iet_logo.jpg";
+import ieeePesLogo from "../../assets/ieee_pes_logo.png";
+import iicLogo from "../../assets/iic_logo.png";
+import ietLogo from "../../assets/iet_logo.png";
 
 export default function Sponsors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -157,31 +157,31 @@ export default function Sponsors() {
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS LOGO CARDS (With Highlighted White Borders & JPG Logos) */}
+        {/* TOP SPONSORS LOGO CARDS (Transparent Background, Highlighted White Borders, High-Visibility Glow & Scaled Logo Size) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.7 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-4xl mb-16"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-5xl mb-16"
         >
           {currentSponsors.map((item) => (
             <motion.div
               key={item.id}
-              whileHover={{ scale: 1.05, translateY: -4 }}
+              whileHover={{ scale: 1.06, translateY: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="bg-white rounded-3xl p-4 sm:p-5 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_20px_rgba(255,255,255,0.4)] min-h-[140px] sm:min-h-[160px]"
+              className="bg-black/30 backdrop-blur-md rounded-3xl p-5 sm:p-7 flex items-center justify-center border-2 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(255,255,255,0.3)] min-h-[180px] sm:min-h-[220px]"
             >
               <img
                 src={item.src}
                 alt={item.name}
-                className="max-h-28 sm:max-h-32 w-auto object-contain rounded-xl"
+                className="h-36 sm:h-48 md:h-56 w-auto object-contain filter drop-shadow-[0_0_16px_rgba(255,255,255,0.95)]"
               />
             </motion.div>
           ))}
         </motion.div>
 
-        {/* BE OUR SPONSOR SECTION (Highlighted White Borders & Bold Text & Scroll Animation) */}
+        {/* BE OUR SPONSOR SECTION */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -216,7 +216,7 @@ export default function Sponsors() {
           </div>
         </motion.section>
 
-        {/* SPONSORSHIP TIERS SECTION (Highlighted White Borders & Larger Bold Font) */}
+        {/* SPONSORSHIP TIERS SECTION */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -277,7 +277,7 @@ export default function Sponsors() {
           </button>
         </motion.div>
 
-        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH HIGHLIGHTED WHITE BORDERS) */}
+        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH TRANSPARENT BG, WHITE BORDERS & SCALED LOGOS) */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -295,12 +295,12 @@ export default function Sponsors() {
               {[...currentSponsors, ...currentSponsors, ...currentSponsors, ...currentSponsors].map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-3xl p-4 sm:p-5 min-w-[220px] sm:min-w-[250px] max-w-[260px] flex items-center justify-center border-4 border-white shadow-[0_10px_25px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.3)] shrink-0 transform hover:scale-105 transition-all duration-200"
+                  className="bg-black/30 backdrop-blur-md rounded-3xl p-5 min-w-[260px] sm:min-w-[320px] max-w-[350px] flex items-center justify-center border-2 border-white shadow-[0_10px_25px_rgba(0,0,0,0.6),0_0_20px_rgba(255,255,255,0.25)] shrink-0 transform hover:scale-105 transition-all duration-200"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="max-h-24 sm:max-h-28 w-auto object-contain rounded-lg"
+                    className="h-32 sm:h-40 md:h-44 w-auto object-contain filter drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
                   />
                 </div>
               ))}
