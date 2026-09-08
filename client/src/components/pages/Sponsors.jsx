@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
@@ -19,6 +19,8 @@ const TIER_FEES = {
 
 export default function Sponsors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalScrollRef = useRef(null);
+
   const [formData, setFormData] = useState({
     sponsoringFor: "Platinum",
     organizationName: "",
@@ -33,6 +35,13 @@ export default function Sponsors() {
   });
   const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+
+  // Auto-scroll modal to top when opened
+  useEffect(() => {
+    if (isModalOpen && modalScrollRef.current) {
+      modalScrollRef.current.scrollTop = 0;
+    }
+  }, [isModalOpen]);
 
   // TanStack Query useMutation for Sponsor Interest Form Submission
   const sponsorMutation = useMutation({
@@ -51,7 +60,6 @@ export default function Sponsors() {
         formDataToSend.append("paymentScreenshot", paymentScreenshotFile);
       }
 
-      // Simulate or execute backend API call
       const response = await new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1200));
       return response;
     },
@@ -404,34 +412,47 @@ export default function Sponsors() {
         </footer>
       </div>
 
-      {/* SPONSORSHIP FORM MODAL (Matching Registration Portal Mirror Glass Gradient Design) */}
+      {/* SPONSORSHIP FORM MODAL WITH STICKY TOP BACK BUTTON & PERFECT VIEWPORT SCROLLING */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.25 }}
-              className="relative z-20 w-full max-w-3xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] my-8 p-4 sm:p-8 text-white text-left font-body"
+              ref={modalScrollRef}
+              className="relative z-20 w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] p-4 sm:p-8 text-white text-left font-body"
               style={{
-                background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.92), rgba(60, 86, 175, 0.92))"
+                background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.95), rgba(60, 86, 175, 0.95))"
               }}
             >
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-4 right-5 text-white/60 hover:text-white font-black text-2xl cursor-pointer"
-              >
-                ✕
-              </button>
+              {/* STICKY TOP CONTROL HEADER (ALWAYS VISIBLE BACK BUTTON & TITLE) */}
+              <div className="sticky top-0 z-30 bg-purple-950/90 backdrop-blur-md pt-2 pb-3 mb-6 border-b border-white/20 flex items-center justify-between shadow-md -mx-4 sm:-mx-8 px-4 sm:px-8 rounded-t-2xl md:rounded-t-3xl">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  ← BACK TO SPONSORS
+                </button>
 
-              <h2 className="font-heading font-black text-xl sm:text-3xl text-white tracking-widest uppercase text-center mb-6 drop-shadow-md">
-                SPONSORSHIP FORM
-              </h2>
+                <h2 className="font-heading font-black text-base sm:text-xl md:text-2xl text-white tracking-widest uppercase text-center drop-shadow-md hidden xs:block">
+                  SPONSORSHIP FORM
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-9 h-9 rounded-full border-2 border-white/40 bg-black/50 hover:bg-white hover:text-black text-white font-black text-sm flex items-center justify-center cursor-pointer transition shadow-md"
+                  aria-label="Close form"
+                >
+                  ✕
+                </button>
+              </div>
 
               {submittedSuccess ? (
-                <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 rounded-2xl text-center space-y-3">
+                <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 rounded-2xl text-center space-y-3 my-6">
                   <div className="text-emerald-400 text-4xl font-black mb-2">✓</div>
                   <h4 className="font-heading font-black text-xl text-white">Sponsorship Submitted Successfully!</h4>
                   <p className="font-body text-sm font-bold text-white/90">
@@ -495,9 +516,9 @@ export default function Sponsors() {
                           type="button"
                           key={cat}
                           onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: cat }))}
-                          className={`py-2 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
+                          className={`py-2.5 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
                             formData.sponsoringFor === cat
-                              ? "bg-white text-black border-white shadow-lg"
+                              ? "bg-white text-black border-white shadow-lg scale-105"
                               : "bg-black/50 text-white border-white/30 hover:border-white"
                           }`}
                         >
@@ -520,7 +541,7 @@ export default function Sponsors() {
                         value={formData.organizationName}
                         onChange={handleInputChange}
                         placeholder="Full Organisation / Corporate Name"
-                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                       />
                     </div>
 
@@ -535,7 +556,7 @@ export default function Sponsors() {
                           value={formData.place}
                           onChange={handleInputChange}
                           placeholder="City / Location"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                         />
                       </div>
 
@@ -549,7 +570,7 @@ export default function Sponsors() {
                           value={formData.district}
                           onChange={handleInputChange}
                           placeholder="District Name"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                         />
                       </div>
                     </div>
@@ -566,7 +587,7 @@ export default function Sponsors() {
                           value={formData.contactPerson}
                           onChange={handleInputChange}
                           placeholder="Full Name"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                         />
                       </div>
 
@@ -581,7 +602,7 @@ export default function Sponsors() {
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="partner@company.com"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                         />
                       </div>
 
@@ -597,7 +618,7 @@ export default function Sponsors() {
                           value={formData.phone}
                           onChange={handlePhoneChange}
                           placeholder="10-digit number"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                         />
                       </div>
                     </div>
@@ -636,7 +657,7 @@ export default function Sponsors() {
                         value={formData.transactionId}
                         onChange={handleInputChange}
                         placeholder="Enter 12-digit UTR / UPI Transaction ID"
-                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
                       />
                     </div>
 
@@ -659,12 +680,20 @@ export default function Sponsors() {
                     </div>
                   </div>
 
-                  {/* SUBMIT BUTTON */}
-                  <div className="pt-2">
+                  {/* BOTTOM CONTROLS (BACK BUTTON & SUBMIT BUTTON) */}
+                  <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/20">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-6 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg w-full sm:w-auto text-center"
+                    >
+                      ← BACK TO SPONSORS
+                    </button>
+
                     <button
                       type="submit"
                       disabled={sponsorMutation.isPending}
-                      className="w-full py-4 border-2 border-white rounded-full bg-white text-black font-heading text-xs sm:text-sm font-black tracking-widest uppercase hover:bg-purple-300 transition shadow-xl cursor-pointer disabled:opacity-50"
+                      className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-purple-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
                     >
                       {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
                     </button>
