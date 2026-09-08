@@ -437,16 +437,18 @@ export default function AuraSubmissionPortal({ onBack }) {
     reader.readAsDataURL(file);
   };
 
-  // Phone number numeric filtering handler (digits and optional leading + only)
+  // Phone number numeric filtering handler (strictly 10 numeric digits 0-9)
   const handlePhoneChange = (e) => {
     const { name, value } = e.target;
-    let cleaned = value.replace(/[^\d+]/g, '');
-    if (cleaned.startsWith('+')) {
-      cleaned = '+' + cleaned.slice(1).replace(/\+/g, '');
-    } else {
-      cleaned = cleaned.replace(/\+/g, '');
-    }
-    setFormData((prev) => ({ ...prev, [name]: cleaned }));
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+    setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
+  };
+
+  // Positive integer numeric input handler (strictly 0-9 digits)
+  const handlePositiveNumberChange = (e) => {
+    const { name, value } = e.target;
+    const digitsOnly = value.replace(/\D/g, '');
+    setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
   };
 
   // Abstract Idea Document Upload Handler (PDF & DOCX)
@@ -548,14 +550,20 @@ export default function AuraSubmissionPortal({ onBack }) {
     // Required Fields Client Validation
     if (!formData.teamName.trim()) { alert("Team Name is required."); return; }
     if (!formData.teamLeaderName.trim()) { alert("Team Leader Name is required."); return; }
-    if (!formData.teamLeaderEmail.trim()) { alert("Team Leader Email is required."); return; }
+    if (!formData.teamLeaderEmail.trim()) {
+      alert("Team Leader Email address is compulsory.");
+      return;
+    }
     if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.teamLeaderEmail.trim())) {
       alert("Please enter a valid email address (e.g. leader@gmail.com).");
       return;
     }
-    if (!formData.teamLeaderPhone.trim()) { alert("Team Leader Phone is required."); return; }
-    if (formData.teamLeaderPhone.trim().replace(/\D/g, '').length < 10) {
-      alert("Please enter a valid 10-digit phone number (numeric digits only).");
+    if (!formData.teamLeaderPhone.trim()) {
+      alert("Team Leader Phone number is compulsory.");
+      return;
+    }
+    if (!/^[0-9]{10}$/.test(formData.teamLeaderPhone.trim())) {
+      alert("Team Leader Phone must be exactly 10 numeric digits (e.g. 9876543210).");
       return;
     }
     if (!formData.teamMembersDetails.trim()) { alert("Team Member Details are required."); return; }
@@ -595,8 +603,8 @@ export default function AuraSubmissionPortal({ onBack }) {
     if (!formData.workingPrinciple.trim()) { alert("Working Principle explanation is required."); return; }
     if (!formData.hardwareComponents.trim()) { alert("Major Hardware Components are required."); return; }
     if (!formData.realWorldImpact.trim()) { alert("Potential Real-World Impact is required."); return; }
-    if (formData.developmentCost === "" || isNaN(Number(formData.developmentCost)) || Number(formData.developmentCost) < 0) {
-      alert("Approx Development Cost must be a positive number.");
+    if (formData.developmentCost === "" || isNaN(Number(formData.developmentCost)) || Number(formData.developmentCost) <= 0) {
+      alert("Development Cost must be a valid positive amount greater than 0 (₹ INR).");
       return;
     }
     if (!formData.whyWorthSeeing.trim()) { alert("Highlight explaining why this is worth seeing is required."); return; }
@@ -1099,6 +1107,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   <input
                     type="email"
                     name="teamLeaderEmail"
+                    required
                     value={formData.teamLeaderEmail}
                     onChange={handleTextChange}
                     placeholder="leader@gmail.com"
@@ -1107,14 +1116,16 @@ export default function AuraSubmissionPortal({ onBack }) {
                 </div>
                 <div id="field-group-8" className="space-y-2">
                   <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold">
-                    Leader Phone *
+                    Leader Phone (10 digits) *
                   </label>
                   <input
                     type="tel"
                     name="teamLeaderPhone"
+                    required
+                    maxLength={10}
                     value={formData.teamLeaderPhone}
                     onChange={handlePhoneChange}
-                    placeholder="10-digit numeric number"
+                    placeholder="10-digit number (e.g. 9876543210)"
                     className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                   />
                 </div>
@@ -1496,15 +1507,21 @@ export default function AuraSubmissionPortal({ onBack }) {
               </div>
 
               <div id="field-group-26" className="space-y-2">
-                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                  Potential Real-World Impact *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Potential Real-World Impact *
+                  </label>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.realWorldImpact) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
+                    {countWords(formData.realWorldImpact)} / 250 words
+                  </span>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={3}
                   name="realWorldImpact"
                   value={formData.realWorldImpact}
-                  onChange={handleTextChange}
-                  placeholder="Who benefits from this? How does it improve current standards?"
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.realWorldImpact, 250)}
+                  placeholder="Who benefits from this? How does it improve current standards? (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
@@ -1531,11 +1548,12 @@ export default function AuraSubmissionPortal({ onBack }) {
                     Development Cost (₹ INR) *
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     name="developmentCost"
                     value={formData.developmentCost}
-                    onChange={handleTextChange}
-                    placeholder="Amount in ₹"
+                    onChange={handlePositiveNumberChange}
+                    placeholder="Positive amount in ₹ (e.g. 5000)"
                     className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                   />
                 </div>
