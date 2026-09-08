@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Lenis from "lenis";
 
 import Navbar from "./components/layout/Navbar";
 import Sidebar from "./components/layout/Sidebar";
 import HomeSections from "./components/sections/HomeSections";
 import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
+import Sponsors from "./components/pages/Sponsors";
+import People from "./components/pages/People";
 
-function App() {
-  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
-
+function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
   // Initialize Lenis smooth scroll for desktop viewports
   useEffect(() => {
     if (showRegistrationForm) return;
 
-    // Skip Lenis on mobile/touch devices for 60fps/120fps native touch momentum scroll
     const isTouchMobile = window.innerWidth < 768 || ('ontouchstart' in window && window.navigator.maxTouchPoints > 0);
     if (isTouchMobile) return;
 
@@ -34,7 +34,6 @@ function App() {
     };
   }, [showRegistrationForm]);
 
-  // When registration opens, render the full portal page with back button support
   if (showRegistrationForm) {
     return <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />;
   }
@@ -53,6 +52,46 @@ function App() {
       {/* Single Page Layout Sections */}
       <HomeSections onRegisterClick={() => setShowRegistrationForm(true)} />
     </div>
+  );
+}
+
+function App() {
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              showRegistrationForm={showRegistrationForm}
+              setShowRegistrationForm={setShowRegistrationForm}
+            />
+          }
+        />
+        <Route
+          path="/sponsors"
+          element={
+            showRegistrationForm ? (
+              <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
+            ) : (
+              <Sponsors onRegisterClick={() => setShowRegistrationForm(true)} />
+            )
+          }
+        />
+        <Route
+          path="/people"
+          element={
+            showRegistrationForm ? (
+              <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
+            ) : (
+              <People onRegisterClick={() => setShowRegistrationForm(true)} />
+            )
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

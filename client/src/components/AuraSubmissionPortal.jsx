@@ -437,16 +437,31 @@ export default function AuraSubmissionPortal({ onBack }) {
     reader.readAsDataURL(file);
   };
 
-  // Abstract Idea PDF Upload Handler
-  const handleAbstractPdfUpload = (e) => {
+  // Phone number numeric filtering handler (digits and optional leading + only)
+  const handlePhoneChange = (e) => {
+    const { name, value } = e.target;
+    let cleaned = value.replace(/[^\d+]/g, '');
+    if (cleaned.startsWith('+')) {
+      cleaned = '+' + cleaned.slice(1).replace(/\+/g, '');
+    } else {
+      cleaned = cleaned.replace(/\+/g, '');
+    }
+    setFormData((prev) => ({ ...prev, [name]: cleaned }));
+  };
+
+  // Abstract Idea Document Upload Handler (PDF & DOCX)
+  const handleAbstractDocUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      alert("Please upload a valid PDF file for the Abstract Idea.");
+    const fileName = file.name.toLowerCase();
+    const isAllowedExt = fileName.endsWith('.pdf') || fileName.endsWith('.docx') || fileName.endsWith('.doc');
+
+    if (!isAllowedExt) {
+      alert("Please upload a valid PDF or DOCX file for the Abstract Idea.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert("Abstract Idea PDF must be smaller than 10 MB.");
+      alert("Abstract Idea document must be smaller than 10 MB.");
       return;
     }
     setFiles((prev) => ({ ...prev, abstractPdf: file }));
@@ -534,8 +549,15 @@ export default function AuraSubmissionPortal({ onBack }) {
     if (!formData.teamName.trim()) { alert("Team Name is required."); return; }
     if (!formData.teamLeaderName.trim()) { alert("Team Leader Name is required."); return; }
     if (!formData.teamLeaderEmail.trim()) { alert("Team Leader Email is required."); return; }
-    if (!/^\S+@\S+\.\S+$/.test(formData.teamLeaderEmail.trim())) { alert("Please enter a valid email address."); return; }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.teamLeaderEmail.trim())) {
+      alert("Please enter a valid email address (e.g. leader@gmail.com).");
+      return;
+    }
     if (!formData.teamLeaderPhone.trim()) { alert("Team Leader Phone is required."); return; }
+    if (formData.teamLeaderPhone.trim().replace(/\D/g, '').length < 10) {
+      alert("Please enter a valid 10-digit phone number (numeric digits only).");
+      return;
+    }
     if (!formData.teamMembersDetails.trim()) { alert("Team Member Details are required."); return; }
 
     // College ID Card verification
@@ -1091,8 +1113,8 @@ export default function AuraSubmissionPortal({ onBack }) {
                     type="tel"
                     name="teamLeaderPhone"
                     value={formData.teamLeaderPhone}
-                    onChange={handleTextChange}
-                    placeholder="10-digit number"
+                    onChange={handlePhoneChange}
+                    placeholder="10-digit numeric number"
                     className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                   />
                 </div>
@@ -1315,20 +1337,23 @@ export default function AuraSubmissionPortal({ onBack }) {
                 />
               </div>
 
-              {/* Abstract Idea Upload (PDF) */}
+              {/* Abstract Idea Upload (PDF / DOCX) */}
               <div id="field-group-16" className="space-y-2 bg-black/40 border border-white/20 p-4 rounded-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                    Abstract Idea Upload (PDF) *
+                    Abstract Idea Upload (PDF / DOCX) *
                   </label>
                   <span className="text-[11px] font-mono text-white/60">
-                    Format: PDF | Max size: 10MB
+                    Format: PDF / DOCX | Max size: 10MB
                   </span>
                 </div>
+                <p className="text-[11px] font-mono font-bold text-purple-300 tracking-wide uppercase bg-purple-950/40 p-2.5 rounded-lg border border-purple-400/30">
+                  UPLOAD ABOUT YOUR PROJECTS' IDEA, METHODOLOGY AND IMPACT IN BRIEF
+                </p>
                 <input
                   type="file"
-                  accept="application/pdf,.pdf"
-                  onChange={handleAbstractPdfUpload}
+                  accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
+                  onChange={handleAbstractDocUpload}
                   className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
                 />
                 {formData.abstractPdfName && (
@@ -1403,15 +1428,21 @@ export default function AuraSubmissionPortal({ onBack }) {
               </div>
 
               <div id="field-group-22" className="space-y-2">
-                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                  Major Hardware Components *
-                </label>
-                <input
-                  type="text"
+                <div className="flex justify-between items-center">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Major Hardware Components *
+                  </label>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.hardwareComponents) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
+                    {countWords(formData.hardwareComponents)} / 250 words
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
                   name="hardwareComponents"
                   value={formData.hardwareComponents}
-                  onChange={handleTextChange}
-                  placeholder="e.g. ESP32, Arduino, motors, sensors, PCB, battery..."
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.hardwareComponents, 250)}
+                  placeholder="e.g. ESP32, Arduino, motors, sensors, PCB, battery... (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
@@ -1566,15 +1597,21 @@ export default function AuraSubmissionPortal({ onBack }) {
               </div>
 
               <div id="field-group-31" className="space-y-2">
-                <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                  Safety Precautions Taken *
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                    Safety Precautions Taken *
+                  </label>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.safetyPrecautions) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
+                    {countWords(formData.safetyPrecautions)} / 250 words
+                  </span>
+                </div>
                 <textarea
-                  rows={2}
+                  rows={3}
                   name="safetyPrecautions"
                   value={formData.safetyPrecautions}
-                  onChange={handleTextChange}
-                  placeholder="Describe the precautions/safeguards built into your prototype"
+                  onChange={(e) => handleWordLimitedChange(e, 250)}
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.safetyPrecautions, 250)}
+                  placeholder="Describe the precautions/safeguards built into your prototype (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
