@@ -412,23 +412,25 @@ export default function Sponsors() {
         </footer>
       </div>
 
-      {/* SPONSORSHIP FORM MODAL WITH STICKY TOP BACK BUTTON & PERFECT VIEWPORT SCROLLING */}
+      {/* SPONSORSHIP FORM MODAL WITH AUTHENTIC WEBSITE_BG.PNG BACKGROUND TEXTURE */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.25 }}
               ref={modalScrollRef}
-              className="relative z-20 w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] p-4 sm:p-8 text-white text-left font-body"
+              className="relative z-20 w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-4 sm:p-8 text-white text-left font-body bg-cover bg-center"
               style={{
-                background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.95), rgba(60, 86, 175, 0.95))"
+                backgroundImage: `linear-gradient(to bottom, rgba(12, 4, 24, 0.45), rgba(24, 10, 42, 0.65)), url(${websiteBg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center"
               }}
             >
               {/* STICKY TOP CONTROL HEADER (ALWAYS VISIBLE BACK BUTTON & TITLE) */}
-              <div className="sticky top-0 z-30 bg-purple-950/90 backdrop-blur-md pt-2 pb-3 mb-6 border-b border-white/20 flex items-center justify-between shadow-md -mx-4 sm:-mx-8 px-4 sm:px-8 rounded-t-2xl md:rounded-t-3xl">
+              <div className="sticky top-0 z-30 bg-purple-950/85 backdrop-blur-lg pt-2 pb-3 mb-6 border-b border-white/30 flex items-center justify-between shadow-lg -mx-4 sm:-mx-8 px-4 sm:px-8 rounded-t-2xl md:rounded-t-3xl">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -463,14 +465,14 @@ export default function Sponsors() {
                 <form onSubmit={handleFormSubmit} className="space-y-6">
                   
                   {/* TOP TABLE: DETAILS OF SPONSORSHIP CATEGORY (NO MAX ALLOWABLE COLUMN) */}
-                  <div className="bg-black/60 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md">
+                  <div className="bg-purple-950/40 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md shadow-lg">
                     <h4 className="font-heading font-black text-xs sm:text-sm text-white uppercase tracking-wider text-center">
                       DETAILS OF SPONSORSHIP CATEGORY ARE AS FOLLOWS:
                     </h4>
                     <div className="overflow-x-auto">
                       <table className="w-full text-center border-collapse border border-white/20 text-xs sm:text-sm font-body">
                         <thead>
-                          <tr className="bg-purple-950/80 text-white font-heading font-black uppercase border-b border-white/30">
+                          <tr className="bg-purple-900/70 text-white font-heading font-black uppercase border-b border-white/30">
                             <th className="p-2 border-r border-white/20">Sr. No.</th>
                             <th className="p-2 border-r border-white/20">Category</th>
                             <th className="p-2">INR</th>
@@ -490,7 +492,7 @@ export default function Sponsors() {
                               className={`border-b border-white/10 transition cursor-pointer font-bold ${
                                 formData.sponsoringFor === row.category
                                   ? "bg-white text-black font-black"
-                                  : "hover:bg-white/10 text-white"
+                                  : "hover:bg-white/20 text-white bg-black/20"
                               }`}
                             >
                               <td className="p-2 border-r border-white/20">{row.sr}</td>
@@ -519,7 +521,7 @@ export default function Sponsors() {
                           className={`py-2.5 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
                             formData.sponsoringFor === cat
                               ? "bg-white text-black border-white shadow-lg scale-105"
-                              : "bg-black/50 text-white border-white/30 hover:border-white"
+                              : "bg-black/50 text-white border-white/30 hover:border-white hover:bg-black/70"
                           }`}
                         >
                           {cat}
@@ -541,7 +543,7 @@ export default function Sponsors() {
                         value={formData.organizationName}
                         onChange={handleInputChange}
                         placeholder="Full Organisation / Corporate Name"
-                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                        className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                       />
                     </div>
 
@@ -556,7 +558,7 @@ export default function Sponsors() {
                           value={formData.place}
                           onChange={handleInputChange}
                           placeholder="City / Location"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                         />
                       </div>
 
@@ -570,7 +572,7 @@ export default function Sponsors() {
                           value={formData.district}
                           onChange={handleInputChange}
                           placeholder="District Name"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                         />
                       </div>
                     </div>
@@ -587,7 +589,7 @@ export default function Sponsors() {
                           value={formData.contactPerson}
                           onChange={handleInputChange}
                           placeholder="Full Name"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                         />
                       </div>
 
@@ -602,7 +604,7 @@ export default function Sponsors() {
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="partner@company.com"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                         />
                       </div>
 
@@ -618,14 +620,14 @@ export default function Sponsors() {
                           value={formData.phone}
                           onChange={handlePhoneChange}
                           placeholder="10-digit number"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                          className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* ONLINE UPI PAYMENT & QR VERIFICATION SECTION */}
-                  <div className="bg-black/60 border border-white/30 p-5 rounded-2xl space-y-4 text-center backdrop-blur-md">
+                  <div className="bg-purple-950/40 border border-white/30 p-5 rounded-2xl space-y-4 text-center backdrop-blur-md shadow-lg">
                     <h4 className="font-heading font-black text-sm text-white uppercase tracking-wider">
                       FEE PAYMENT VIA UPI QR
                     </h4>
@@ -657,7 +659,7 @@ export default function Sponsors() {
                         value={formData.transactionId}
                         onChange={handleInputChange}
                         placeholder="Enter 12-digit UTR / UPI Transaction ID"
-                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/30"
+                        className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                       />
                     </div>
 
@@ -685,7 +687,7 @@ export default function Sponsors() {
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-6 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg w-full sm:w-auto text-center"
+                      className="px-6 py-3 border-2 border-white rounded-full bg-black/50 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg w-full sm:w-auto text-center cursor-pointer"
                     >
                       ← BACK TO SPONSORS
                     </button>
@@ -693,7 +695,7 @@ export default function Sponsors() {
                     <button
                       type="submit"
                       disabled={sponsorMutation.isPending}
-                      className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-purple-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
+                      className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-cyan-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
                     >
                       {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
                     </button>
