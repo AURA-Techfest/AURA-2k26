@@ -854,8 +854,10 @@ export default function AuraSubmissionPortal({ onBack }) {
 
       {/* Main Mirror Glass Panel Container (Static Min-Height to prevent background shifts) */}
       <div 
-        className="relative z-20 w-full max-w-4xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12 min-h-[720px] flex flex-col justify-between"
+        className="relative z-20 w-full border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] mb-12 flex flex-col justify-between"
         style={{
+          width: "clamp(300px, 92vw, 896px)",
+          minHeight: "clamp(550px, 80vh, 760px)",
           background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.78), rgba(60, 86, 175, 0.78))",
           padding: "clamp(1.25rem, 3.5vw, 2.5rem)"
         }}

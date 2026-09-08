@@ -422,8 +422,11 @@ export default function Sponsors() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.25 }}
               ref={modalScrollRef}
-              className="relative z-20 w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-4 sm:p-8 text-white text-left font-body bg-cover bg-center"
+              className="relative z-20 w-full border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] text-white text-left font-body bg-cover bg-center overflow-y-auto custom-scrollbar"
               style={{
+                width: "clamp(300px, 92vw, 820px)",
+                maxHeight: "clamp(500px, 88vh, 850px)",
+                padding: "clamp(1rem, 2.5vw, 2rem)",
                 backgroundImage: `linear-gradient(to bottom, rgba(12, 4, 24, 0.45), rgba(24, 10, 42, 0.65)), url(${websiteBg})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center"
@@ -439,7 +442,10 @@ export default function Sponsors() {
                   ← BACK TO SPONSORS
                 </button>
 
-                <h2 className="font-heading font-black text-base sm:text-xl md:text-2xl text-white tracking-widest uppercase text-center drop-shadow-md hidden xs:block">
+                <h2 
+                  className="font-heading font-black text-white tracking-widest uppercase text-center drop-shadow-md hidden xs:block"
+                  style={{ fontSize: "clamp(0.95rem, 2.2vw, 1.5rem)" }}
+                >
                   SPONSORSHIP FORM
                 </h2>
 
