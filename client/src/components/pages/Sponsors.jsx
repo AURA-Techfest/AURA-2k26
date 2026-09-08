@@ -4,25 +4,53 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
+import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/ieee_pes_logo.png";
 import iicLogo from "../../assets/iic_logo.png";
 import ietLogo from "../../assets/iet_logo.png";
 
+const TIER_FEES = {
+  Platinum: 100000,
+  Diamond: 75000,
+  Gold: 50000,
+  Silver: 25000,
+  Bronze: 10000
+};
+
 export default function Sponsors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
+    sponsoringFor: "Platinum",
     organizationName: "",
+    place: "",
+    district: "",
     contactPerson: "",
     email: "",
     phone: "",
-    preferredTier: "PLATINUM SPONSORSHIP PACKAGE",
-    message: ""
+    transactionId: "",
+    paymentScreenshotName: "",
+    paymentScreenshotPreview: null
   });
+  const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
   // TanStack Query useMutation for Sponsor Interest Form Submission
   const sponsorMutation = useMutation({
     mutationFn: async (payload) => {
+      const formDataToSend = new FormData();
+      formDataToSend.append("sponsoringFor", payload.sponsoringFor);
+      formDataToSend.append("organizationName", payload.organizationName);
+      formDataToSend.append("place", payload.place);
+      formDataToSend.append("district", payload.district);
+      formDataToSend.append("contactPerson", payload.contactPerson);
+      formDataToSend.append("email", payload.email);
+      formDataToSend.append("phone", payload.phone);
+      formDataToSend.append("transactionId", payload.transactionId);
+
+      if (paymentScreenshotFile) {
+        formDataToSend.append("paymentScreenshot", paymentScreenshotFile);
+      }
+
       // Simulate or execute backend API call
       const response = await new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1200));
       return response;
@@ -33,14 +61,19 @@ export default function Sponsors() {
         setSubmittedSuccess(false);
         setIsModalOpen(false);
         setFormData({
+          sponsoringFor: "Platinum",
           organizationName: "",
+          place: "",
+          district: "",
           contactPerson: "",
           email: "",
           phone: "",
-          preferredTier: "PLATINUM SPONSORSHIP PACKAGE",
-          message: ""
+          transactionId: "",
+          paymentScreenshotName: "",
+          paymentScreenshotPreview: null
         });
-      }, 2000);
+        setPaymentScreenshotFile(null);
+      }, 2200);
     },
     onError: () => {
       alert("Submission failed. Please try again or email us directly at aura@aliah.ac.in.");
@@ -52,12 +85,56 @@ export default function Sponsors() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.organizationName || !formData.email || !formData.phone) {
-      alert("Please fill in all mandatory contact fields.");
+  const handlePhoneChange = (e) => {
+    const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setFormData((prev) => ({ ...prev, phone: digitsOnly }));
+  };
+
+  const handlePaymentScreenshotUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload a valid image file (JPG/PNG) for payment screenshot.");
       return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Payment screenshot must be smaller than 5 MB.");
+      return;
+    }
+    setPaymentScreenshotFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        paymentScreenshotName: file.name,
+        paymentScreenshotPreview: reader.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.organizationName.trim()) { alert("Organisation Name is compulsory."); return; }
+    if (!formData.contactPerson.trim()) { alert("Contact Person Name is compulsory."); return; }
+    if (!formData.email.trim()) { alert("Email address is compulsory."); return; }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email.trim())) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (!formData.phone.trim() || !/^[0-9]{10}$/.test(formData.phone.trim())) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
+    }
+    if (!formData.transactionId.trim()) {
+      alert("Transaction ID / UTR Number is required.");
+      return;
+    }
+    if (!paymentScreenshotFile && !formData.paymentScreenshotPreview) {
+      alert("Please upload payment screenshot.");
+      return;
+    }
+
     sponsorMutation.mutate(formData);
   };
 
@@ -71,6 +148,7 @@ export default function Sponsors() {
     {
       title: "PLATINUM SPONSORSHIP PACKAGE",
       price: "RS. 100000",
+      categoryKey: "Platinum",
       features: [
         "Organization Logo will be displayed along with AURA 2026 Banner everywhere.",
         "Super-scaling antenna / banner will be installed for advertisement.",
@@ -84,6 +162,7 @@ export default function Sponsors() {
     {
       title: "DIAMOND SPONSORSHIP PACKAGE",
       price: "RS. 75000",
+      categoryKey: "Diamond",
       features: [
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "A 10-minute slot on the stage to deliver an appropriate speech related to advertisement during the program to interact with the audience.",
@@ -95,6 +174,7 @@ export default function Sponsors() {
     {
       title: "GOLD SPONSORSHIP PACKAGE",
       price: "RS. 50000",
+      categoryKey: "Gold",
       features: [
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
@@ -105,6 +185,7 @@ export default function Sponsors() {
     {
       title: "SILVER SPONSORSHIP PACKAGE",
       price: "RS. 25000",
+      categoryKey: "Silver",
       features: [
         "A single banner of the organization (2'X6') will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
@@ -113,12 +194,15 @@ export default function Sponsors() {
     {
       title: "BRONZE SPONSORSHIP PACKAGE",
       price: "RS. 10000",
+      categoryKey: "Bronze",
       features: [
         "A single banner of the organization (2'X6') will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     }
   ];
+
+  const currentFee = TIER_FEES[formData.sponsoringFor] || 100000;
 
   return (
     <div
@@ -157,7 +241,7 @@ export default function Sponsors() {
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS LOGO CARDS (Pure Seamless White Background - Zero Color Difference) */}
+        {/* TOP SPONSORS LOGO CARDS */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -175,7 +259,7 @@ export default function Sponsors() {
               <img
                 src={item.src}
                 alt={item.name}
-                className="h-36 sm:h-48 md:h-56 w-auto object-contain"
+                className="h-36 sm:h-48 md:h-56 w-auto object-contain rounded-xl"
               />
             </motion.div>
           ))}
@@ -242,9 +326,16 @@ export default function Sponsors() {
                   <h3 className="font-heading font-black text-base sm:text-lg md:text-xl text-white tracking-wider uppercase">
                     {tier.title}
                   </h3>
-                  <span className="font-heading font-black text-sm sm:text-base md:text-lg text-cyan-300 tracking-widest uppercase bg-black/50 px-4 py-1.5 rounded-full border border-cyan-400/50">
-                    {tier.price}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, sponsoringFor: tier.categoryKey }));
+                      setIsModalOpen(true);
+                    }}
+                    className="font-heading font-black text-sm sm:text-base md:text-lg text-cyan-300 tracking-widest uppercase bg-black/50 hover:bg-white hover:text-black px-4 py-1.5 rounded-full border border-cyan-400/50 transition cursor-pointer self-start sm:self-auto"
+                  >
+                    {tier.price} — SPONSOR NOW
+                  </button>
                 </div>
 
                 <ul className="space-y-3">
@@ -277,7 +368,7 @@ export default function Sponsors() {
           </button>
         </motion.div>
 
-        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH SEAMLESS PURE WHITE BG & SCALED LOGOS) */}
+        {/* PREVIOUS SPONSORS SECTION */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -289,7 +380,6 @@ export default function Sponsors() {
             PREVIOUS SPONSORS
           </h2>
 
-          {/* Marquee Container */}
           <div className="w-full overflow-hidden relative py-6">
             <div className="animate-marquee flex items-center gap-8">
               {[...currentSponsors, ...currentSponsors, ...currentSponsors, ...currentSponsors].map((item, idx) => (
@@ -300,7 +390,7 @@ export default function Sponsors() {
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="h-32 sm:h-40 md:h-44 w-auto object-contain"
+                    className="h-32 sm:h-40 md:h-44 w-auto object-contain rounded-lg"
                   />
                 </div>
               ))}
@@ -314,140 +404,271 @@ export default function Sponsors() {
         </footer>
       </div>
 
-      {/* SPONSOR INTEREST FORM MODAL */}
+      {/* SPONSORSHIP FORM MODAL (Matching Registration Portal Mirror Glass Gradient Design) */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto custom-scrollbar">
             <motion.div
-              initial={{ scale: 0.88, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.88, opacity: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.25 }}
-              className="bg-gradient-to-b from-purple-950 via-slate-950 to-black border-4 border-white rounded-3xl p-6 sm:p-9 max-w-xl w-full shadow-[0_0_50px_rgba(255,255,255,0.3)] text-white relative my-8"
+              className="relative z-20 w-full max-w-3xl border-2 border-white rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] my-8 p-4 sm:p-8 text-white text-left font-body"
+              style={{
+                background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.92), rgba(60, 86, 175, 0.92))"
+              }}
             >
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="absolute top-5 right-6 text-white/60 hover:text-white font-black text-2xl cursor-pointer"
+                className="absolute top-4 right-5 text-white/60 hover:text-white font-black text-2xl cursor-pointer"
               >
                 ✕
               </button>
 
-              <h3 className="font-heading font-black text-2xl sm:text-3xl text-white uppercase tracking-wider text-center mb-2">
-                BECOME A SPONSOR
-              </h3>
-              <p className="font-body text-xs sm:text-sm font-bold text-white/70 text-center mb-6">
-                Submit your details below and our Sponsorship Team will get in touch shortly.
-              </p>
+              <h2 className="font-heading font-black text-xl sm:text-3xl text-white tracking-widest uppercase text-center mb-6 drop-shadow-md">
+                SPONSORSHIP FORM
+              </h2>
 
               {submittedSuccess ? (
                 <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 rounded-2xl text-center space-y-3">
                   <div className="text-emerald-400 text-4xl font-black mb-2">✓</div>
-                  <h4 className="font-heading font-black text-xl text-white">Sponsorship Request Received!</h4>
-                  <p className="font-body text-sm font-bold text-white/90">Thank you for your interest in partnering with AURA 2K26.</p>
+                  <h4 className="font-heading font-black text-xl text-white">Sponsorship Submitted Successfully!</h4>
+                  <p className="font-body text-sm font-bold text-white/90">
+                    Thank you for partnering with AURA 2K26. Our team will verify your transaction and contact you.
+                  </p>
                 </div>
               ) : (
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div>
-                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                      Organization Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="organizationName"
-                      required
-                      value={formData.organizationName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Acme Corporation"
-                      className="w-full bg-black/70 border-2 border-white/50 focus:border-white text-white font-body text-sm sm:text-base font-bold p-3.5 rounded-xl focus:outline-none transition"
-                    />
+                <form onSubmit={handleFormSubmit} className="space-y-6">
+                  
+                  {/* TOP TABLE: DETAILS OF SPONSORSHIP CATEGORY (NO MAX ALLOWABLE COLUMN) */}
+                  <div className="bg-black/60 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md">
+                    <h4 className="font-heading font-black text-xs sm:text-sm text-white uppercase tracking-wider text-center">
+                      DETAILS OF SPONSORSHIP CATEGORY ARE AS FOLLOWS:
+                    </h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-center border-collapse border border-white/20 text-xs sm:text-sm font-body">
+                        <thead>
+                          <tr className="bg-purple-950/80 text-white font-heading font-black uppercase border-b border-white/30">
+                            <th className="p-2 border-r border-white/20">Sr. No.</th>
+                            <th className="p-2 border-r border-white/20">Category</th>
+                            <th className="p-2">INR</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { sr: 1, category: "Platinum", inr: "100000" },
+                            { sr: 2, category: "Diamond", inr: "75000" },
+                            { sr: 3, category: "Gold", inr: "50000" },
+                            { sr: 4, category: "Silver", inr: "25000" },
+                            { sr: 5, category: "Bronze", inr: "10000" }
+                          ].map((row) => (
+                            <tr
+                              key={row.sr}
+                              onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: row.category }))}
+                              className={`border-b border-white/10 transition cursor-pointer font-bold ${
+                                formData.sponsoringFor === row.category
+                                  ? "bg-white text-black font-black"
+                                  : "hover:bg-white/10 text-white"
+                              }`}
+                            >
+                              <td className="p-2 border-r border-white/20">{row.sr}</td>
+                              <td className="p-2 border-r border-white/20 font-heading tracking-wider">{row.category}</td>
+                              <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-cyan-300"}`}>
+                                ₹ {row.inr}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* SPONSORING FOR CATEGORY SELECTION PILLS */}
+                  <div className="space-y-2">
+                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                      Sponsoring for *
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {["Platinum", "Diamond", "Gold", "Silver", "Bronze"].map((cat) => (
+                        <button
+                          type="button"
+                          key={cat}
+                          onClick={() => setFormData((prev) => ({ ...prev, sponsoringFor: cat }))}
+                          className={`py-2 px-3 text-xs font-heading font-black uppercase rounded-lg border transition-all cursor-pointer ${
+                            formData.sponsoringFor === cat
+                              ? "bg-white text-black border-white shadow-lg"
+                              : "bg-black/50 text-white border-white/30 hover:border-white"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ORGANISATION & PLACE / DISTRICT DETAILS */}
+                  <div className="space-y-4">
                     <div>
-                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                        Contact Person *
+                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                        Organisation Name *
                       </label>
                       <input
                         type="text"
-                        name="contactPerson"
+                        name="organizationName"
                         required
-                        value={formData.contactPerson}
+                        value={formData.organizationName}
                         onChange={handleInputChange}
-                        placeholder="Full Name"
-                        className="w-full bg-black/70 border-2 border-white/50 focus:border-white text-white font-body text-sm font-bold p-3.5 rounded-xl focus:outline-none transition"
+                        placeholder="Full Organisation / Corporate Name"
+                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
                       />
                     </div>
 
-                    <div>
-                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                        Phone Number *
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                          Place
+                        </label>
+                        <input
+                          type="text"
+                          name="place"
+                          value={formData.place}
+                          onChange={handleInputChange}
+                          placeholder="City / Location"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold mb-1">
+                          District
+                        </label>
+                        <input
+                          type="text"
+                          name="district"
+                          value={formData.district}
+                          onChange={handleInputChange}
+                          placeholder="District Name"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                          Contact Person *
+                        </label>
+                        <input
+                          type="text"
+                          name="contactPerson"
+                          required
+                          value={formData.contactPerson}
+                          onChange={handleInputChange}
+                          placeholder="Full Name"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          required
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="partner@company.com"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-heading text-xs uppercase tracking-wider text-white font-bold mb-1">
+                          Phone (10 digits) *
+                        </label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          required
+                          maxLength={10}
+                          value={formData.phone}
+                          onChange={handlePhoneChange}
+                          placeholder="10-digit number"
+                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ONLINE UPI PAYMENT & QR VERIFICATION SECTION */}
+                  <div className="bg-black/60 border border-white/30 p-5 rounded-2xl space-y-4 text-center backdrop-blur-md">
+                    <h4 className="font-heading font-black text-sm text-white uppercase tracking-wider">
+                      FEE PAYMENT VIA UPI QR
+                    </h4>
+                    <p className="font-body text-xs sm:text-sm text-white/90 leading-relaxed">
+                      For online payment, you can directly pay through any UPI App to the QR displayed here for the selected <span className="font-heading font-black text-cyan-300">{formData.sponsoringFor}</span> package (Amount: <span className="font-mono font-black text-cyan-300">₹ {currentFee}</span>):
+                    </p>
+
+                    {/* IDBI UPI Payment QR Image */}
+                    <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border-2 border-white max-w-xs mx-auto shadow-2xl">
+                      <img
+                        src={paymentQr}
+                        alt="AURA 2K26 IDBI UPI Payment QR"
+                        className="w-48 sm:w-56 h-auto object-contain rounded-lg"
+                      />
+                      <span className="text-[10px] font-heading font-black text-slate-900 uppercase tracking-widest mt-2">
+                        SCAN & PAY VIA ANY UPI APP
+                      </span>
+                    </div>
+
+                    {/* Transaction ID / UTR Input */}
+                    <div className="space-y-1.5 text-left pt-2">
+                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                        Transaction ID / UTR Number *
                       </label>
                       <input
-                        type="tel"
-                        name="phone"
+                        type="text"
+                        name="transactionId"
                         required
-                        maxLength={10}
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-                        placeholder="10-digit number"
-                        className="w-full bg-black/70 border-2 border-white/50 focus:border-white text-white font-body text-sm font-bold p-3.5 rounded-xl focus:outline-none transition"
+                        value={formData.transactionId}
+                        onChange={handleInputChange}
+                        placeholder="Enter 12-digit UTR / UPI Transaction ID"
+                        className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm p-3 rounded-lg focus:outline-none transition placeholder:text-white/30"
                       />
+                    </div>
+
+                    {/* Payment Screenshot Upload */}
+                    <div className="space-y-1.5 text-left">
+                      <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
+                        Upload Payment Screenshot (JPG/PNG, Max 5MB) *
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg"
+                        onChange={handlePaymentScreenshotUpload}
+                        className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
+                      />
+                      {formData.paymentScreenshotName && (
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
+                          <span>✓ Screenshot Attached: {formData.paymentScreenshotName}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="partner@company.com"
-                      className="w-full bg-black/70 border-2 border-white/50 focus:border-white text-white font-body text-sm font-bold p-3.5 rounded-xl focus:outline-none transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                      Preferred Sponsorship Tier *
-                    </label>
-                    <select
-                      name="preferredTier"
-                      value={formData.preferredTier}
-                      onChange={handleInputChange}
-                      className="w-full bg-black/80 border-2 border-white/50 focus:border-white text-white font-body text-sm font-bold p-3.5 rounded-xl focus:outline-none transition cursor-pointer"
+                  {/* SUBMIT BUTTON */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={sponsorMutation.isPending}
+                      className="w-full py-4 border-2 border-white rounded-full bg-white text-black font-heading text-xs sm:text-sm font-black tracking-widest uppercase hover:bg-purple-300 transition shadow-xl cursor-pointer disabled:opacity-50"
                     >
-                      {sponsorTiers.map((t) => (
-                        <option key={t.title} value={t.title}>{t.title} ({t.price})</option>
-                      ))}
-                    </select>
+                      {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
+                    </button>
                   </div>
-
-                  <div>
-                    <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white mb-1.5 font-black">
-                      Additional Message / Requirements
-                    </label>
-                    <textarea
-                      rows={3}
-                      name="message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      placeholder="Specify any custom requirements or questions..."
-                      className="w-full bg-black/70 border-2 border-white/50 focus:border-white text-white font-body text-sm font-bold p-3.5 rounded-xl focus:outline-none transition"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={sponsorMutation.isPending}
-                    className="w-full py-4 border-2 border-white rounded-full bg-white text-black font-heading text-xs sm:text-sm font-black tracking-widest uppercase hover:bg-purple-300 transition shadow-[0_0_20px_rgba(255,255,255,0.4)] cursor-pointer disabled:opacity-50 mt-3"
-                  >
-                    {sponsorMutation.isPending ? "SUBMITTING..." : "SUBMIT INTEREST"}
-                  </button>
                 </form>
               )}
             </motion.div>
