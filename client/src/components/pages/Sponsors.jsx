@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
-import ieeePesLogo from "../../assets/ieee_pes_logo.png";
-import iicLogo from "../../assets/iic_logo.png";
-import ietLogo from "../../assets/iet_logo.png";
+import ieeePesLogo from "../../assets/ieee_pes_logo.jpg";
+import iicLogo from "../../assets/iic_logo.jpg";
+import ietLogo from "../../assets/iet_logo.jpg";
 
 export default function Sponsors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -139,7 +139,7 @@ export default function Sponsors() {
         >
           <Link
             to="/"
-            className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(255,255,255,0.25)]"
+            className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md"
           >
             HOME
           </Link>
@@ -151,13 +151,13 @@ export default function Sponsors() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-[0_0_15px_rgba(255,255,255,0.25)] cursor-pointer"
+            className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md cursor-pointer"
           >
             JOIN US
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS LOGO CARDS (Transparent Background, Highlighted White Borders, High-Visibility Glow & Scaled Logo Size) */}
+        {/* TOP SPONSORS LOGO CARDS (Static White Background, Solid White Borders, Clean High-Res Logos) */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -168,14 +168,14 @@ export default function Sponsors() {
           {currentSponsors.map((item) => (
             <motion.div
               key={item.id}
-              whileHover={{ scale: 1.06, translateY: -5 }}
+              whileHover={{ scale: 1.05, translateY: -4 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className="bg-black/30 backdrop-blur-md rounded-3xl p-5 sm:p-7 flex items-center justify-center border-2 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(255,255,255,0.3)] min-h-[180px] sm:min-h-[220px]"
+              className="bg-white rounded-3xl p-5 sm:p-7 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] min-h-[180px] sm:min-h-[220px]"
             >
               <img
                 src={item.src}
                 alt={item.name}
-                className="h-36 sm:h-48 md:h-56 w-auto object-contain filter drop-shadow-[0_0_16px_rgba(255,255,255,0.95)]"
+                className="h-36 sm:h-48 md:h-56 w-auto object-contain rounded-xl"
               />
             </motion.div>
           ))}
@@ -206,7 +206,7 @@ export default function Sponsors() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-blue-950/80 via-purple-950/90 to-indigo-950/80 border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6),0_0_15px_rgba(255,255,255,0.2)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
+                className="bg-gradient-to-r from-blue-950/80 via-purple-950/90 to-indigo-950/80 border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
               >
                 <p className="font-body text-sm sm:text-base md:text-lg font-black text-white leading-relaxed tracking-wide">
                   {text}
@@ -236,7 +236,7 @@ export default function Sponsors() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-purple-950/90 via-slate-950/95 to-blue-950/90 border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(255,255,255,0.25)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
+                className="bg-gradient-to-r from-purple-950/90 via-slate-950/95 to-blue-950/90 border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
               >
                 <div className="border-b-2 border-white/30 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="font-heading font-black text-base sm:text-lg md:text-xl text-white tracking-wider uppercase">
@@ -271,13 +271,13 @@ export default function Sponsors() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="px-12 py-4 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-sm sm:text-base font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.4)] cursor-pointer hover:scale-105"
+            className="px-12 py-4 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-sm sm:text-base font-black tracking-widest uppercase transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] cursor-pointer hover:scale-105"
           >
             SPONSOR NOW
           </button>
         </motion.div>
 
-        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH TRANSPARENT BG, WHITE BORDERS & SCALED LOGOS) */}
+        {/* PREVIOUS SPONSORS SECTION (INFINITE SCROLL CAROUSEL WITH STATIC WHITE BG & SCALED LOGOS) */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -295,12 +295,12 @@ export default function Sponsors() {
               {[...currentSponsors, ...currentSponsors, ...currentSponsors, ...currentSponsors].map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-black/30 backdrop-blur-md rounded-3xl p-5 min-w-[260px] sm:min-w-[320px] max-w-[350px] flex items-center justify-center border-2 border-white shadow-[0_10px_25px_rgba(0,0,0,0.6),0_0_20px_rgba(255,255,255,0.25)] shrink-0 transform hover:scale-105 transition-all duration-200"
+                  className="bg-white rounded-3xl p-5 min-w-[260px] sm:min-w-[320px] max-w-[350px] flex items-center justify-center border-4 border-white shadow-[0_10px_25px_rgba(0,0,0,0.6)] shrink-0 transform hover:scale-105 transition-all duration-200"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="h-32 sm:h-40 md:h-44 w-auto object-contain filter drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
+                    className="h-32 sm:h-40 md:h-44 w-auto object-contain rounded-lg"
                   />
                 </div>
               ))}
