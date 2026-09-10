@@ -4,6 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
+
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_URL = (rawApiUrl && rawApiUrl !== 'undefined')
+  ? rawApiUrl.replace(/\/$/, '')
+  : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/ieee_pes_logo.png";
 import iicLogo from "../../assets/iic_logo.png";
@@ -59,8 +64,18 @@ export default function Sponsors({ initialFormOpen = false }) {
         formDataToSend.append("paymentScreenshot", paymentScreenshotFile);
       }
 
-      const response = await new Promise((resolve) => setTimeout(() => resolve({ success: true }), 1200));
-      return response;
+      const response = await fetch(`${API_URL}/api/sponsorships`, {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Submission failed");
+      }
+
+      return data;
     },
     onSuccess: () => {
       setSubmittedSuccess(true);
@@ -82,8 +97,8 @@ export default function Sponsors({ initialFormOpen = false }) {
         setPaymentScreenshotFile(null);
       }, 2200);
     },
-    onError: () => {
-      alert("Submission failed. Please try again or email us directly at aura@aliah.ac.in.");
+    onError: (error) => {
+      alert(error.message || "Submission failed. Please try again or email us directly at aura@aliah.ac.in.");
     }
   });
 
