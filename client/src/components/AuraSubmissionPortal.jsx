@@ -113,6 +113,13 @@ const INITIAL_FORM_DATA = {
   teamLeaderPhone: '',
   teamMembersDetails: '',
 
+  // Individual member data
+  teamMembers: [
+    { name: '', email: '', phone: '', college: '', year: '', branch: '' },
+    { name: '', email: '', phone: '', college: '', year: '', branch: '' },
+    { name: '', email: '', phone: '', college: '', year: '', branch: '' },
+  ],
+
   // College ID Previews
   teamLeaderIdCardPreview: null,
   member1IdCardPreview: null,
@@ -140,6 +147,11 @@ const INITIAL_FORM_DATA = {
   deployableSystem: 'Yes',
   developmentCost: '',
   whyWorthSeeing: '',
+
+  // Project Links
+  projectGitHub: '',
+  projectVideoDemo: '',
+  projectPresentation: '',
 
   // Section 5: Safety
   safetyHazards: ['None of the Above'],
@@ -444,6 +456,18 @@ export default function AuraSubmissionPortal({ onBack }) {
     setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
   };
 
+  // Individual member data handler
+  const handleMemberChange = (memberIndex, field, value) => {
+    setFormData((prev) => {
+      const updatedMembers = [...(prev.teamMembers || [])];
+      while (updatedMembers.length <= memberIndex) {
+        updatedMembers.push({ name: '', email: '', phone: '', college: '', year: '', branch: '' });
+      }
+      updatedMembers[memberIndex] = { ...updatedMembers[memberIndex], [field]: value };
+      return { ...prev, teamMembers: updatedMembers };
+    });
+  };
+
   // Positive integer numeric input handler (strictly 0-9 digits)
   const handlePositiveNumberChange = (e) => {
     const { name, value } = e.target;
@@ -702,6 +726,17 @@ export default function AuraSubmissionPortal({ onBack }) {
       if (files.member2IdCard) formDataToSend.append("member2IdCard", files.member2IdCard);
       if (files.member3IdCard) formDataToSend.append("member3IdCard", files.member3IdCard);
       if (files.abstractPdf) formDataToSend.append("abstractPdf", files.abstractPdf);
+
+      // Individual member data
+      const validMembers = (formData.teamMembers || []).filter(m => m.name.trim());
+      if (validMembers.length > 0) {
+        formDataToSend.append("teamMembers", JSON.stringify(validMembers));
+      }
+
+      // Project links
+      if (formData.projectGitHub.trim()) formDataToSend.append("projectGitHub", formData.projectGitHub.trim());
+      if (formData.projectVideoDemo.trim()) formDataToSend.append("projectVideoDemo", formData.projectVideoDemo.trim());
+      if (formData.projectPresentation.trim()) formDataToSend.append("projectPresentation", formData.projectPresentation.trim());
 
       // Declarations
       formDataToSend.append("workingPrototypeDeclaration", formData.declWorkingPrototype);
@@ -1133,18 +1168,74 @@ export default function AuraSubmissionPortal({ onBack }) {
                 </div>
               </div>
 
-              {/* Other Members Details */}
-              <div id="field-group-9" className="space-y-2">
+              {/* Other Members Details - Structured Fields */}
+              <div id="field-group-9" className="space-y-4">
                 <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
-                  Other Members Details *
+                  Team Members Details *
                 </label>
+                <p className="text-[11px] text-white/50 font-body">Fill in details for each team member (excluding the team leader above).</p>
+                
+                {Array.from({ length: Math.max(0, (parseInt(formData.teamSize) || 4) - 1) }, (_, i) => (
+                  <div key={i} className="bg-black/40 border border-white/20 p-3 rounded-xl space-y-2">
+                    <span className="font-heading text-[11px] text-purple-300 font-bold uppercase">Member {i + 2}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Full Name *"
+                        value={formData.teamMembers?.[i]?.name || ''}
+                        onChange={(e) => handleMemberChange(i, 'name', e.target.value)}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email"
+                        value={formData.teamMembers?.[i]?.email || ''}
+                        onChange={(e) => handleMemberChange(i, 'email', e.target.value)}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone (10 digits)"
+                        maxLength={10}
+                        value={formData.teamMembers?.[i]?.phone || ''}
+                        onChange={(e) => handleMemberChange(i, 'phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        placeholder="College / Institution"
+                        value={formData.teamMembers?.[i]?.college || ''}
+                        onChange={(e) => handleMemberChange(i, 'college', e.target.value)}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Year (e.g. 2nd Year)"
+                        value={formData.teamMembers?.[i]?.year || ''}
+                        onChange={(e) => handleMemberChange(i, 'year', e.target.value)}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Branch / Department"
+                        value={formData.teamMembers?.[i]?.branch || ''}
+                        onChange={(e) => handleMemberChange(i, 'branch', e.target.value)}
+                        className="bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                {/* Legacy textarea as fallback */}
                 <textarea
-                  rows={3}
+                  rows={2}
                   name="teamMembersDetails"
                   value={formData.teamMembersDetails}
                   onChange={handleTextChange}
-                  placeholder="Format: Member Name | Institution / College | Department | Year | Phone"
-                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
+                  placeholder="Or paste formatted details: Name | College | Department | Year | Phone (one member per line)"
+                  className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
               </div>
 
@@ -1580,6 +1671,55 @@ export default function AuraSubmissionPortal({ onBack }) {
                   placeholder="Why should judges/audience pay attention to your project? Highlight its most impressive or unique aspect (Strict Max 250 words)."
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30"
                 />
+              </div>
+
+              {/* Project Links Section */}
+              <div className="border-t border-white/10 pt-4 mt-2">
+                <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white mb-3">
+                  Project Links (Optional)
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="block font-heading text-[10px] uppercase tracking-wider text-white/80 font-bold">
+                    GitHub Repository
+                  </label>
+                  <input
+                    type="url"
+                    name="projectGitHub"
+                    value={formData.projectGitHub}
+                    onChange={handleTextChange}
+                    placeholder="https://github.com/..."
+                    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2.5 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block font-heading text-[10px] uppercase tracking-wider text-white/80 font-bold">
+                    Video Demo URL
+                  </label>
+                  <input
+                    type="url"
+                    name="projectVideoDemo"
+                    value={formData.projectVideoDemo}
+                    onChange={handleTextChange}
+                    placeholder="https://youtube.com/..."
+                    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2.5 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block font-heading text-[10px] uppercase tracking-wider text-white/80 font-bold">
+                    Presentation / PPT Link
+                  </label>
+                  <input
+                    type="url"
+                    name="projectPresentation"
+                    value={formData.projectPresentation}
+                    onChange={handleTextChange}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-xs p-2.5 rounded-lg focus:outline-none transition-all placeholder:text-white/30"
+                  />
+                </div>
               </div>
 
               <div className="border-t border-white/10 pt-4 mt-2">

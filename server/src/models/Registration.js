@@ -56,6 +56,24 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    teamMembers: [
+      {
+        name: { type: String, required: true, trim: true },
+        email: { type: String, trim: true, lowercase: true },
+        phone: { type: String, trim: true },
+        college: { type: String, trim: true },
+        year: { type: String, trim: true },
+        branch: { type: String, trim: true },
+      },
+    ],
+
+    teamLeaderIdCard: { type: String, trim: true },
+    member1IdCard: { type: String, trim: true },
+    member2IdCard: { type: String, trim: true },
+    member3IdCard: { type: String, trim: true },
+
+    abstractPdf: { type: String, trim: true },
+
     projectTitle: {
       type: String,
       required: true,
@@ -276,6 +294,10 @@ const registrationSchema = new mongoose.Schema(
       enum: [0, 400],
       required: true,
     },
+
+    projectGitHub: { type: String, trim: true },
+    projectVideoDemo: { type: String, trim: true },
+    projectPresentation: { type: String, trim: true },
 
     workingPrototypeDeclaration: {
       type: Boolean,

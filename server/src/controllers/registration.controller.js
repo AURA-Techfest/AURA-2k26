@@ -47,6 +47,7 @@ export const createRegistration = async (req, res) => {
       teamLeaderEmail,
       teamLeaderPhone,
       teamMemberDetails,
+      teamMembers: rawTeamMembers,
       projectTitle,
       hardwareProjectCategories: rawHardwareProjectCategories,
       prototypeType,
@@ -73,6 +74,9 @@ export const createRegistration = async (req, res) => {
       registrationFeeStatus,
       transactionId,
       registrationFee: rawRegistrationFee,
+      projectGitHub,
+      projectVideoDemo,
+      projectPresentation,
       workingPrototypeDeclaration: rawWorkingPrototypeDeclaration,
       originalityDeclaration: rawOriginalityDeclaration,
       safetyEventRulesAgreement: rawSafetyEventRulesAgreement,
@@ -114,6 +118,25 @@ export const createRegistration = async (req, res) => {
     );
     const parsedMediaPermission = parseBoolean(rawMediaPermission);
     const parsedFinalConfirmation = parseBoolean(rawFinalConfirmation);
+
+    let parsedTeamMembers = [];
+    if (rawTeamMembers) {
+      try {
+        const raw = typeof rawTeamMembers === "string" ? JSON.parse(rawTeamMembers) : rawTeamMembers;
+        if (Array.isArray(raw)) {
+          parsedTeamMembers = raw.map((m) => ({
+            name: m.name?.trim() || "",
+            email: m.email?.trim().toLowerCase() || "",
+            phone: m.phone?.trim() || "",
+            college: m.college?.trim() || "",
+            year: m.year?.trim() || "",
+            branch: m.branch?.trim() || "",
+          }));
+        }
+      } catch (e) {
+        parsedTeamMembers = [];
+      }
+    }
 
     if (
       !teamName ||
@@ -212,6 +235,43 @@ export const createRegistration = async (req, res) => {
     let paymentScreenshotUrl = "";
     let finalFee = 0;
 
+    const hasCloudinary =
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET;
+
+    // Helper to upload a single file buffer to Cloudinary
+    const uploadToCloudinary = async (buffer, folder) => {
+      if (!hasCloudinary) return "";
+      try {
+        const result = await uploadImage(buffer, folder);
+        return result.secure_url;
+      } catch (err) {
+        console.error(`Cloudinary upload failed for ${folder}:`, err);
+        return "";
+      }
+    };
+
+    // Upload ID cards from req.files
+    const files = req.files || {};
+    const teamLeaderIdCardUrl = files.teamLeaderIdCard?.[0]
+      ? await uploadToCloudinary(files.teamLeaderIdCard[0].buffer, "aura-registrations/id-cards")
+      : "";
+    const member1IdCardUrl = files.member1IdCard?.[0]
+      ? await uploadToCloudinary(files.member1IdCard[0].buffer, "aura-registrations/id-cards")
+      : "";
+    const member2IdCardUrl = files.member2IdCard?.[0]
+      ? await uploadToCloudinary(files.member2IdCard[0].buffer, "aura-registrations/id-cards")
+      : "";
+    const member3IdCardUrl = files.member3IdCard?.[0]
+      ? await uploadToCloudinary(files.member3IdCard[0].buffer, "aura-registrations/id-cards")
+      : "";
+
+    // Upload abstract PDF
+    const abstractPdfUrl = files.abstractPdf?.[0]
+      ? await uploadToCloudinary(files.abstractPdf[0].buffer, "aura-registrations/abstracts")
+      : "";
+
     if (registrationFeeStatus === "external_fee") {
       finalFee = 400;
       if (parsedRegistrationFee !== 400) {
@@ -227,7 +287,7 @@ export const createRegistration = async (req, res) => {
         });
       }
 
-      if (!req.file) {
+      if (!files.paymentScreenshot?.[0]) {
         return res.status(400).json({
           success: false,
           message:
@@ -235,11 +295,7 @@ export const createRegistration = async (req, res) => {
         });
       }
 
-      if (
-        !process.env.CLOUDINARY_CLOUD_NAME ||
-        !process.env.CLOUDINARY_API_KEY ||
-        !process.env.CLOUDINARY_API_SECRET
-      ) {
+      if (!hasCloudinary) {
         console.error("Cloudinary config missing from environment variables.");
         return res.status(500).json({
           success: false,
@@ -249,7 +305,7 @@ export const createRegistration = async (req, res) => {
       }
 
       try {
-        const uploadResult = await uploadImage(req.file.buffer);
+        const uploadResult = await uploadImage(files.paymentScreenshot[0].buffer);
         paymentScreenshotUrl = uploadResult.secure_url;
       } catch (uploadError) {
         console.error("Cloudinary upload failed:", uploadError);
@@ -282,6 +338,12 @@ export const createRegistration = async (req, res) => {
       teamLeaderEmail: trimmedEmail,
       teamLeaderPhone: teamLeaderPhone.trim(),
       teamMemberDetails: teamMemberDetails.trim(),
+      teamMembers: parsedTeamMembers.length > 0 ? parsedTeamMembers : undefined,
+      teamLeaderIdCard: teamLeaderIdCardUrl || undefined,
+      member1IdCard: member1IdCardUrl || undefined,
+      member2IdCard: member2IdCardUrl || undefined,
+      member3IdCard: member3IdCardUrl || undefined,
+      abstractPdf: abstractPdfUrl || undefined,
       projectTitle: projectTitle.trim(),
       hardwareProjectCategories: parsedHardwareProjectCategories,
       prototypeType,
@@ -317,6 +379,9 @@ export const createRegistration = async (req, res) => {
           ? paymentScreenshotUrl
           : undefined,
       registrationFee: finalFee,
+      projectGitHub: projectGitHub?.trim() || undefined,
+      projectVideoDemo: projectVideoDemo?.trim() || undefined,
+      projectPresentation: projectPresentation?.trim() || undefined,
       workingPrototypeDeclaration: parsedWorkingPrototypeDeclaration,
       originalityDeclaration: parsedOriginalityDeclaration,
       safetyEventRulesAgreement: parsedSafetyEventRulesAgreement,

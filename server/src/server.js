@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import registrationRouter from "./routes/registration.routes.js";
+import sponsorshipRouter from "./routes/sponsorship.routes.js";
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.get("/api/health", (req, res) => {
 
 // Routes
 app.use("/api/registrations", registrationRouter);
+app.use("/api/sponsorships", sponsorshipRouter);
 
 connectDB();
 
