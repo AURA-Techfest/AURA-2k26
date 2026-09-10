@@ -189,3 +189,78 @@ export const checkSponsorEmail = async (req, res) => {
     });
   }
 };
+
+const escapeCSV = (value) => {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+export const exportSponsorships = async (req, res) => {
+  try {
+    const sponsorships = await Sponsorship.find().sort({ createdAt: -1 });
+
+    if (sponsorships.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No sponsorship applications found to export",
+      });
+    }
+
+    const headers = [
+      "S.No",
+      "Sponsoring For (Tier)",
+      "Sponsorship Amount (INR)",
+      "Organization Name",
+      "Place",
+      "District",
+      "Contact Person",
+      "Email",
+      "Phone",
+      "Transaction ID",
+      "Payment Screenshot URL",
+      "Application Status",
+      "Admin Notes",
+      "Created At",
+    ];
+
+    const rows = sponsorships.map((s, i) => [
+      i + 1,
+      s.sponsoringFor,
+      s.sponsorshipAmount,
+      s.organizationName,
+      s.place ?? "",
+      s.district ?? "",
+      s.contactPerson,
+      s.email,
+      s.phone,
+      s.transactionId,
+      s.paymentScreenshot ?? "",
+      s.applicationStatus,
+      s.adminNotes ?? "",
+      s.createdAt ? new Date(s.createdAt).toISOString() : "",
+    ]);
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=aura_2026_sponsorships_${Date.now()}.csv`
+    );
+    res.status(200).send("\uFEFF" + csvContent);
+  } catch (error) {
+    console.error("Export sponsorships error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to export sponsorships",
+      error: error.message,
+    });
+  }
+};
