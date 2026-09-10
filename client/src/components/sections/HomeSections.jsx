@@ -5,16 +5,37 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 
-// Reusable typographic heading matching the exact design with fluid responsive sizing
+// Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
   return (
-    <div className="flex items-center text-left font-heading text-white select-none h-[4rem] sm:h-[6rem] md:h-[7.5rem] lg:h-[10rem]">
+    <div 
+      className="flex items-center text-left font-heading text-white select-none"
+      style={{ height: 'clamp(3.5rem, 9.5vw, 8.5rem)' }}
+    >
       {/* Giant letter 'A' */}
-      <span className="text-[5.5rem] sm:text-[8rem] md:text-[10rem] lg:text-[13rem] font-black leading-[0.68] tracking-tighter shrink-0">A</span>
+      <span 
+        className="font-black leading-[0.68] tracking-tighter shrink-0"
+        style={{ fontSize: 'clamp(4.5rem, 13vw, 12.5rem)' }}
+      >
+        A
+      </span>
       {/* Container for the two stacked lines */}
-      <div className="flex flex-col justify-between h-[2.5rem] sm:h-[3.6rem] md:h-[4.2rem] lg:h-[5.8rem] pl-2 md:pl-3 min-w-0">
-        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{topText}</span>
-        <span className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap">{bottomText}</span>
+      <div 
+        className="flex flex-col justify-between pl-2 md:pl-3 min-w-0"
+        style={{ height: 'clamp(2.5rem, 6vw, 5.5rem)' }}
+      >
+        <span 
+          className="font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap"
+          style={{ fontSize: 'clamp(1.1rem, 3.2vw, 3.2rem)' }}
+        >
+          {topText}
+        </span>
+        <span 
+          className="font-black tracking-wider md:tracking-widest uppercase leading-none whitespace-nowrap"
+          style={{ fontSize: 'clamp(1.1rem, 3.2vw, 3.2rem)' }}
+        >
+          {bottomText}
+        </span>
       </div>
     </div>
   );
@@ -73,101 +94,79 @@ const TimelineEventDot = ({ event, progress }) => {
 const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.1",
-    title: "Abstract Submission (Online)",
-    detail: "Last Date of Submission",
-    date: "August 31, 2026",
+    title: "Abstraction Submission Start",
+    detail: "",
+    date: "29 Aug, 2026",
     t: 0.05,
-    x: 100,
+    x: 60,
     y: 0,
     dotX: 100,
     dotY: 160
   },
   {
     stage: "Stage 1.2",
+    title: "Abstraction Submission End",
+    detail: "",
+    date: "30 Sep, 2026",
+    t: 0.20,
+    x: 460,
+    y: 0,
+    dotX: 500,
+    dotY: 160
+  },
+  {
+    stage: "Stage 2",
     title: "Abstract Acceptance Notification",
-    detail: "Screening results announcement",
-    date: "August 31, 2026",
-    t: 0.14,
-    x: 480,
-    y: 0,
-    dotX: 480,
-    dotY: 160
-  },
-  {
-    stage: "Stage 2.1",
-    title: "Registration Opens",
-    detail: "Shortlisted teams registration start",
-    date: "August 31, 2026",
-    t: 0.23,
+    detail: "",
+    date: "5 Oct, 2026",
+    t: 0.35,
     x: 860,
     y: 0,
-    dotX: 860,
+    dotX: 900,
     dotY: 160
-  },
-  {
-    stage: "Stage 2.2",
-    title: "Registration Ends",
-    detail: "Standard registration window closes",
-    date: "August 31, 2026",
-    t: 0.32,
-    x: 860,
-    y: 380,
-    dotX: 860,
-    dotY: 340
   },
   {
     stage: "Stage 3",
-    title: "Preliminary Round (Physical Mode)",
-    detail: "Live prototype demonstration and presentation",
-    date: "August 31, 2026",
-    t: 0.41,
-    x: 480,
-    y: 380,
-    dotX: 480,
-    dotY: 340
-  },
-  {
-    stage: "Stage 2.3",
-    title: "Registration Closes",
-    detail: "Registration Kits for all registered participants",
-    date: "August 31, 2026",
+    title: "Preliminary Round",
+    detail: "",
+    date: "19 Nov, 2026",
     t: 0.50,
-    x: 100,
+    x: 660,
     y: 380,
-    dotX: 100,
+    dotX: 700,
     dotY: 340
   },
   {
     stage: "Stage 4",
-    title: "Final Round (Physical Mode)",
-    detail: "Grand finale assessment",
-    date: "August 31, 2026",
-    t: 0.60,
-    x: 100,
-    y: 560,
-    dotX: 100,
-    dotY: 520
+    title: "Final Round",
+    detail: "",
+    date: "20 Nov, 2026",
+    t: 0.65,
+    x: 300,
+    y: 380,
+    dotX: 350,
+    dotY: 340
   },
   {
     stage: "Stage 4.1",
     title: "Participation Certificates",
-    detail: "To all registered participants",
-    date: "August 31, 2026",
-    t: 0.70,
-    x: 480,
+    detail: "To all participants",
+    date: "",
+    t: 0.80,
+    x: 350,
     y: 560,
-    dotX: 480,
+    dotX: 400,
     dotY: 520
   },
   {
     stage: "Stage 4.2",
-    title: "For Top Three Teams",
-    detail: "Lucrative Prizes and certificates of excellence based on ranking",
-    date: "August 31, 2026",
-    t: 0.80,
-    x: 860,
+    title: "Lucrative Prizes",
+    detail: "For top 3 teams",
+    date: "",
+    t: 0.95,
+    x: 780,
     y: 560,
-    dotX: 860,
+    dotX: 830,
     dotY: 520
   }
 ];
@@ -210,7 +209,7 @@ function HomeSections({ onRegisterClick }) {
         id="hero"
         className="min-h-screen w-full relative flex items-center justify-start px-4 sm:px-8 md:px-24 py-20 overflow-hidden"
       >
-        {/* Background Image Container with mobile-optimized position placing robot directly in the middle */}
+        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-[position:74%_center] md:bg-[position:center_right] pointer-events-none z-0" 
           style={{ backgroundImage: `url(${heroBg})` }}
@@ -228,11 +227,14 @@ function HomeSections({ onRegisterClick }) {
           {/* Typographic Title matching Image 1 */}
           <GiantAHeading topText="URA" bottomText="2K26" />
           
-          <h2 className="font-heading text-sm md:text-lg tracking-widest text-white uppercase font-black mt-8">
+          <h2 
+            className="font-heading tracking-widest text-white uppercase font-black mt-8"
+            style={{ fontSize: 'clamp(0.85rem, 1.8vw, 1.25rem)' }}
+          >
             Hardware Hackathon of Aliah University
           </h2>
 
-          {/* Vertically stacked outline pill buttons matching Image 1 */}
+          {/* Vertically stacked outline pill buttons */}
           <div className="flex flex-col gap-4 mt-8 w-full max-w-[240px]">
             <button
               onClick={onRegisterClick}
@@ -250,18 +252,16 @@ function HomeSections({ onRegisterClick }) {
         </motion.div>
       </section>
 
-      {/* 2. ABOUT THE EVENT SECTION - Normal WEBSITE_BG */}
+      {/* 2. ABOUT THE EVENT SECTION */}
       <section
         id="event"
         className="min-h-screen w-full relative flex flex-col justify-between pt-16 sm:pt-20 pb-16 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden"
       >
-        {/* Background Image Container */}
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})` }}
         />
         
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
 
         {/* Top: Title */}
@@ -275,13 +275,14 @@ function HomeSections({ onRegisterClick }) {
           <GiantAHeading topText="BOUT" bottomText="THE EVENT" />
         </motion.div>
 
-        {/* Center content: Text description and details in newspaper columns */}
+        {/* Center content: Text description in columns with clamp() typography */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
-          className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-5xl mt-8 flex-grow flex flex-col justify-center select-text"
+          className="relative z-20 text-white font-body font-bold max-w-5xl mt-8 flex-grow flex flex-col justify-center select-text"
+          style={{ fontSize: 'clamp(0.95rem, 1.4vw, 1.25rem)', lineHeight: 'clamp(1.6rem, 2.2vw, 2.2rem)' }}
         >
           <div className="columns-1 md:columns-2 gap-10 md:gap-16 w-full">
             <p className="mb-6">
@@ -294,7 +295,7 @@ function HomeSections({ onRegisterClick }) {
             <div className="mt-4 select-none">
               <p className="uppercase tracking-[0.2em] text-white text-xs mb-3 font-mono font-black">// Venue & Dates</p>
               <p className="mb-2"><strong className="text-white">Venue [In-Person]:</strong> Aliah University, Newtown Campus</p>
-              <p className=""><strong className="text-white">Dates:</strong> 25th & 27th February, 2025</p>
+              <p className=""><strong className="text-white">Dates:</strong> 19th & 20th November, 2026</p>
             </div>
           </div>
         </motion.div>
@@ -316,7 +317,7 @@ function HomeSections({ onRegisterClick }) {
         </motion.div>
       </section>
 
-      {/* 3. ABOUT ALIAH UNIVERSITY SECTION - Reversed WEBSITE_BG (scale-x-[-1]) */}
+      {/* 3. ABOUT ALIAH UNIVERSITY SECTION */}
       <section
         id="about"
         className="min-h-screen w-full relative flex flex-col justify-start py-16 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
@@ -326,47 +327,69 @@ function HomeSections({ onRegisterClick }) {
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
 
-        {/* Left Side Overlay gradient for matching opacity */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        {/* Top: Giant A Heading */}
+        {/* Top: Giant A Heading & Borderless Logo with Key University Highlights */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-0"
+          className="relative z-20 self-start mt-0 flex flex-col items-start gap-4 w-full"
         >
           <GiantAHeading topText="BOUT" bottomText="ALIAH UNIVERSITY" />
+
+          {/* Header Content Row: Borderless Logo on Left + Key University Highlights on Right */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-center w-full max-w-6xl mt-2 select-none">
+            {/* Borderless Logo directly under heading */}
+            <div className="md:col-span-4 lg:col-span-3 flex justify-start items-center">
+              <img
+                src={aliahLogo}
+                alt="Aliah University Official Seal Logo"
+                style={{ width: 'clamp(8.5rem, 16vw, 14rem)', height: 'clamp(8.5rem, 16vw, 14rem)' }}
+                className="object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+              />
+            </div>
+
+            {/* University Quick Facts / Legacy Highlights filling space to the right of logo */}
+            <div className="md:col-span-8 lg:col-span-9 flex flex-col justify-center gap-2.5 text-left border-l-0 md:border-l border-white/20 pl-0 md:pl-8">
+              <div className="flex flex-wrap items-center gap-2.5 font-mono text-[11px] md:text-xs font-bold text-white/80 uppercase">
+                <span className="bg-white/10 px-3 py-1 rounded-full text-white border border-white/20">
+                  Heritage Est. 1780 • University Status 2008
+                </span>
+                <span className="bg-white/10 px-3 py-1 rounded-full text-white border border-white/20">
+                  State University • Govt. of West Bengal
+                </span>
+              </div>
+              <h3 className="font-heading text-sm md:text-base font-bold text-white uppercase tracking-wider mt-1">
+                240+ Years of Academic Heritage & Technological Excellence
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs md:text-sm font-body text-white/80 font-semibold pt-1">
+                <div>• <strong className="text-white">Main Hub:</strong> New Town Campus (Engineering & Science)</div>
+                <div>• <strong className="text-white">City Campuses:</strong> Park Circus & Taltala</div>
+                <div>• <strong className="text-white">Departments:</strong> CSE, ECE, Civil, ME, EE, Sciences</div>
+                <div>• <strong className="text-white">Recognition:</strong> Minority State Univ (Act XXVII, 2007)</div>
+              </div>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Center: University Description Text and Logo Grid (Larger Visibility) */}
+        {/* Center: University Description Text */}
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-100px" }}
           transition={{ duration: 1.0, ease: "easeOut", delay: 0.15 }}
-          className="relative z-20 text-white font-body text-base md:text-lg lg:text-[20px] font-bold leading-relaxed max-w-6xl mt-8 flex-grow flex flex-col justify-center select-text w-full"
+          className="relative z-20 text-white font-body font-bold max-w-5xl mt-6 flex-grow flex flex-col justify-start select-text w-full text-left"
+          style={{ fontSize: 'clamp(0.95rem, 1.4vw, 1.25rem)', lineHeight: 'clamp(1.6rem, 2.2vw, 2.2rem)' }}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-16 items-center w-full">
-            {/* Left description paragraphs (8 columns on lg) */}
-            <div className="lg:col-span-8 flex flex-col gap-6">
-              <p>
-                Aliah University started its glorious journey from the academic session 2008-09 with great potential and immense visual. It is found that this university is harmonizing our tradition and have emerged as a unique institution for higher education and in research field.
-              </p>
-              <p>
-                As per the Parliament Act, 2007, Section 3 (3), it has conferred the status of a minority educational institution. It is an autonomous body under the Department of Minority Affairs and Madrasah Education, Government of West Bengal. The students belonging to any race, creed, caste or class, this University has played a crucial and leading role in the advancement of higher education in both socially and economically.
-              </p>
-            </div>
-            
-            {/* Right Logo (4 columns on lg) */}
-            <div className="lg:col-span-4 flex justify-center lg:justify-end items-center select-none">
-              <img
-                src={aliahLogo}
-                alt="Aliah University Seal Logo"
-                className="w-48 h-48 md:w-64 md:h-64 lg:w-80 lg:h-80 object-contain"
-              />
-            </div>
+          <div className="columns-1 md:columns-2 gap-10 md:gap-16 w-full">
+            <p className="mb-6">
+              Aliah University started its glorious journey from the academic session 2008-09 with great potential and immense visual. It is found that this university is harmonizing our tradition and have emerged as a unique institution for higher education and in research field.
+            </p>
+            <p className="mb-6">
+              As per the Parliament Act, 2007, Section 3 (3), it has conferred the status of a minority educational institution. It is an autonomous body under the Department of Minority Affairs and Madrasah Education, Government of West Bengal. The students belonging to any race, creed, caste or class, this University has played a crucial and leading role in the advancement of higher education in both socially and economically.
+            </p>
           </div>
         </motion.div>
       </section>
@@ -438,7 +461,7 @@ function HomeSections({ onRegisterClick }) {
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1100 725" preserveAspectRatio="none">
               {/* Base grey line */}
               <path
-                d="M 100,160 L 860,160 C 940,160 1020,200 1020,250 C 1020,300 940,340 860,340 L 100,340 C 40,340 20,380 20,430 C 20,480 40,520 100,520 L 980,520"
+                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
                 fill="none"
                 stroke="rgba(255,255,255,0.12)"
                 strokeWidth="4"
@@ -446,7 +469,7 @@ function HomeSections({ onRegisterClick }) {
               />
               {/* Animated white drawing path */}
               <motion.path
-                d="M 100,160 L 860,160 C 940,160 1020,200 1020,250 C 1020,300 940,340 860,340 L 100,340 C 40,340 20,380 20,430 C 20,480 40,520 100,520 L 980,520"
+                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
                 fill="none"
                 stroke="white"
                 strokeWidth="4"
@@ -467,20 +490,20 @@ function HomeSections({ onRegisterClick }) {
           </div>
 
           {/* Mobile Linear Layout */}
-          <div className="grid grid-cols-1 gap-12 relative z-10 block md:hidden">
+          <div className="grid grid-cols-1 gap-10 relative z-10 block md:hidden">
             {TIMELINE_EVENTS.map((event, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, margin: "-80px" }}
-                transition={{ duration: 1.0, ease: "easeOut", delay: idx * 0.12 }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
                 className="flex flex-col text-left justify-start pl-12 relative z-10 font-bold"
               >
                 <span className="text-xs font-mono font-black tracking-widest text-white uppercase">// {event.stage}</span>
                 <h3 className="font-heading text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
-                <p className="text-sm text-white mt-1 font-bold">{event.detail}</p>
-                <span className="font-mono text-sm font-bold text-white mt-2">{event.date}</span>
+                {event.detail && <p className="text-sm text-white/90 mt-1 font-bold">{event.detail}</p>}
+                {event.date && <span className="font-mono text-sm font-black text-cyan-300 mt-1.5">{event.date}</span>}
               </motion.div>
             ))}
           </div>
