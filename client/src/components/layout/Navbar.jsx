@@ -1,23 +1,38 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 
 function Navbar({ onRegisterClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { label: "The Event", target: "event" },
     { label: "About Us", target: "about" },
     { label: "Timeline", target: "notifications" },
     { label: "Gallery", target: "gallery" },
-    { label: "Contact Us", target: "contact" }
+    { label: "Contact Us", target: "contact" },
+    { label: "Sponsors", path: "/sponsors", isRoute: true },
+    { label: "People", path: "/people", isRoute: true }
   ];
 
-  const handleScroll = (id) => {
+  const handleNavClick = (item) => {
     setMobileMenuOpen(false);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
+    if (item.isRoute) {
+      navigate(item.path);
+    } else {
+      if (location.pathname !== "/") {
+        navigate("/", { state: { scrollTo: item.target } });
+        setTimeout(() => {
+          const el = document.getElementById(item.target);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      } else {
+        const el = document.getElementById(item.target);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -29,7 +44,13 @@ function Navbar({ onRegisterClick }) {
           <img
             src={auraLogo}
             alt="AURA 2K26"
-            onClick={() => handleScroll("hero")}
+            onClick={() => {
+              if (location.pathname !== "/") navigate("/");
+              else {
+                const el = document.getElementById("hero");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
             className="w-9 h-auto object-contain cursor-pointer select-none filter brightness-200"
           />
         </div>
@@ -38,16 +59,23 @@ function Navbar({ onRegisterClick }) {
         <div className="w-36 hidden lg:block" />
 
         {/* Centered Navigation Links (Desktop) */}
-        <div className="hidden md:flex items-center gap-4 md:gap-6 lg:gap-8 flex-grow justify-center">
-          {navItems.map((item) => (
-            <button
-              key={item.target}
-              onClick={() => handleScroll(item.target)}
-              className="font-heading text-[10px] md:text-xs uppercase tracking-widest text-white/70 hover:text-white transition-colors duration-200 cursor-pointer"
-            >
-              {item.label}
-            </button>
-          ))}
+        <div className="hidden md:flex items-center gap-3 md:gap-5 lg:gap-7 flex-grow justify-center">
+          {navItems.map((item) => {
+            const isActiveRoute = item.isRoute && location.pathname === item.path;
+            return (
+              <button
+                key={item.label}
+                onClick={() => handleNavClick(item)}
+                className={`font-heading text-[10px] md:text-xs uppercase tracking-widest transition-colors duration-200 cursor-pointer ${
+                  isActiveRoute
+                    ? "text-white font-black border-b border-white/80 pb-0.5"
+                    : "text-white/70 hover:text-white"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Right Action Container (Desktop & Mobile) */}
@@ -55,7 +83,7 @@ function Navbar({ onRegisterClick }) {
           <button
             onClick={() => {
               setMobileMenuOpen(false);
-              onRegisterClick();
+              if (onRegisterClick) onRegisterClick();
             }}
             className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
           >
@@ -97,11 +125,11 @@ function Navbar({ onRegisterClick }) {
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (
                 <button
-                  key={item.target}
-                  onClick={() => handleScroll(item.target)}
+                  key={item.label}
+                  onClick={() => handleNavClick(item)}
                   className="text-left font-heading text-sm uppercase tracking-widest text-white/80 hover:text-white py-2 border-b border-white/5 transition-colors"
                 >
-                  // {item.label}
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -110,7 +138,7 @@ function Navbar({ onRegisterClick }) {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  onRegisterClick();
+                  if (onRegisterClick) onRegisterClick();
                 }}
                 className="w-full py-3 border-2 border-white rounded-full bg-white text-black font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg"
               >
