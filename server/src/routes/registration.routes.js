@@ -9,7 +9,14 @@ const router = express.Router();
 
 router.post(
   "/",
-  upload.single("paymentScreenshot"),
+  upload.fields([
+    { name: "paymentScreenshot", maxCount: 1 },
+    { name: "teamLeaderIdCard", maxCount: 1 },
+    { name: "member1IdCard", maxCount: 1 },
+    { name: "member2IdCard", maxCount: 1 },
+    { name: "member3IdCard", maxCount: 1 },
+    { name: "abstractPdf", maxCount: 1 },
+  ]),
   createRegistration
 );
 
