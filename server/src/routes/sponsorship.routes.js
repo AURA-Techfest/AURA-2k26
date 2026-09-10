@@ -2,6 +2,7 @@ import express from "express";
 import {
   createSponsorship,
   checkSponsorEmail,
+  exportSponsorships,
 } from "../controllers/sponsorship.controller.js";
 import upload from "../middleware/upload.middleware.js";
 
@@ -14,5 +15,7 @@ router.post(
 );
 
 router.get("/check", checkSponsorEmail);
+
+router.get("/export", exportSponsorships);
 
 export default router;

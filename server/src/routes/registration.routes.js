@@ -2,6 +2,7 @@ import express from "express";
 import {
   createRegistration,
   checkEmailOrTeamName,
+  exportRegistrations,
 } from "../controllers/registration.controller.js";
 import upload from "../middleware/upload.middleware.js";
 
@@ -23,6 +24,11 @@ router.post(
 router.get(
   "/check",
   checkEmailOrTeamName
+);
+
+router.get(
+  "/export",
+  exportRegistrations
 );
 
 export default router;

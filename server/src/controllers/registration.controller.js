@@ -458,3 +458,158 @@ export const checkEmailOrTeamName = async (req, res) => {
     });
   }
 };
+
+const escapeCSV = (value) => {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+};
+
+export const exportRegistrations = async (req, res) => {
+  try {
+    const registrations = await Registration.find().sort({ createdAt: -1 });
+
+    if (registrations.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No registrations found to export",
+      });
+    }
+
+    const headers = [
+      "S.No",
+      "Team Name",
+      "Team Size",
+      "Working Prototype",
+      "Team Affiliation",
+      "Aliah Members",
+      "Other Institution Members",
+      "Team Leader Name",
+      "Team Leader Email",
+      "Team Leader Phone",
+      "Team Member Details",
+      "Team Members (Structured)",
+      "Team Leader ID Card URL",
+      "Member 1 ID Card URL",
+      "Member 2 ID Card URL",
+      "Member 3 ID Card URL",
+      "Project Title",
+      "Hardware Categories",
+      "Prototype Type",
+      "Working Status",
+      "Problem/Solution/Innovation",
+      "Abstract PDF URL",
+      "Intended Beneficiaries",
+      "Working Principle",
+      "Hardware Components",
+      "Uses AI",
+      "Uses IoT",
+      "Power Source",
+      "Potential Impact",
+      "Product Potential",
+      "Development Cost (INR)",
+      "Demo Highlight",
+      "Safety Hazards",
+      "Safety Precautions",
+      "Requires Supervision",
+      "Developed By Team",
+      "Previously Exhibited",
+      "Exhibition Details",
+      "Fee Status",
+      "Registration Fee",
+      "Transaction ID",
+      "Payment Screenshot URL",
+      "Project GitHub",
+      "Project Video Demo",
+      "Project Presentation",
+      "Working Prototype Declaration",
+      "Originality Declaration",
+      "Safety Rules Agreement",
+      "Media Permission",
+      "Final Confirmation",
+      "Created At",
+    ];
+
+    const rows = registrations.map((r, i) => {
+      const teamMembersStr = (r.teamMembers || [])
+        .map((m) => `${m.name} (${m.college || "N/A"}, ${m.year || "N/A"}, ${m.branch || "N/A"})`)
+        .join("; ");
+
+      return [
+        i + 1,
+        r.teamName,
+        r.teamSize,
+        r.hasWorkingPrototype,
+        r.teamAffiliation,
+        r.aliahMembers ?? "",
+        r.otherInstitutionMembers ?? "",
+        r.teamLeaderName,
+        r.teamLeaderEmail,
+        r.teamLeaderPhone,
+        r.teamMemberDetails,
+        teamMembersStr,
+        r.teamLeaderIdCard ?? "",
+        r.member1IdCard ?? "",
+        r.member2IdCard ?? "",
+        r.member3IdCard ?? "",
+        r.projectTitle,
+        (r.hardwareProjectCategories || []).join("; "),
+        r.prototypeType,
+        r.currentWorkingStatus,
+        r.problemStatement,
+        r.abstractPdf ?? "",
+        (r.intendedBeneficiaries || []).join("; "),
+        r.workingPrinciple,
+        (r.majorHardwareComponents || []).join("; "),
+        r.useAi ? "Yes" : "No",
+        r.useIot ? "Yes" : "No",
+        r.powerSource,
+        r.potentialImpact,
+        r.productPotential,
+        r.prototypeDevelopmentCost,
+        r.auraDemoHighlight,
+        (r.safetyHazards || []).join("; "),
+        r.safetyPrecautions,
+        r.requiresContinuousSupervision ? "Yes" : "No",
+        r.prototypeDevelopedByTeam,
+        r.previouslyExhibited ? "Yes" : "No",
+        r.previousExhibitionDetails ?? "",
+        r.registrationFeeStatus,
+        r.registrationFee,
+        r.transactionId ?? "",
+        r.paymentScreenshot ?? "",
+        r.projectGitHub ?? "",
+        r.projectVideoDemo ?? "",
+        r.projectPresentation ?? "",
+        r.workingPrototypeDeclaration ? "Yes" : "No",
+        r.originalityDeclaration ? "Yes" : "No",
+        r.safetyEventRulesAgreement ? "Yes" : "No",
+        r.mediaPermission ? "Yes" : "No",
+        r.finalConfirmation ? "Yes" : "No",
+        r.createdAt ? new Date(r.createdAt).toISOString() : "",
+      ];
+    });
+
+    const csvContent = [
+      headers.map(escapeCSV).join(","),
+      ...rows.map((row) => row.map(escapeCSV).join(",")),
+    ].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=aura_2026_registrations_${Date.now()}.csv`
+    );
+    res.status(200).send("\uFEFF" + csvContent);
+  } catch (error) {
+    console.error("Export registrations error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to export registrations",
+      error: error.message,
+    });
+  }
+};
