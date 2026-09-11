@@ -369,7 +369,8 @@ export default function Sponsors({ initialFormOpen = false }) {
                               : "hover:bg-white/20 text-white bg-black/20"
                           }`}
                         >
-                          <td className="p-2 border-r border-white/20 font-heading tracking-wider">{row.category}</td>
+                          <td className="p-2 border-r border-white/20 font-mono">{row.sr}</td>
+                          <td className="p-2 border-r border-white/20 font-heading tracking-wider uppercase">{row.category}</td>
                           <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-white"}`}>
                             ₹ {row.inr}
                           </td>
