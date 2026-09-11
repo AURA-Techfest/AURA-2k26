@@ -639,12 +639,12 @@ export default function Sponsors({ initialFormOpen = false }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-56 sm:w-72 md:w-80 h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-56 sm:w-72 md:w-80 h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="max-h-[85%] max-w-[85%] object-contain rounded-xl drop-shadow-md"
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -671,12 +671,12 @@ export default function Sponsors({ initialFormOpen = false }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-60 sm:w-80 md:w-96 h-48 sm:h-60 md:h-68 transition-all duration-300 transform-gpu"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-60 sm:w-80 md:w-96 h-48 sm:h-60 md:h-68 transition-all duration-300 transform-gpu overflow-hidden"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="max-h-[85%] max-w-[85%] object-contain rounded-xl drop-shadow-md"
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -703,12 +703,12 @@ export default function Sponsors({ initialFormOpen = false }) {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="max-h-[85%] max-w-[85%] object-contain rounded-xl drop-shadow-md"
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -838,12 +838,12 @@ export default function Sponsors({ initialFormOpen = false }) {
               {[...currentSponsors, ...currentSponsors, ...currentSponsors, ...currentSponsors].map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-3xl p-6 sm:p-8 min-w-[300px] sm:min-w-[380px] md:min-w-[440px] h-48 sm:h-60 md:h-64 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.8)] shrink-0 transform-gpu hover:scale-105 transition-all duration-200"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 min-w-[300px] sm:min-w-[380px] md:min-w-[440px] h-48 sm:h-60 md:h-64 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.8)] shrink-0 transform-gpu hover:scale-105 transition-all duration-200 overflow-hidden"
                 >
                   <img
                     src={item.src}
                     alt={item.name}
-                    className="max-h-[85%] max-w-[85%] object-contain rounded-xl drop-shadow-md"
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </div>
               ))}
