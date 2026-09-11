@@ -25,13 +25,13 @@ const registrationSchema = new mongoose.Schema(
     },
     aliahMembers: {
       type: Number,
-      min: 1,
-      max: 3,
+      min: 0,
+      max: 4,
     },
     otherInstitutionMembers: {
       type: Number,
-      min: 1,
-      max: 3,
+      min: 0,
+      max: 4,
     },
     teamLeaderName: {
       type: String,
@@ -53,6 +53,23 @@ const registrationSchema = new mongoose.Schema(
     teamMemberDetails: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    teamLeaderIdCard: {
+      type: String,
+      trim: true,
+    },
+    member1IdCard: {
+      type: String,
+      trim: true,
+    },
+    member2IdCard: {
+      type: String,
+      trim: true,
+    },
+    member3IdCard: {
+      type: String,
       trim: true,
     },
 
@@ -120,17 +137,22 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 1000,
+      maxlength: 4000,
     },
     solutionDescription: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 1300,
+      maxlength: 4000,
     },
     innovationDescription: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    abstractPdf: {
+      type: String,
       trim: true,
     },
 
@@ -273,7 +295,7 @@ const registrationSchema = new mongoose.Schema(
 
     registrationFee: {
       type: Number,
-      enum: [0, 400],
+      min: 0,
       required: true,
     },
 
