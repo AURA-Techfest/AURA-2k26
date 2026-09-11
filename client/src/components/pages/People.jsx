@@ -97,7 +97,10 @@ function CrewSection({ title, members }) {
       transition={{ duration: 0.6 }}
       className="w-full flex flex-col items-center mb-16"
     >
-      <h2 className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white tracking-widest uppercase mb-8 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] text-center">
+      <h2 
+        className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] text-center"
+        style={{ fontSize: "clamp(1.25rem, 3.5vw, 2.25rem)" }}
+      >
         {title}
       </h2>
 
@@ -146,7 +149,10 @@ export default function People({ onRegisterClick }) {
             HOME
           </Link>
 
-          <h1 className="font-heading font-black text-2xl sm:text-4xl md:text-5xl text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+          <h1 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
+            style={{ fontSize: "clamp(1.5rem, 4.5vw, 3.25rem)" }}
+          >
             MEET OUR CREW
           </h1>
 

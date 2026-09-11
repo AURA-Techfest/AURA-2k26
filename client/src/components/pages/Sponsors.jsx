@@ -605,7 +605,10 @@ export default function Sponsors({ initialFormOpen = false }) {
             HOME
           </Link>
 
-          <h1 className="font-heading font-black text-2xl sm:text-4xl md:text-5xl text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+          <h1 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
+            style={{ fontSize: 'clamp(1.5rem, 5vw, 3.25rem)' }}
+          >
             OUR SPONSORS
           </h1>
 
@@ -628,7 +631,10 @@ export default function Sponsors({ initialFormOpen = false }) {
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white tracking-widest uppercase mb-8 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               TECHNICAL CO-SPONSORS
             </h2>
             <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 w-full">
@@ -660,7 +666,10 @@ export default function Sponsors({ initialFormOpen = false }) {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white tracking-widest uppercase mb-8 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               IN ASSOCIATION WITH
             </h2>
             <div className="flex items-center justify-center w-full">
@@ -692,7 +701,10 @@ export default function Sponsors({ initialFormOpen = false }) {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white tracking-widest uppercase mb-8 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               POWERED BY
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-10 w-full max-w-5xl mx-auto">
@@ -725,7 +737,10 @@ export default function Sponsors({ initialFormOpen = false }) {
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}
+          >
             BE OUR SPONSOR
           </h2>
 
@@ -761,7 +776,10 @@ export default function Sponsors({ initialFormOpen = false }) {
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}
+          >
             SPONSORSHIP TIERS
           </h2>
 
@@ -830,7 +848,10 @@ export default function Sponsors({ initialFormOpen = false }) {
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center overflow-hidden transform-gpu"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: "clamp(1.5rem, 4.5vw, 3rem)" }}
+          >
             PREVIOUS SPONSORS
           </h2>
 

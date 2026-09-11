@@ -418,7 +418,10 @@ function HomeSections({ onRegisterClick }) {
           transition={{ duration: 1.0, ease: "easeOut" }}
           className="relative z-20 self-start mt-4 mb-4"
         >
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-xl"
+            style={{ fontSize: "clamp(2rem, 6vw, 4.5rem)" }}
+          >
             TIMELINE
           </h2>
         </motion.div>
@@ -533,7 +536,10 @@ function HomeSections({ onRegisterClick }) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8 mb-10"
         >
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-xl"
+            style={{ fontSize: "clamp(2rem, 6vw, 4.5rem)" }}
+          >
             GALLERY
           </h2>
         </motion.div>
@@ -615,7 +621,10 @@ function HomeSections({ onRegisterClick }) {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8 mb-12"
         >
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-xl"
+            style={{ fontSize: "clamp(2rem, 6vw, 4.5rem)" }}
+          >
             CONNECT WITH US
           </h2>
         </motion.div>
@@ -645,7 +654,10 @@ function HomeSections({ onRegisterClick }) {
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
                 </div>
-                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide break-all">
+                <span 
+                  className="font-body font-bold tracking-wide break-all"
+                  style={{ fontSize: "clamp(0.95rem, 2vw, 1.4rem)" }}
+                >
                   aura@aliah.ac.in
                 </span>
               </motion.a>
@@ -663,7 +675,10 @@ function HomeSections({ onRegisterClick }) {
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
                 </div>
-                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide break-all">
+                <span 
+                  className="font-body font-bold tracking-wide break-all"
+                  style={{ fontSize: "clamp(0.95rem, 2vw, 1.4rem)" }}
+                >
                   aura.technical@aliah.ac.in
                 </span>
               </motion.a>
@@ -691,7 +706,10 @@ function HomeSections({ onRegisterClick }) {
                     <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.7a1.63 1.63 0 1 0 0 3.26 1.63 1.63 0 0 0 0-3.26Z" />
                   </svg>
                 </div>
-                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide">
+                <span 
+                  className="font-body font-bold tracking-wide"
+                  style={{ fontSize: "clamp(0.95rem, 2vw, 1.4rem)" }}
+                >
                   Aliah university's research aspirations
                 </span>
               </motion.a>
@@ -710,7 +728,10 @@ function HomeSections({ onRegisterClick }) {
                     <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H7.5v-3H10V9.5C10 7.01 11.49 5.6 13.78 5.6c1.1 0 2.25.2 2.25.2v2.47h-1.27c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 3h-2.33v6.8c4.56-.93 8-4.96 8-9.8z" />
                   </svg>
                 </div>
-                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide">
+                <span 
+                  className="font-body font-bold tracking-wide"
+                  style={{ fontSize: "clamp(0.95rem, 2vw, 1.4rem)" }}
+                >
                   Aliah university's research aspirations
                 </span>
               </motion.a>
