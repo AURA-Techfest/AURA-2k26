@@ -171,6 +171,28 @@ function CheckIcon({ className = "w-4 h-4" }) {
   );
 }
 
+const dataURLtoFile = (dataurl, filename = "uploaded_file.png") => {
+  if (!dataurl || typeof dataurl !== "string" || !dataurl.startsWith("data:")) {
+    return null;
+  }
+  try {
+    const arr = dataurl.split(",");
+    if (arr.length < 2) return null;
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : "image/png";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  } catch (err) {
+    console.error("Failed to convert dataURL to File:", err);
+    return null;
+  }
+};
+
 export default function AuraSubmissionPortal({ onBack }) {
   // Initialize formData from localStorage
   const [formData, setFormData] = useState(() => {
@@ -284,7 +306,20 @@ export default function AuraSubmissionPortal({ onBack }) {
       const timer = setTimeout(() => setDraftSavedToast(false), 1200);
       return () => clearTimeout(timer);
     } catch (err) {
-      console.error("Failed to save draft to localStorage:", err);
+      console.warn("Could not save full draft to localStorage, saving text fields without large previews:", err);
+      try {
+        const {
+          teamLeaderIdCardPreview,
+          member1IdCardPreview,
+          member2IdCardPreview,
+          member3IdCardPreview,
+          paymentScreenshotPreview,
+          ...textOnlyData
+        } = formData;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(textOnlyData));
+      } catch (innerErr) {
+        console.error("Failed to save draft to localStorage:", innerErr);
+      }
     }
   }, [formData]);
 
@@ -569,19 +604,23 @@ export default function AuraSubmissionPortal({ onBack }) {
     if (!formData.teamMembersDetails.trim()) { alert("Team Member Details are required."); return; }
 
     // College ID Card verification
-    if (!files.teamLeaderIdCard && !formData.teamLeaderIdCardPreview) {
+    const leaderFileObj = files.teamLeaderIdCard || dataURLtoFile(formData.teamLeaderIdCardPreview, "teamLeaderIdCard.png");
+    if (!leaderFileObj) {
       alert("Please upload Team Leader College ID Card.");
       return;
     }
-    if (!files.member1IdCard && !formData.member1IdCardPreview) {
+    const member1FileObj = files.member1IdCard || dataURLtoFile(formData.member1IdCardPreview, "member1IdCard.png");
+    if (!member1FileObj) {
       alert("Please upload Member 1 College ID Card.");
       return;
     }
-    if (parsedTeamSize >= 3 && !files.member2IdCard && !formData.member2IdCardPreview) {
+    const member2FileObj = files.member2IdCard || dataURLtoFile(formData.member2IdCardPreview, "member2IdCard.png");
+    if (parsedTeamSize >= 3 && !member2FileObj) {
       alert("Please upload Member 2 College ID Card.");
       return;
     }
-    if (parsedTeamSize >= 4 && !files.member3IdCard && !formData.member3IdCardPreview) {
+    const member3FileObj = files.member3IdCard || dataURLtoFile(formData.member3IdCardPreview, "member3IdCard.png");
+    if (parsedTeamSize >= 4 && !member3FileObj) {
       alert("Please upload Member 3 College ID Card.");
       return;
     }
@@ -593,8 +632,8 @@ export default function AuraSubmissionPortal({ onBack }) {
       alert("Problem Statement, Solution & Innovation Details is required.");
       return;
     }
-    if (!files.abstractPdf && !formData.abstractPdfName) {
-      alert("Please upload Abstract Idea PDF.");
+    if (!files.abstractPdf) {
+      alert("Please upload / attach your Abstract Idea document (PDF/DOCX).");
       return;
     }
     if (formData.beneficiaries.length === 0) { alert("Please select at least one Intended User / Beneficiary."); return; }
@@ -616,12 +655,14 @@ export default function AuraSubmissionPortal({ onBack }) {
     }
 
     // Step 4 validation (Fee)
+    let paymentScreenshotFileObj = null;
     if (calculatedFee > 0) {
       if (!formData.transactionId.trim()) {
         alert("Transaction ID / UTR is required for fee submission.");
         return;
       }
-      if (!files.paymentScreenshot && !formData.paymentScreenshotPreview) {
+      paymentScreenshotFileObj = files.paymentScreenshot || dataURLtoFile(formData.paymentScreenshotPreview, "paymentScreenshot.png");
+      if (!paymentScreenshotFileObj) {
         alert("Payment screenshot image is required for fee submission.");
         return;
       }
@@ -691,16 +732,16 @@ export default function AuraSubmissionPortal({ onBack }) {
 
       if (calculatedFee > 0) {
         formDataToSend.append("transactionId", formData.transactionId.trim());
-        if (files.paymentScreenshot) {
-          formDataToSend.append("paymentScreenshot", files.paymentScreenshot);
+        if (paymentScreenshotFileObj) {
+          formDataToSend.append("paymentScreenshot", paymentScreenshotFileObj);
         }
       }
 
       // File uploads
-      if (files.teamLeaderIdCard) formDataToSend.append("teamLeaderIdCard", files.teamLeaderIdCard);
-      if (files.member1IdCard) formDataToSend.append("member1IdCard", files.member1IdCard);
-      if (files.member2IdCard) formDataToSend.append("member2IdCard", files.member2IdCard);
-      if (files.member3IdCard) formDataToSend.append("member3IdCard", files.member3IdCard);
+      if (leaderFileObj) formDataToSend.append("teamLeaderIdCard", leaderFileObj);
+      if (member1FileObj) formDataToSend.append("member1IdCard", member1FileObj);
+      if (member2FileObj && parsedTeamSize >= 3) formDataToSend.append("member2IdCard", member2FileObj);
+      if (member3FileObj && parsedTeamSize >= 4) formDataToSend.append("member3IdCard", member3FileObj);
       if (files.abstractPdf) formDataToSend.append("abstractPdf", files.abstractPdf);
 
       // Declarations
@@ -1369,12 +1410,16 @@ export default function AuraSubmissionPortal({ onBack }) {
                   onChange={handleAbstractDocUpload}
                   className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
                 />
-                {formData.abstractPdfName && (
+                {files.abstractPdf ? (
                   <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
                     <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Document Attached: {formData.abstractPdfName}</span>
+                    <span>Document Attached: {files.abstractPdf.name}</span>
                   </div>
-                )}
+                ) : formData.abstractPdfName ? (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-400 font-bold mt-1">
+                    <span>⚠️ Previously selected: {formData.abstractPdfName} (Please re-select file)</span>
+                  </div>
+                ) : null}
               </div>
 
               {/* Intended Users / Beneficiaries */}
