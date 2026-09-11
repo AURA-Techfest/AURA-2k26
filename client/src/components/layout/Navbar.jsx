@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
+import eventIcon from "../../assets/event.png";
+import aboutIcon from "../../assets/about.png";
+import notificationIcon from "../../assets/notification.png";
+import galleryIcon from "../../assets/gallery.png";
+import mailIcon from "../../assets/mail.png";
 
 function Navbar({ onRegisterClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -9,13 +14,13 @@ function Navbar({ onRegisterClick }) {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: "The Event", target: "event" },
-    { label: "About Us", target: "about" },
-    { label: "Timeline", target: "notifications" },
-    { label: "Gallery", target: "gallery" },
-    { label: "Contact Us", target: "contact" },
-    { label: "Sponsors", path: "/sponsors", isRoute: true },
-    { label: "People", path: "/people", isRoute: true }
+    { label: "The Event", target: "event", icon: eventIcon, isSvg: false },
+    { label: "About Us", target: "about", icon: aboutIcon, isSvg: false },
+    { label: "Timeline", target: "notifications", icon: notificationIcon, isSvg: false },
+    { label: "Gallery", target: "gallery", icon: galleryIcon, isSvg: false },
+    { label: "SPONSORS", path: "/sponsors", isRoute: true, isSvg: true, svgType: "sponsor" },
+    { label: "People", path: "/people", isRoute: true, isSvg: true, svgType: "people" },
+    { label: "Contact Us", target: "contact", icon: mailIcon, isSvg: false }
   ];
 
   const handleNavClick = (item) => {
@@ -34,6 +39,36 @@ function Navbar({ onRegisterClick }) {
         if (el) el.scrollIntoView({ behavior: "smooth" });
       }
     }
+  };
+
+  const renderSvgIcon = (type, className = "w-3.5 h-3.5 text-white") => {
+    if (type === "sponsor") {
+      return (
+        <svg
+          className={className}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 7l10 15 10-15-10-5zM2 7h20" />
+        </svg>
+      );
+    }
+    if (type === "people") {
+      return (
+        <svg
+          className={className}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      );
+    }
+    return null;
   };
 
   return (
@@ -56,30 +91,39 @@ function Navbar({ onRegisterClick }) {
         </div>
 
         {/* Desktop Spacer to balance centering */}
-        <div className="w-36 hidden lg:block" />
+        <div className="w-28 hidden lg:block" />
 
         {/* Centered Navigation Links (Desktop) */}
-        <div className="hidden md:flex items-center gap-3 md:gap-5 lg:gap-7 flex-grow justify-center">
+        <div className="hidden md:flex items-center gap-3 md:gap-4 lg:gap-6 flex-grow justify-center">
           {navItems.map((item) => {
             const isActiveRoute = item.isRoute && location.pathname === item.path;
             return (
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item)}
-                className={`font-heading text-[10px] md:text-xs uppercase tracking-widest transition-colors duration-200 cursor-pointer ${
+                className={`group flex items-center gap-1.5 font-heading text-[10px] md:text-xs uppercase tracking-widest transition-all duration-200 cursor-pointer ${
                   isActiveRoute
                     ? "text-white font-black border-b border-white/80 pb-0.5"
                     : "text-white/70 hover:text-white"
                 }`}
               >
-                {item.label}
+                {item.isSvg ? (
+                  renderSvgIcon(item.svgType, "w-3.5 h-3.5 text-white/80 group-hover:text-white filter brightness-200 transition-opacity")
+                ) : (
+                  <img
+                    src={item.icon}
+                    alt=""
+                    className="w-3.5 h-3.5 object-contain filter invert brightness-200 opacity-80 group-hover:opacity-100 transition-opacity"
+                  />
+                )}
+                <span>{item.label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Right Action Container (Desktop & Mobile) */}
-        <div className="flex items-center gap-3 w-auto lg:w-36 justify-end shrink-0">
+        <div className="flex items-center gap-3 w-auto lg:w-28 justify-end shrink-0">
           <button
             onClick={() => {
               setMobileMenuOpen(false);
@@ -127,9 +171,18 @@ function Navbar({ onRegisterClick }) {
                 <button
                   key={item.label}
                   onClick={() => handleNavClick(item)}
-                  className="text-left font-heading text-sm uppercase tracking-widest text-white/80 hover:text-white py-2 border-b border-white/5 transition-colors"
+                  className="flex items-center gap-3 text-left font-heading text-sm uppercase tracking-widest text-white/80 hover:text-white py-2 border-b border-white/5 transition-colors"
                 >
-                  {item.label}
+                  {item.isSvg ? (
+                    renderSvgIcon(item.svgType, "w-4 h-4 text-white/80 filter brightness-200")
+                  ) : (
+                    <img
+                      src={item.icon}
+                      alt=""
+                      className="w-4 h-4 object-contain filter invert brightness-200 opacity-80"
+                    />
+                  )}
+                  <span>{item.label}</span>
                 </button>
               ))}
             </div>

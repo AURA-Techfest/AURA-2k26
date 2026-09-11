@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 import websiteBg from "../assets/WEBSITE_BG.png";
 import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
 import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
-import paymentQr from "../assets/payment_qr.jpeg";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL = (rawApiUrl && rawApiUrl !== 'undefined') 
@@ -151,10 +150,6 @@ const INITIAL_FORM_DATA = {
   previouslyExhibited: 'No',
   exhibitionDetails: '',
 
-  // Section 7: Registration Fee & Payment
-  transactionId: '',
-  paymentScreenshotPreview: null,
-
   // Section 8: Declarations
   declWorkingPrototype: false,
   declOriginality: false,
@@ -190,7 +185,6 @@ export default function AuraSubmissionPortal({ onBack }) {
     member2IdCard: null,
     member3IdCard: null,
     abstractPdf: null,
-    paymentScreenshot: null,
   });
 
   // Initialize current step from localStorage
@@ -298,11 +292,6 @@ export default function AuraSubmissionPortal({ onBack }) {
   }, [currentStep]);
 
   // Dynamic fee calculation: ₹400 per outside member (0 outside -> ₹0)
-  const calculatedFee = useMemo(() => {
-    const otherCount = Number(formData.otherMembersCount) || 0;
-    return otherCount * 400;
-  }, [formData.otherMembersCount]);
-
   // Word counting & strict limiting helpers (Cap at 250 words)
   const countWords = (str) => {
     if (!str || typeof str !== 'string') return 0;
@@ -470,26 +459,6 @@ export default function AuraSubmissionPortal({ onBack }) {
     setFormData((prev) => ({ ...prev, abstractPdfName: file.name }));
   };
 
-  // Payment Screenshot Upload Handler
-  const handlePaymentScreenshotUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      alert("Please upload a valid image file (JPG/PNG) for payment screenshot.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Payment screenshot must be smaller than 5 MB.");
-      return;
-    }
-    setFiles((prev) => ({ ...prev, paymentScreenshot: file }));
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData((prev) => ({ ...prev, paymentScreenshotPreview: reader.result }));
-    };
-    reader.readAsDataURL(file);
-  };
-
   // Step Navigation Handlers
   const handleStepJump = (stepNumber) => {
     setCurrentStep(stepNumber);
@@ -514,7 +483,6 @@ export default function AuraSubmissionPortal({ onBack }) {
         member2IdCard: null,
         member3IdCard: null,
         abstractPdf: null,
-        paymentScreenshot: null,
       });
       setCurrentStep(1);
     }
@@ -615,17 +583,7 @@ export default function AuraSubmissionPortal({ onBack }) {
       return;
     }
 
-    // Step 4 validation (Fee)
-    if (calculatedFee > 0) {
-      if (!formData.transactionId.trim()) {
-        alert("Transaction ID / UTR is required for fee submission.");
-        return;
-      }
-      if (!files.paymentScreenshot && !formData.paymentScreenshotPreview) {
-        alert("Payment screenshot image is required for fee submission.");
-        return;
-      }
-    }
+
 
     try {
       const formDataToSend = new FormData();
@@ -685,16 +643,8 @@ export default function AuraSubmissionPortal({ onBack }) {
       }
 
       // Fees
-      const feeStatus = calculatedFee > 0 ? "external_fee" : "no_fee";
-      formDataToSend.append("registrationFeeStatus", feeStatus);
-      formDataToSend.append("registrationFee", calculatedFee);
-
-      if (calculatedFee > 0) {
-        formDataToSend.append("transactionId", formData.transactionId.trim());
-        if (files.paymentScreenshot) {
-          formDataToSend.append("paymentScreenshot", files.paymentScreenshot);
-        }
-      }
+      formDataToSend.append("registrationFeeStatus", "no_fee");
+      formDataToSend.append("registrationFee", 0);
 
       // File uploads
       if (files.teamLeaderIdCard) formDataToSend.append("teamLeaderIdCard", files.teamLeaderIdCard);
@@ -720,86 +670,40 @@ export default function AuraSubmissionPortal({ onBack }) {
 
   if (submitted) {
     return (
-      <div className="viewport w-full relative overflow-hidden bg-black flex justify-center items-start selection:bg-white selection:text-black">
+      <div 
+        className="min-h-screen w-full relative bg-cover bg-center overflow-y-auto custom-scrollbar py-8 px-4 sm:px-6 md:px-10 flex flex-col items-center justify-center text-white select-none selection:bg-white selection:text-black"
+        style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: 'fixed' }}
+      >
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none z-0" />
+
+        {/* Top-Left Back Button */}
+        <div className="absolute top-6 left-6 sm:top-8 sm:left-10 z-30">
+          <button
+            onClick={onBack}
+            className="px-6 py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+          >
+            BACK
+          </button>
+        </div>
+
+        {/* Glassmorphic Success Card Container */}
         <div 
-          className="canvas absolute top-0 left-0 bg-cover bg-center select-none"
+          className="relative z-20 w-full max-w-2xl border-2 border-white/80 rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] p-8 sm:p-12 md:p-16 flex flex-col items-center justify-center text-center my-auto"
           style={{
-            backgroundImage: `url(${isMobile ? mobileBg : desktopBg})`,
-            width: isMobile ? '680px' : '1376px',
-            height: isMobile ? '1209px' : '768px'
+            background: "radial-gradient(circle at 50% 50%, rgba(119, 32, 61, 0.75), rgba(60, 86, 175, 0.75))"
           }}
         >
-          {/* Top Header Actions */}
-          <div className={`absolute z-30 flex items-center justify-between ${isMobile ? 'top-[25px] left-[70px] w-[540px]' : 'top-[15px] left-[348px] w-[680px]'}`}>
-            <button
-              onClick={onBack}
-              className="px-4 py-1.5 bg-black border border-white/30 rounded-full hover:bg-white hover:text-black text-white font-mono text-[10px] font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
-            >
-              ← Back
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tracking-widest px-3 py-1.5 rounded-full bg-black border border-purple-400/40 text-purple-200 uppercase select-none shadow-lg">
-                Fee Status: {calculatedFee > 0 ? `Paid (₹${calculatedFee})` : "Subsidized (₹0)"}
-              </span>
-            </div>
-          </div>
+          {/* Header */}
+          <h2 className="font-heading font-black text-white text-2xl sm:text-3xl md:text-4xl tracking-widest uppercase mb-10 sm:mb-14 drop-shadow-md">
+            REGISTRATION SUCCESSFUL
+          </h2>
 
-          {/* Mac Terminal container */}
-          <div 
-            className={`flex flex-col bg-black/95 border border-white/15 rounded-lg shadow-2xl overflow-hidden ${
-              isMobile 
-                ? 'w-[540px] h-[960px] absolute left-[70px] top-[125px]' 
-                : 'w-[680px] h-[670px] absolute left-[348px] top-[49px]'
-            }`}
-            style={{ fontFamily: "'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace" }}
-          >
-            {/* Terminal Header Bar */}
-            <div className="h-8 bg-[#1e1e1f] border-b border-white/5 flex items-center px-4 relative select-none flex-shrink-0">
-              <div className="flex items-center gap-1.5 z-10">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-              </div>
-              <div className="absolute left-0 right-0 text-center text-[10px] text-white/40 tracking-wider">
-                aura-2k26-terminal -- bash
-              </div>
-            </div>
-
-            {/* Terminal Body */}
-            <div className="flex-grow p-6 overflow-y-auto custom-scrollbar flex flex-col justify-between text-white text-sm">
-              <div className="space-y-4">
-                <div className="text-[#4682BF] font-bold select-none">
-                  aura@aliah-univ:~$ ./register --status
-                </div>
-                <div className="text-[#4682BF] font-semibold leading-relaxed">
-                  [SUCCESS] PROJECT SUBMISSION LOGGED SUCCESSFULLY!
-                </div>
-                <pre className="text-[11px] text-[#4682BF] leading-none select-none font-bold">
-{`   _  _  _  _  ___   _ 
-  | || || || || _ \\ / \\  
-  | \\/ || \\/ ||   // _ \\ 
-   \\__/  \\__/ |_|_|_/ \\_\\`}
-                </pre>
-                <div className="border-t border-white/10 pt-3 space-y-3 text-white/90">
-                  <p>
-                    Thank you for submitting your hardware project to <strong className="text-white">AURA 2026</strong> (The Annual Technical Festival of Aliah University, 19–20 November 2026).
-                  </p>
-                  <p className="bg-white/5 border border-white/10 p-3 rounded text-[12px] leading-relaxed">
-                    Your submission has been logged by the AURA 2026 Project Evaluation Committee. Please note that shortlisted teams will be contacted separately regarding live evaluation and demo.
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-4 flex flex-col items-center gap-3">
-                <span className="text-[10px] text-white/40">DISCOVER • DESIGN • DISRUPT</span>
-                <button
-                  onClick={onBack}
-                  className="px-6 py-2 border border-white rounded hover:bg-white hover:text-black text-white font-mono text-[11px] font-bold uppercase transition duration-150 cursor-pointer bg-transparent"
-                >
-                  ← Return to Homepage
-                </button>
-              </div>
-            </div>
+          {/* Message Body */}
+          <div className="space-y-3 font-heading font-black text-white text-base sm:text-xl md:text-2xl tracking-wider leading-relaxed uppercase drop-shadow-md">
+            <p>YOUR IDEA HAS BEEN SUBMITTED</p>
+            <p>PLEASE CHECK YOUR MAILBOX</p>
+            <p>FOR CREDENTIALS</p>
           </div>
         </div>
       </div>
@@ -1712,104 +1616,8 @@ export default function AuraSubmissionPortal({ onBack }) {
             <div className="space-y-6">
               <div className="border-b border-white/10 pb-2">
                 <h3 className="font-heading text-base sm:text-lg font-black uppercase tracking-wider text-white">
-                  4. Fee Submission, Declarations & Final Submit
+                  4. Declarations & Final Submission
                 </h3>
-              </div>
-
-              {/* Registration Fee Box */}
-              <div className="bg-black/50 border border-white/20 rounded-xl p-5 space-y-4 shadow-xl">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/10">
-                  <div>
-                    <h4 className="font-heading text-sm font-black uppercase tracking-wider text-white">
-                      4. FEE SUBMISSION
-                    </h4>
-                    <p className="text-xs text-white/70 mt-0.5">
-                      {formData.otherMembersCount} external member(s) selected (₹400 per external member).
-                    </p>
-                  </div>
-                  <span className={`self-start sm:self-center px-4 py-1.5 border rounded-full font-heading text-xs font-black uppercase tracking-widest ${calculatedFee > 0 ? 'bg-purple-500/25 text-purple-200 border-purple-400/50' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'}`}>
-                    {calculatedFee > 0 ? `Payable Amount: ₹${calculatedFee}` : "₹0 (Fully Subsidized)"}
-                  </span>
-                </div>
-
-                {calculatedFee === 0 ? (
-                  <div className="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-xl text-emerald-200 text-xs sm:text-sm leading-relaxed space-y-1">
-                    <p className="font-bold flex items-center gap-2 text-emerald-300">
-                      <CheckIcon className="w-4 h-4 text-emerald-400" />
-                      Registration Subsidized (No Fee Required)
-                    </p>
-                    <p>
-                      All team members are registered from Aliah University. Your participation in AURA 2K26 is 100% subsidized and free of cost.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-5">
-                    {/* Payment QR Section */}
-                    <div className="bg-black/60 border border-white/20 p-5 rounded-2xl flex flex-col md:flex-row items-center gap-6">
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="font-heading text-xs font-bold uppercase tracking-wider text-purple-300">
-                          PAYMENT QR
-                        </span>
-                        <div className="p-3 bg-white rounded-xl shadow-[0_0_25px_rgba(168,85,247,0.35)] border-2 border-purple-400">
-                          <img
-                            src={paymentQr}
-                            alt="Payment QR Code"
-                            className="w-44 h-44 object-contain rounded"
-                          />
-                        </div>
-                        <span className="text-[11px] font-mono text-white/60">
-                          Scan using any UPI App
-                        </span>
-                      </div>
-
-                      <div className="flex-1 space-y-3 text-center md:text-left">
-                        <h5 className="font-heading text-lg font-black text-white uppercase tracking-wider">
-                          Scan & Pay ₹{calculatedFee}
-                        </h5>
-                        <p className="text-xs text-white/80 leading-relaxed font-body">
-                          Please scan the QR code to complete the fee payment of <strong className="text-purple-300">₹{calculatedFee}</strong> (₹400 × {formData.otherMembersCount} outside member{formData.otherMembersCount > 1 ? 's' : ''}). After payment, enter your 12-digit UTR/Transaction ID and attach the payment screenshot below.
-                        </p>
-                        <div className="inline-block bg-purple-600/20 border border-purple-400/40 px-3 py-1.5 rounded-lg text-purple-200 font-mono text-xs font-bold">
-                          Fee Breakdown: {formData.otherMembersCount} Outside Member(s) × ₹400 = ₹{calculatedFee}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                      <div id="field-group-38" className="space-y-2">
-                        <label className="block font-heading text-xs uppercase text-white font-bold">
-                          UTR / Transaction ID *
-                        </label>
-                        <input
-                          type="text"
-                          name="transactionId"
-                          value={formData.transactionId}
-                          onChange={handleTextChange}
-                          placeholder="Enter 12-digit UTR/Transaction ID"
-                          className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30 font-mono"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block font-heading text-xs uppercase text-white font-bold">
-                          Payment Screenshot Upload *
-                        </label>
-                        <input
-                          type="file"
-                          name="paymentScreenshot"
-                          accept="image/png, image/jpeg, image/jpg"
-                          onChange={handlePaymentScreenshotUpload}
-                          className="w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-white file:text-xs file:font-heading file:font-black file:uppercase file:bg-white file:text-black cursor-pointer"
-                        />
-                        {formData.paymentScreenshotPreview && (
-                          <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold mt-1">
-                            <CheckIcon className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Payment Screenshot Attached</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Declarations */}
@@ -1867,7 +1675,7 @@ export default function AuraSubmissionPortal({ onBack }) {
               onClick={handleSubmit}
               className="px-10 py-3 border-2 border-white rounded-full bg-white text-black hover:bg-emerald-400 hover:border-emerald-400 hover:text-black font-heading text-sm font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-xl ml-auto disabled:opacity-50"
             >
-              {isPending ? "SUBMITTING..." : "SUBMIT REGISTRATION"}
+              {isPending ? "SUBMITTING..." : "ABSTRACT SUBMIT"}
             </button>
           )}
         </div>

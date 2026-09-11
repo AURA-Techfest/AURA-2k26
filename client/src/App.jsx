@@ -8,6 +8,7 @@ import HomeSections from "./components/sections/HomeSections";
 import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
 import Sponsors from "./components/pages/Sponsors";
 import People from "./components/pages/People";
+import GalleryDetail from "./components/pages/GalleryDetail";
 
 function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
   // Initialize Lenis smooth scroll for desktop viewports
@@ -107,6 +108,16 @@ function App() {
               <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
             ) : (
               <People onRegisterClick={() => setShowRegistrationForm(true)} />
+            )
+          }
+        />
+        <Route
+          path="/gallery/:year"
+          element={
+            showRegistrationForm ? (
+              <AuraSubmissionPortal onBack={() => setShowRegistrationForm(false)} />
+            ) : (
+              <GalleryDetail onRegisterClick={() => setShowRegistrationForm(true)} />
             )
           }
         />
