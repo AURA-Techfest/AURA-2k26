@@ -132,7 +132,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 2.1",
     title: "Login to Pay Window Opens",
-    date: "N/A",
+    date: "to be notified via email",
     t: 0.50,
     x: 640,
     y: 380,
@@ -142,7 +142,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 2.2",
     title: "Login to Pay Window Ends",
-    date: "N/A",
+    date: "to be notified via email",
     t: 0.65,
     x: 260,
     y: 380,
@@ -232,7 +232,7 @@ function HomeSections({ onRegisterClick }) {
             className="font-heading tracking-widest text-white uppercase font-black mt-8"
             style={{ fontSize: 'clamp(0.85rem, 1.8vw, 1.25rem)' }}
           >
-            Hardware Hackathon of Aliah University
+            Aliah University Tech Fest
           </h2>
 
           {/* Vertically stacked outline pill buttons */}
@@ -288,7 +288,7 @@ function HomeSections({ onRegisterClick }) {
         >
           <div className="columns-1 md:columns-2 gap-10 md:gap-16 w-full">
             <p className="mb-6">
-              AURA is Aliah University’s flagship technical festival that facilitates innovation, creativity and collaboration with students and research scholars. Started in the year 2024, AURA has turn out to be a hub for technical excellence, inspiring young minds to push the boundaries in the field of hardware innovations.
+              AURA (Aliah University's Research Aspiration) is Aliah University’s flagship technical festival that facilitates innovation, creativity and collaboration with students and research scholars. Started in the year 2024, AURA has turn out to be a hub for technical excellence, inspiring young minds to push the boundaries in the field of hardware innovations.
             </p>
             <p className="mb-6">
               Our Mission is to endow with a platform for showcasing technical prowess, promoting knowledge and encouraging the future leaders in technology.
@@ -681,7 +681,7 @@ function HomeSections({ onRegisterClick }) {
               <motion.a
                 whileHover={{ x: 6, scale: 1.02 }}
                 transition={{ duration: 0.2 }}
-                href="https://www.linkedin.com/search/results/all/?keywords=Aliah%20university%27s%20research%20aspirations"
+                href="https://www.linkedin.com/in/aliah-university-s-research-aspirations-688a0a2a1/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"
@@ -700,7 +700,7 @@ function HomeSections({ onRegisterClick }) {
               <motion.a
                 whileHover={{ x: 6, scale: 1.02 }}
                 transition={{ duration: 0.2 }}
-                href="https://www.facebook.com/search/top?q=Aliah%20university%27s%20research%20aspirations"
+                href="https://www.facebook.com/p/AURA-Aliah-Universitys-Research-Aspirations-61553964573919/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"

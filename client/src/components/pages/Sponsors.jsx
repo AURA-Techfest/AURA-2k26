@@ -194,57 +194,57 @@ export default function Sponsors({ initialFormOpen = false }) {
   const sponsorTiers = [
     {
       title: "PLATINUM SPONSORSHIP PACKAGE",
-      price: "RS. 100000",
+      price: "RS. 1,00,000",
       categoryKey: "Platinum",
       features: [
-        "Organization Logo will be displayed along with AURA 2026 Banner everywhere.",
-        "Super-scaling antenna / banner will be installed for advertisement.",
+        "Organisation Logo will be displayed alongwith AURA 2026 Banner everywhere.",
+        "Separate big gate will be installed for the advertisement.",
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "A 15-minute slot on the stage to deliver an appropriate speech related to advertisement during the program to interact with the audience.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "DIAMOND SPONSORSHIP PACKAGE",
-      price: "RS. 75000",
+      price: "RS. 75,000",
       categoryKey: "Diamond",
       features: [
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "A 10-minute slot on the stage to deliver an appropriate speech related to advertisement during the program to interact with the audience.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "GOLD SPONSORSHIP PACKAGE",
-      price: "RS. 50000",
+      price: "RS. 50,000",
       categoryKey: "Gold",
       features: [
-        "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "A separate Kiosk with seating capacity of 2 members with respective banner for interaction with the audience and participants.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "SILVER SPONSORSHIP PACKAGE",
-      price: "RS. 25000",
+      price: "RS. 25,000",
       categoryKey: "Silver",
       features: [
-        "A single banner of the organization (2'X6') will be displayed.",
-        "Registration kit @1,000/- INR free upto 4 delegates in the final day."
+        "A single banner of the organisation (2\"X6\") will be displayed.",
+        "Registration kit @1,000/- INR free upto 2 delegates in the final day."
       ]
     },
     {
       title: "BRONZE SPONSORSHIP PACKAGE",
-      price: "RS. 10000",
+      price: "RS. 10,000",
       categoryKey: "Bronze",
       features: [
-        "A single banner of the organization (2'X6') will be displayed.",
-        "Registration kit @1,000/- INR free upto 4 delegates in the final day."
+        "A single banner of the organisation (2\"X6\") will be displayed.",
+        "Registration kit @1,000/- INR free upto 2 delegates in the final day."
       ]
     }
   ];
@@ -742,7 +742,8 @@ export default function Sponsors({ initialFormOpen = false }) {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, margin: "-40px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-blue-950/80 via-purple-950/90 to-indigo-950/80 border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
+                className="border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
+                style={{ background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.9), rgba(60, 86, 175, 0.9))" }}
               >
                 <p className="font-body text-sm sm:text-base md:text-lg font-black text-white leading-relaxed tracking-wide">
                   {text}
@@ -772,7 +773,8 @@ export default function Sponsors({ initialFormOpen = false }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-purple-950/90 via-slate-950/95 to-blue-950/90 border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
+                className="border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
+                style={{ background: "radial-gradient(circle at 0% 0%, #77203d, #3c56af)" }}
               >
                 <div className="border-b-2 border-white/30 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="font-heading font-black text-base sm:text-lg md:text-xl text-white tracking-wider uppercase">
