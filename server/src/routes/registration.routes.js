@@ -3,13 +3,13 @@ import {
   createRegistration,
   checkEmailOrTeamName,
 } from "../controllers/registration.controller.js";
-import upload from "../middleware/upload.middleware.js";
+import { uploadRegistrationFiles } from "../middleware/upload.middleware.js";
 
 const router = express.Router();
 
 router.post(
   "/",
-  upload.single("paymentScreenshot"),
+  uploadRegistrationFiles,
   createRegistration
 );
 
@@ -18,4 +18,4 @@ router.get(
   checkEmailOrTeamName
 );
 
-export default router;
+export default router;

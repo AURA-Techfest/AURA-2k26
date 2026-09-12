@@ -9,23 +9,56 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadImage = (
+export const uploadToCloudinary = (
   fileBuffer,
-  folder = "aura-registrations/payment-screenshots",
+  {
+    folder = "aura-registrations",
+    resource_type = "auto",
+    filename = undefined,
+  } = {}
 ) => {
   return new Promise((resolve, reject) => {
+    const uploadOptions = {
+      folder,
+      resource_type,
+    };
+
+    if (filename) {
+      uploadOptions.public_id = filename.replace(/\.[^/.]+$/, "");
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: "image",
-      },
+      uploadOptions,
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
-      },
+      }
     );
     uploadStream.end(fileBuffer);
   });
 };
 
+export const uploadImage = (
+  fileBuffer,
+  folder = "aura-registrations/id-cards"
+) => {
+  return uploadToCloudinary(fileBuffer, {
+    folder,
+    resource_type: "image",
+  });
+};
+
+export const uploadDocument = (
+  fileBuffer,
+  folder = "aura-registrations/abstract-docs",
+  filename = undefined
+) => {
+  return uploadToCloudinary(fileBuffer, {
+    folder,
+    resource_type: "auto",
+    filename,
+  });
+};
+
 export default cloudinary;
+

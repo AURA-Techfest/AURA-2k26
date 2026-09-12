@@ -6,8 +6,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import websiteBg from "../../assets/WEBSITE_BG.png";
 import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/ieee_pes_logo.png";
-import iicLogo from "../../assets/iic_logo.png";
-import ietLogo from "../../assets/iet_logo.png";
+// import iicLogo from "../../assets/iic_logo.png";
+// import ietLogo from "../../assets/iet_logo.png";
 
 const fetchSponsorsHeaderData = async () => {
   return {

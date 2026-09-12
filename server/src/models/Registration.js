@@ -25,13 +25,13 @@ const registrationSchema = new mongoose.Schema(
     },
     aliahMembers: {
       type: Number,
-      min: 1,
-      max: 3,
+      min: 0,
+      max: 4,
     },
     otherInstitutionMembers: {
       type: Number,
-      min: 1,
-      max: 3,
+      min: 0,
+      max: 4,
     },
     teamLeaderName: {
       type: String,
@@ -56,6 +56,25 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // College ID Card URLs
+    teamLeaderIdCard: {
+      type: String,
+      trim: true,
+    },
+    member1IdCard: {
+      type: String,
+      trim: true,
+    },
+    member2IdCard: {
+      type: String,
+      trim: true,
+    },
+    member3IdCard: {
+      type: String,
+      trim: true,
+    },
+
+    // Project Details
     projectTitle: {
       type: String,
       required: true,
@@ -120,17 +139,28 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 1000,
+      maxlength: 5000,
     },
     solutionDescription: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 1300,
+      maxlength: 5000,
     },
     innovationDescription: {
       type: String,
       required: true,
+      trim: true,
+      maxlength: 5000,
+    },
+
+    // Abstract Idea Document
+    abstractPdf: {
+      type: String,
+      trim: true,
+    },
+    abstractPdfOriginalName: {
+      type: String,
       trim: true,
     },
 
@@ -156,6 +186,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
     majorHardwareComponents: {
       type: [String],
@@ -188,6 +219,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     productPotential: {
@@ -206,6 +238,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     safetyHazards: {
@@ -232,6 +265,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     requiresContinuousSupervision: {
@@ -253,11 +287,13 @@ const registrationSchema = new mongoose.Schema(
     previousExhibitionDetails: {
       type: String,
       trim: true,
+      maxlength: 5000,
     },
 
     registrationFeeStatus: {
       type: String,
       enum: ["no_fee", "external_fee"],
+      default: "no_fee",
       required: true,
     },
 
@@ -273,7 +309,7 @@ const registrationSchema = new mongoose.Schema(
 
     registrationFee: {
       type: Number,
-      enum: [0, 400],
+      default: 0,
       required: true,
     },
 
@@ -326,3 +362,4 @@ const registrationSchema = new mongoose.Schema(
 const Registration = mongoose.model("Registration", registrationSchema);
 
 export default Registration;
+
