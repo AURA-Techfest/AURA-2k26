@@ -586,6 +586,8 @@ function HomeSections({ onRegisterClick }) {
                     src={
                       year === "2024"
                         ? "https://res.cloudinary.com/dpw89wko7/image/upload/v1789209443/AURA_24_-_01.JPG_ktxaqc.jpg"
+                        : year === "2025"
+                        ? "https://res.cloudinary.com/dpw89wko7/image/upload/v1789212127/AURA_25_-_01.jpg_u8du0p.jpg"
                         : crewPlaceholder
                     }
                     alt={`AURA ${year}`}
