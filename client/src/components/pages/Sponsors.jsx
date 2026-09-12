@@ -54,24 +54,6 @@ const fetchSponsorsHeaderData = async () => {
   };
 };
 
-
-const fetchSponsorsHeaderData = async () => {
-  return {
-    technicalCoSponsors: [
-      { id: "tech-1", name: "IEEE PES", src: ieeePesLogo },
-      { id: "tech-2", name: "IET", src: ietLogo }
-    ],
-    inAssociationWith: [
-      { id: "assoc-1", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
-    ],
-    poweredBy: [
-      { id: "pow-1", name: "IEEE PES", src: ieeePesLogo },
-      { id: "pow-2", name: "IET", src: ietLogo },
-      { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
-    ]
-  };
-};
-
 const TIER_FEES = {
   Platinum: 100000,
   Diamond: 75000,
