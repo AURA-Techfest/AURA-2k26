@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 import websiteBg from "../../assets/WEBSITE_BG.png";
 
@@ -11,8 +11,25 @@ const API_URL = (rawApiUrl && rawApiUrl !== 'undefined')
   : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/ieee_pes_logo.png";
-import iicLogo from "../../assets/iic_logo.png";
-import ietLogo from "../../assets/iet_logo.png";
+// import iicLogo from "../../assets/iic_logo.png";
+// import ietLogo from "../../assets/iet_logo.png";
+
+const fetchSponsorsHeaderData = async () => {
+  return {
+    technicalCoSponsors: [
+      { id: "tech-1", name: "IEEE PES", src: ieeePesLogo },
+      { id: "tech-2", name: "IET", src: ietLogo }
+    ],
+    inAssociationWith: [
+      { id: "assoc-1", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
+    ],
+    poweredBy: [
+      { id: "pow-1", name: "IEEE PES", src: ieeePesLogo },
+      { id: "pow-2", name: "IET", src: ietLogo },
+      { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
+    ]
+  };
+};
 
 const TIER_FEES = {
   Platinum: 100000,
@@ -47,6 +64,24 @@ export default function Sponsors({ initialFormOpen = false }) {
     }
   }, [isFormOpen]);
 
+  const handleSuccessBack = () => {
+    setSubmittedSuccess(false);
+    setIsFormOpen(false);
+    setFormData({
+      sponsoringFor: "Platinum",
+      organizationName: "",
+      place: "",
+      district: "",
+      contactPerson: "",
+      email: "",
+      phone: "",
+      transactionId: "",
+      paymentScreenshotName: "",
+      paymentScreenshotPreview: null
+    });
+    setPaymentScreenshotFile(null);
+  };
+
   // TanStack Query useMutation for Sponsor Interest Form Submission
   const sponsorMutation = useMutation({
     mutationFn: async (payload) => {
@@ -79,23 +114,6 @@ export default function Sponsors({ initialFormOpen = false }) {
     },
     onSuccess: () => {
       setSubmittedSuccess(true);
-      setTimeout(() => {
-        setSubmittedSuccess(false);
-        setIsFormOpen(false);
-        setFormData({
-          sponsoringFor: "Platinum",
-          organizationName: "",
-          place: "",
-          district: "",
-          contactPerson: "",
-          email: "",
-          phone: "",
-          transactionId: "",
-          paymentScreenshotName: "",
-          paymentScreenshotPreview: null
-        });
-        setPaymentScreenshotFile(null);
-      }, 2200);
     },
     onError: (error) => {
       alert(error.message || "Submission failed. Please try again or email us directly at aura@aliah.ac.in.");
@@ -159,6 +177,28 @@ export default function Sponsors({ initialFormOpen = false }) {
 
     sponsorMutation.mutate(formData);
   };
+
+  // TanStack Query for Top Sponsors Data
+  const { data: sponsorsHeaderData } = useQuery({
+    queryKey: ["sponsorsHeaderData"],
+    queryFn: fetchSponsorsHeaderData,
+    staleTime: 1000 * 60 * 10
+  });
+
+  const technicalCoSponsors = sponsorsHeaderData?.technicalCoSponsors || [
+    { id: "tech-1", name: "IEEE PES", src: ieeePesLogo },
+    { id: "tech-2", name: "IET", src: ietLogo }
+  ];
+
+  const inAssociationWith = sponsorsHeaderData?.inAssociationWith || [
+    { id: "assoc-1", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
+  ];
+
+  const poweredBySponsors = sponsorsHeaderData?.poweredBy || [
+    { id: "pow-1", name: "IEEE PES", src: ieeePesLogo },
+    { id: "pow-2", name: "IET", src: ietLogo },
+    { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
+  ];
 
   const currentSponsors = [
     { id: 1, name: "IEEE PES", src: ieeePesLogo },
@@ -227,6 +267,47 @@ export default function Sponsors({ initialFormOpen = false }) {
   const currentFee = TIER_FEES[formData.sponsoringFor] || 100000;
 
   // STANDALONE FULL-PAGE SPONSORSHIP FORM VIEW (MATCHING REGISTRATION FORM PORTAL)
+  if (isFormOpen && submittedSuccess) {
+    return (
+      <div 
+        className="min-h-screen w-full relative bg-cover bg-center overflow-y-auto custom-scrollbar py-8 px-4 sm:px-6 md:px-10 flex flex-col items-center justify-center text-white select-none selection:bg-white selection:text-black font-body"
+        style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: 'fixed' }}
+      >
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 pointer-events-none z-0" />
+
+        {/* Top-Left Back Button */}
+        <div className="absolute top-6 left-6 sm:top-8 sm:left-10 z-30">
+          <button
+            onClick={handleSuccessBack}
+            className="px-6 py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+          >
+            BACK
+          </button>
+        </div>
+
+        {/* Glassmorphic Success Card Container */}
+        <div 
+          className="relative z-20 w-full max-w-2xl border-2 border-white/80 rounded-2xl md:rounded-3xl backdrop-blur-xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] p-8 sm:p-12 md:p-16 flex flex-col items-center justify-center text-center my-auto"
+          style={{
+            background: "radial-gradient(circle at 50% 50%, rgba(119, 32, 61, 0.75), rgba(60, 86, 175, 0.75))"
+          }}
+        >
+          {/* Header */}
+          <h2 className="font-heading font-black text-white text-2xl sm:text-3xl md:text-4xl tracking-widest uppercase mb-10 sm:mb-14 drop-shadow-md">
+            FORM SUBMITTED SUCCESSFULLY
+          </h2>
+
+          {/* Message Body */}
+          <div className="space-y-3 font-heading font-black text-white text-base sm:text-xl md:text-2xl tracking-wider leading-relaxed uppercase drop-shadow-md">
+            <p>THANK YOU FOR SUPPORTING OUR EVENT!</p>
+            <p>WE TRULY APPRECIATE YOUR PARTNERSHIP</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isFormOpen) {
     return (
       <div 
@@ -270,16 +351,7 @@ export default function Sponsors({ initialFormOpen = false }) {
             padding: "clamp(1.25rem, 3.5vw, 2.5rem)"
           }}
         >
-          {submittedSuccess ? (
-            <div className="bg-emerald-950/90 border-2 border-emerald-400 p-8 sm:p-12 rounded-2xl text-center space-y-4 my-auto shadow-2xl">
-              <div className="text-emerald-400 text-5xl font-black mb-2">✓</div>
-              <h4 className="font-heading font-black text-2xl text-white">Sponsorship Submitted Successfully!</h4>
-              <p className="font-body text-base font-bold text-white/90">
-                Thank you for partnering with AURA 2K26. Our team will verify your transaction and contact you shortly.
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleFormSubmit} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
               
               {/* TOP TABLE: DETAILS OF SPONSORSHIP CATEGORY */}
               <div className="bg-black/40 border border-white/30 rounded-2xl p-4 sm:p-5 space-y-3 backdrop-blur-md shadow-lg">
@@ -518,11 +590,10 @@ export default function Sponsors({ initialFormOpen = false }) {
                 </button>
               </div>
             </form>
-          )}
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
   // MAIN SPONSORS PAGE VIEW
   return (
@@ -562,35 +633,110 @@ export default function Sponsors({ initialFormOpen = false }) {
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS LOGO CARDS */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.7 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-5xl mb-16"
-        >
-          {currentSponsors.map((item) => (
-            <motion.div
-              key={item.id}
-              whileHover={{ scale: 1.05, translateY: -4 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="bg-white rounded-3xl p-5 sm:p-7 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] min-h-[180px] sm:min-h-[220px]"
-            >
-              <img
-                src={item.src}
-                alt={item.name}
-                className="h-36 sm:h-48 md:h-56 w-auto object-contain rounded-xl"
-              />
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* TOP SPONSORS SECTIONS (MATCHING MOCKUP DESIGN) */}
+        <div className="w-full max-w-4xl space-y-12 mb-16">
+          {/* 1. TECHNICAL CO-SPONSORS */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-40px" }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center"
+          >
+            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+              TECHNICAL CO-SPONSORS
+            </h2>
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 w-full">
+              {technicalCoSponsors.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  whileHover={{ scale: 1.05, translateY: -4 }}
+                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] w-44 sm:w-56 h-36 sm:h-44 transition-all duration-300"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.name}
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 2. IN ASSOCIATION WITH */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="flex flex-col items-center"
+          >
+            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+              IN ASSOCIATION WITH
+            </h2>
+            <div className="flex items-center justify-center w-full">
+              {inAssociationWith.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  whileHover={{ scale: 1.05, translateY: -4 }}
+                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] w-48 sm:w-60 h-38 sm:h-48 transition-all duration-300"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.name}
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 3. POWERED BY */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col items-center"
+          >
+            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+              POWERED BY
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-4xl mx-auto">
+              {poweredBySponsors.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  whileHover={{ scale: 1.05, translateY: -4 }}
+                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] h-36 sm:h-44 transition-all duration-300"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.name}
+                    className="max-h-full max-w-full object-contain rounded-xl"
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
         {/* BE OUR SPONSOR SECTION */}
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
@@ -609,7 +755,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                 key={idx}
                 initial={{ opacity: 0, x: idx % 2 === 0 ? -30 : 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
+                viewport={{ once: false, margin: "-40px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                 className="bg-gradient-to-r from-blue-950/80 via-purple-950/90 to-indigo-950/80 border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
               >
@@ -625,7 +771,7 @@ export default function Sponsors({ initialFormOpen = false }) {
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
@@ -639,7 +785,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                 key={tier.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                viewport={{ once: false, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                 className="bg-gradient-to-r from-purple-950/90 via-slate-950/95 to-blue-950/90 border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
               >
@@ -676,7 +822,7 @@ export default function Sponsors({ initialFormOpen = false }) {
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 0.5 }}
           className="mb-20"
         >
@@ -693,7 +839,7 @@ export default function Sponsors({ initialFormOpen = false }) {
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center overflow-hidden"
         >

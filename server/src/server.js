@@ -82,8 +82,33 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("Server Error:", err);
+
+  if (err.name === "MulterError") {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File size exceeds the allowed limit. Please upload smaller files.",
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: `File upload error: ${err.message}`,
+    });
+  }
+
+  return res.status(err.status || 400).json({
+    success: false,
+    message: err.message || "An unexpected error occurred.",
+  });
+});
+
 connectDB();
 
 app.listen(PORT, () => {
   console.log(`AURA backend running on http://localhost:${PORT}`);
 });
+
+

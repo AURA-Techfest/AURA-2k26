@@ -1,9 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import heroBg from "../../assets/HERO_SECTION_BG.png";
 import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
+import crewPlaceholder from "../../assets/crew_placeholder.png";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
@@ -48,15 +50,20 @@ const TimelineEventCard = ({ event, progress }) => {
 
   return (
     <motion.div
-      className="absolute flex flex-col text-left justify-start max-w-[200px] select-text z-10 font-bold"
+      className="absolute flex flex-col text-left justify-start w-[240px] select-text z-10 font-bold"
       style={{ left: `${event.x}px`, top: `${event.y}px`, opacity, scale, y }}
     >
-      <span className="text-xs font-mono font-black tracking-widest text-white uppercase">// {event.stage}</span>
-      <h3 className="font-heading text-lg font-black uppercase mt-1 text-white">{event.title}</h3>
-      <p className={`text-white mt-1 font-bold ${event.stage === "Stage 3" ? "text-[11px] tracking-tight whitespace-nowrap" : "text-sm"}`}>
-        {event.detail}
-      </p>
-      <span className="font-mono text-sm font-bold text-white mt-2">{event.date}</span>
+      <span className="text-xs sm:text-sm font-mono font-black tracking-widest text-white/80 uppercase">
+        // {event.stage}
+      </span>
+      <h3 className="font-heading text-base sm:text-lg font-black uppercase mt-1 text-white leading-tight drop-shadow-md">
+        {event.title}
+      </h3>
+      {event.date && (
+        <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5 drop-shadow">
+          {event.date}
+        </span>
+      )}
     </motion.div>
   );
 };
@@ -71,21 +78,21 @@ const TimelineEventDot = ({ event, progress }) => {
       <circle
         cx={event.dotX}
         cy={event.dotY}
-        r="6"
+        r="7"
         fill="#1c1919"
-        stroke="rgba(255,255,255,0.2)"
+        stroke="rgba(255,255,255,0.25)"
         strokeWidth="3"
       />
-      {/* Highlight active dot */}
+      {/* Highlight active white dot */}
       <motion.circle
         cx={event.dotX}
         cy={event.dotY}
-        r="7"
+        r="8"
         fill="white"
         stroke="#0b0909"
         strokeWidth="3"
         style={{ opacity, scale }}
-        className="filter drop-shadow-[0_0_8px_rgba(255,255,255,0.85)]"
+        className="filter drop-shadow-[0_0_10px_rgba(255,255,255,0.9)]"
       />
     </>
   );
@@ -95,83 +102,77 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.1",
     title: "Abstraction Submission Start",
-    detail: "",
     date: "29 Aug, 2026",
     t: 0.05,
-    x: 60,
+    x: 140,
     y: 0,
-    dotX: 100,
+    dotX: 180,
     dotY: 160
   },
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    detail: "",
     date: "30 Sep, 2026",
     t: 0.20,
-    x: 460,
+    x: 470,
     y: 0,
-    dotX: 500,
+    dotX: 510,
     dotY: 160
   },
   {
-    stage: "Stage 2",
+    stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    detail: "",
     date: "5 Oct, 2026",
     t: 0.35,
-    x: 860,
+    x: 820,
     y: 0,
-    dotX: 900,
+    dotX: 860,
     dotY: 160
+  },
+  {
+    stage: "Stage 2.1",
+    title: "Login to Pay Window Opens",
+    date: "N/A",
+    t: 0.50,
+    x: 640,
+    y: 380,
+    dotX: 680,
+    dotY: 340
+  },
+  {
+    stage: "Stage 2.2",
+    title: "Login to Pay Window Ends",
+    date: "N/A",
+    t: 0.65,
+    x: 260,
+    y: 380,
+    dotX: 300,
+    dotY: 340
   },
   {
     stage: "Stage 3",
     title: "Preliminary Round",
-    detail: "",
     date: "19 Nov, 2026",
-    t: 0.50,
-    x: 660,
-    y: 380,
-    dotX: 700,
-    dotY: 340
+    t: 0.80,
+    x: 260,
+    y: 560,
+    dotX: 300,
+    dotY: 520
   },
   {
     stage: "Stage 4",
     title: "Final Round",
-    detail: "",
     date: "20 Nov, 2026",
-    t: 0.65,
-    x: 300,
-    y: 380,
-    dotX: 350,
-    dotY: 340
-  },
-  {
-    stage: "Stage 4.1",
-    title: "Participation Certificates",
-    detail: "To all participants",
-    date: "",
-    t: 0.80,
-    x: 350,
-    y: 560,
-    dotX: 400,
-    dotY: 520
-  },
-  {
-    stage: "Stage 4.2",
-    title: "Lucrative Prizes",
-    detail: "For top 3 teams",
-    date: "",
     t: 0.95,
-    x: 780,
+    x: 640,
     y: 560,
-    dotX: 830,
+    dotX: 680,
     dotY: 520
   }
 ];
 
 function HomeSections({ onRegisterClick }) {
+  const navigate = useNavigate();
   const timelineRef = React.useRef(null);
   const { scrollYProgress } = useScroll({
     target: timelineRef,
@@ -238,15 +239,16 @@ function HomeSections({ onRegisterClick }) {
           <div className="flex flex-col gap-4 mt-8 w-full max-w-[240px]">
             <button
               onClick={onRegisterClick}
-              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer"
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg"
             >
               Register Now
             </button>
             <button
-              onClick={onRegisterClick}
-              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer"
+              type="button"
+              onClick={() => alert("AURA 2K26 Official Event Brochure will be available for download soon!")}
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg"
             >
-              Login
+              Download Brochure
             </button>
           </div>
         </motion.div>
@@ -414,10 +416,10 @@ function HomeSections({ onRegisterClick }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false }}
           transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-4 mb-2"
+          className="relative z-20 self-start mt-4 mb-4"
         >
-          <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
-            Timeline
+          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+            TIMELINE
           </h2>
         </motion.div>
 
@@ -461,15 +463,15 @@ function HomeSections({ onRegisterClick }) {
             <svg className="absolute inset-0 w-full h-full pointer-events-none z-0" viewBox="0 0 1100 725" preserveAspectRatio="none">
               {/* Base grey line */}
               <path
-                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
+                d="M 150,160 L 900,160 C 970,160 1020,205 1020,250 C 1020,295 970,340 900,340 L 150,340 C 80,340 30,385 30,430 C 30,475 80,520 150,520 L 900,520"
                 fill="none"
-                stroke="rgba(255,255,255,0.12)"
+                stroke="rgba(255,255,255,0.15)"
                 strokeWidth="4"
                 strokeDasharray="6 6"
               />
               {/* Animated white drawing path */}
               <motion.path
-                d="M 100,160 L 900,160 C 970,160 1020,200 1020,250 C 1020,300 970,340 900,340 L 350,340 C 270,340 220,380 220,430 C 220,480 270,520 350,520 L 950,520"
+                d="M 150,160 L 900,160 C 970,160 1020,205 1020,250 C 1020,295 970,340 900,340 L 150,340 C 80,340 30,385 30,430 C 30,475 80,520 150,520 L 900,520"
                 fill="none"
                 stroke="white"
                 strokeWidth="4"
@@ -500,10 +502,9 @@ function HomeSections({ onRegisterClick }) {
                 transition={{ duration: 0.8, ease: "easeOut", delay: idx * 0.1 }}
                 className="flex flex-col text-left justify-start pl-12 relative z-10 font-bold"
               >
-                <span className="text-xs font-mono font-black tracking-widest text-white uppercase">// {event.stage}</span>
-                <h3 className="font-heading text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
-                {event.detail && <p className="text-sm text-white/90 mt-1 font-bold">{event.detail}</p>}
-                {event.date && <span className="font-mono text-sm font-black text-cyan-300 mt-1.5">{event.date}</span>}
+                <span className="text-xs font-mono font-black tracking-widest text-white/80 uppercase">// {event.stage}</span>
+                <h3 className="font-heading text-lg sm:text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
+                {event.date && <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5">{event.date}</span>}
               </motion.div>
             ))}
           </div>
@@ -511,7 +512,7 @@ function HomeSections({ onRegisterClick }) {
         </div>
       </section>
 
-      {/* 5. GALLERY SECTION - Reversed WEBSITE_BG */}
+      {/* 5. GALLERY SECTION - 3D YEAR FLASH CARDS MATCHING MOCKUP */}
       <section
         id="gallery"
         className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-between py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
@@ -521,42 +522,83 @@ function HomeSections({ onRegisterClick }) {
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
 
-        {/* Left Side Overlay gradient for matching opacity */}
+        {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        {/* Top: Title */}
+        {/* Title */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8"
+          viewport={{ once: false, margin: "-40px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8 mb-10"
         >
-          <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
-            Gallery
+          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+            GALLERY
           </h2>
         </motion.div>
 
-        {/* Center: Coming Soon */}
+        {/* 3D Year Flash Cards Container */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: false }}
-          transition={{ duration: 1.0, ease: "easeOut", delay: 0.1 }}
-          className="relative z-20 flex flex-col items-center justify-center flex-grow text-center py-12"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, margin: "-50px" }}
+          transition={{ duration: 0.8 }}
+          className="relative z-20 w-full max-w-5xl mx-auto my-auto py-8"
         >
-          <h3 className="font-heading text-2xl md:text-4xl font-black text-white/90 tracking-[0.2em] uppercase select-none animate-pulse">
-            Coming Soon
-          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 w-full">
+            {["2026", "2025", "2024"].map((year, idx) => (
+              <motion.div
+                key={year}
+                initial={{ opacity: 0, rotateY: -70, scale: 0.85, y: 40 }}
+                whileInView={{ opacity: 1, rotateY: 0, scale: 1, y: 0 }}
+                viewport={{ once: false, margin: "-40px" }}
+                transition={{
+                  duration: 0.7,
+                  delay: idx * 0.15,
+                  type: "spring",
+                  stiffness: 180,
+                  damping: 18
+                }}
+                whileHover={{
+                  scale: 1.06,
+                  rotateY: 6,
+                  rotateX: -4,
+                  translateY: -8,
+                  transition: { duration: 0.25 }
+                }}
+                onClick={() => navigate(`/gallery/${year}`)}
+                className="group relative bg-white/95 rounded-2xl p-4 sm:p-5 border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_50px_rgba(0,0,0,0.8)] transition-all duration-300 flex flex-col items-center justify-center cursor-pointer transform-gpu overflow-hidden text-slate-900"
+                style={{ perspective: 1000 }}
+              >
+                {/* Shimmer light beam effect */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none z-10" />
+
+                {/* Card Image Box */}
+                <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-slate-100 border border-slate-200 shadow-inner">
+                  <img
+                    src={crewPlaceholder}
+                    alt={`AURA ${year}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+
+                {/* Year Label */}
+                <h3 className="font-heading font-black text-2xl sm:text-3xl text-slate-700 uppercase tracking-widest">
+                  {year}
+                </h3>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         <div className="h-4" />
       </section>
 
-      {/* 6. CONTACT US SECTION - Reversed WEBSITE_BG */}
-      {/* <section
+      {/* 6. CONNECT WITH US SECTION */}
+      <section
         id="contact"
-        className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-start py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
+        className="min-h-[50vh] md:min-h-screen w-full relative flex flex-col justify-between py-12 sm:py-20 px-4 sm:px-8 md:px-16 lg:px-24 overflow-hidden border-t border-white/5"
       >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
@@ -565,62 +607,275 @@ function HomeSections({ onRegisterClick }) {
 
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
+        {/* Title */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false }}
-          transition={{ duration: 1.0, ease: "easeOut" }}
-          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8"
+          viewport={{ once: false, margin: "-40px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-20 self-start mt-2 sm:mt-4 md:mt-8 mb-12"
         >
-          <h2 className="font-heading text-4xl md:text-5.5xl font-black text-white tracking-widest uppercase">
-            Contact Us
+          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-widest uppercase drop-shadow-xl">
+            CONNECT WITH US
           </h2>
         </motion.div>
-      </section> */}
 
-      <footer className="py-12 sm:py-20 relative overflow-hidden border-t border-white/10 text-white font-body">
+        {/* 2-Column Contact Links */}
+        <div className="relative z-20 w-full max-w-5xl mx-auto my-auto py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 text-left">
+            
+            {/* Left Column: Emails */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false, margin: "-50px" }}
+              transition={{ duration: 0.7 }}
+              className="space-y-8"
+            >
+              {/* Email 1 */}
+              <motion.a
+                whileHover={{ x: 6, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                href="mailto:aura@aliah.ac.in"
+                className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"
+              >
+                <div className="w-14 h-12 sm:w-16 sm:h-14 border-2 border-white rounded-2xl flex items-center justify-center bg-black/40 group-hover:border-cyan-300 group-hover:bg-cyan-950/40 transition-all shrink-0 shadow-lg">
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white group-hover:text-cyan-300 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide break-all">
+                  aura@aliah.ac.in
+                </span>
+              </motion.a>
+
+              {/* Email 2 */}
+              <motion.a
+                whileHover={{ x: 6, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                href="mailto:aura.technical@aliah.ac.in"
+                className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"
+              >
+                <div className="w-14 h-12 sm:w-16 sm:h-14 border-2 border-white rounded-2xl flex items-center justify-center bg-black/40 group-hover:border-cyan-300 group-hover:bg-cyan-950/40 transition-all shrink-0 shadow-lg">
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white group-hover:text-cyan-300 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <rect width="20" height="16" x="2" y="4" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </div>
+                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide break-all">
+                  aura.technical@aliah.ac.in
+                </span>
+              </motion.a>
+            </motion.div>
+
+            {/* Right Column: Social Links */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: false, margin: "-50px" }}
+              transition={{ duration: 0.7, delay: 0.15 }}
+              className="space-y-8"
+            >
+              {/* LinkedIn */}
+              <motion.a
+                whileHover={{ x: 6, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                href="https://www.linkedin.com/search/results/all/?keywords=Aliah%20university%27s%20research%20aspirations"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"
+              >
+                <div className="w-14 h-12 sm:w-16 sm:h-14 border-2 border-white rounded-2xl flex items-center justify-center bg-black/40 group-hover:border-cyan-300 group-hover:bg-cyan-950/40 transition-all shrink-0 shadow-lg">
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white group-hover:text-cyan-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.7a1.63 1.63 0 1 0 0 3.26 1.63 1.63 0 0 0 0-3.26Z" />
+                  </svg>
+                </div>
+                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide">
+                  Aliah university's research aspirations
+                </span>
+              </motion.a>
+
+              {/* Facebook */}
+              <motion.a
+                whileHover={{ x: 6, scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+                href="https://www.facebook.com/search/top?q=Aliah%20university%27s%20research%20aspirations"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-5 text-white hover:text-cyan-300 transition-colors group cursor-pointer"
+              >
+                <div className="w-14 h-12 sm:w-16 sm:h-14 border-2 border-white rounded-2xl flex items-center justify-center bg-black/40 group-hover:border-cyan-300 group-hover:bg-cyan-950/40 transition-all shrink-0 shadow-lg">
+                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white group-hover:text-cyan-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H7.5v-3H10V9.5C10 7.01 11.49 5.6 13.78 5.6c1.1 0 2.25.2 2.25.2v2.47h-1.27c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 3h-2.33v6.8c4.56-.93 8-4.96 8-9.8z" />
+                  </svg>
+                </div>
+                <span className="font-body font-bold text-lg sm:text-xl md:text-2xl tracking-wide">
+                  Aliah university's research aspirations
+                </span>
+              </motion.a>
+            </motion.div>
+
+          </div>
+        </div>
+
+        <div className="h-4" />
+      </section>
+
+      {/* 7. FOOTER SECTION (STATIC BG, ANIMATED CONTENT COLUMNS) */}
+      <footer 
+        className="py-12 sm:py-16 relative overflow-hidden border-t border-white/10 text-white font-body"
+      >
         <div 
           className="absolute inset-0 bg-cover bg-center pointer-events-none z-0" 
           style={{ backgroundImage: `url(${websiteBg})`, transform: "scaleX(-1) rotate(180deg)" }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0b0909] via-[#0b0909]/80 to-transparent z-10" />
         
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 md:px-16 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 items-center relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-6 items-start relative z-20 text-left">
           
-          
-          <div className="flex flex-col items-start gap-4 pl-0 md:pl-12">
+          {/* Column 1 (Far Left): AURA Logo & Tagline */}
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            className="flex flex-col items-start gap-3"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.85, rotate: -2 }}
-              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-              viewport={{ once: false }}
-              transition={{ duration: 1.2, ease: "easeOut" }}
               whileHover={{ scale: 1.05, rotate: 1 }}
-              className="relative cursor-pointer select-none"
+              onClick={() => {
+                const el = document.getElementById("hero");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="cursor-pointer select-none"
             >
               <img
                 src={auraLogo}
                 alt="AURA 2K26 Logo"
-                className="h-36 md:h-52 lg:h-56 object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.06)]"
+                className="h-24 sm:h-28 md:h-32 object-contain filter drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
               />
             </motion.div>
-            <div className="mt-2 text-white/70 space-y-2 text-sm leading-relaxed max-w-sm">
+            <div className="text-white/70 space-y-1.5 text-xs leading-relaxed max-w-xs">
               <p className="font-heading text-xs font-bold uppercase tracking-wider text-white">
-                AURA 2K26 • Annual Technical Festival
+                AURA 2K26 • Technical Fest
               </p>
-              <p>
+              <p className="text-white/80 font-medium">
                 Aliah University, Newtown Campus, Kolkata. Discover, Design, and Disrupt the future of hardware technologies.
               </p>
-              <p className="text-xs text-white/30 pt-2 font-mono">
+              <p className="text-[11px] text-white/40 pt-1 font-mono">
                 © {new Date().getFullYear()} AURA Committee. All rights reserved.
               </p>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Right Column: Google Maps Embed and university location info */}
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-between items-center select-none">
-              <h3 className="font-heading text-xs font-bold uppercase tracking-widest text-white/60">
-                // VENUE MAP LOCATION
+          {/* Column 2: NAVIGATION */}
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="flex flex-col items-start gap-3"
+          >
+            <h3 className="font-heading text-sm font-black uppercase tracking-widest text-white border-b-2 border-white/30 pb-1 w-full">
+              NAVIGATION
+            </h3>
+            <ul className="space-y-2 text-xs sm:text-sm font-bold text-white/80">
+              <li>
+                <button
+                  onClick={onRegisterClick}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
+                >
+                  • Register Now
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("contact");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
+                >
+                  • Contact Us
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => navigate("/people")}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
+                >
+                  • People
+                </button>
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Column 3: LOCATED AT */}
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="flex flex-col items-start gap-3"
+          >
+            <h3 className="font-heading text-sm font-black uppercase tracking-widest text-white border-b-2 border-white/30 pb-1 w-full">
+              LOCATED AT
+            </h3>
+            <div className="text-xs sm:text-sm font-body font-semibold text-white/80 leading-relaxed space-y-1">
+              <p className="font-bold text-white uppercase font-heading text-xs tracking-wider">
+                Aliah University
+              </p>
+              <p>Action Area IIA, Newtown</p>
+              <p>Kolkata, West Bengal 700160</p>
+              <p className="text-white text-xs font-mono font-bold pt-1">
+                India
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Column 4: LEGAL */}
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.35 }}
+            className="flex flex-col items-start gap-3"
+          >
+            <h3 className="font-heading text-sm font-black uppercase tracking-widest text-white border-b-2 border-white/30 pb-1 w-full">
+              LEGAL
+            </h3>
+            <ul className="space-y-2 text-xs sm:text-sm font-bold text-white/80">
+              <li>
+                <button
+                  onClick={() => alert("AURA 2K26 Privacy Policy: We respect your data privacy and ensure all team and participant data is securely protected.")}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
+                >
+                  • Privacy Policy
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => alert("AURA 2K26 Terms of Service: All hardware competition submissions must strictly follow Aliah University hackathon code of conduct.")}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
+                >
+                  • Terms of Service
+                </button>
+              </li>
+            </ul>
+          </motion.div>
+
+          {/* Column 5 (Far Right): VENUE MAP */}
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-col gap-3 w-full"
+          >
+            <div className="flex justify-between items-center select-none border-b-2 border-white/30 pb-1 w-full">
+              <h3 className="font-heading text-xs font-black uppercase tracking-widest text-white">
+                VENUE MAP
               </h3>
               <a
                 href="https://maps.app.goo.gl/5Wo4F19PLej4Fw9f7"
@@ -628,22 +883,22 @@ function HomeSections({ onRegisterClick }) {
                 rel="noopener noreferrer"
                 className="text-[10px] uppercase font-mono tracking-widest text-white hover:underline"
               >
-                Open Google Maps ↗
+                Maps ↗
               </a>
             </div>
             
-            {/* Embedded map iframe (Using direct output embed query to ensure standard reliable loading) */}
-            <div className="w-full h-48 rounded overflow-hidden border border-white/10 relative z-30">
+            {/* Embedded map iframe */}
+            <div className="w-full h-40 sm:h-44 rounded-xl overflow-hidden border-2 border-white/20 relative z-30 shadow-lg">
               <iframe
                 title="Aliah University Newtown Campus Map"
                 src="https://maps.google.com/maps?q=Aliah%20University%20New%20Town%20Campus&t=&z=15&ie=UTF8&iwloc=&output=embed"
-                className="w-full h-full border-0 grayscale invert opacity-75 hover:opacity-100 transition-all duration-300"
+                className="w-full h-full border-0 grayscale invert opacity-80 hover:opacity-100 transition-all duration-300"
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </footer>
