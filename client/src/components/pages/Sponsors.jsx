@@ -54,7 +54,6 @@ const fetchSponsorsHeaderData = async () => {
   };
 };
 
-
 const TIER_FEES = {
   Platinum: 100000,
   Diamond: 75000,
@@ -234,57 +233,57 @@ export default function Sponsors({ initialFormOpen = false }) {
   const sponsorTiers = [
     {
       title: "PLATINUM SPONSORSHIP PACKAGE",
-      price: "RS. 100000",
+      price: "RS. 1,00,000",
       categoryKey: "Platinum",
       features: [
-        "Organization Logo will be displayed along with AURA 2026 Banner everywhere.",
-        "Super-scaling antenna / banner will be installed for advertisement.",
+        "Organisation Logo will be displayed alongwith AURA 2026 Banner everywhere.",
+        "Separate big gate will be installed for the advertisement.",
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "A 15-minute slot on the stage to deliver an appropriate speech related to advertisement during the program to interact with the audience.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "DIAMOND SPONSORSHIP PACKAGE",
-      price: "RS. 75000",
+      price: "RS. 75,000",
       categoryKey: "Diamond",
       features: [
         "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
         "A 10-minute slot on the stage to deliver an appropriate speech related to advertisement during the program to interact with the audience.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "GOLD SPONSORSHIP PACKAGE",
-      price: "RS. 50000",
+      price: "RS. 50,000",
       categoryKey: "Gold",
       features: [
-        "A separate Kiosk with seating capacity of 4 members with respective banner for interaction with the audience and participants.",
-        "The organization may display their own explicit advertisement in the LED TV / AV Screen provided.",
-        "A single banner of the organization (2'X6') will be displayed.",
+        "A separate Kiosk with seating capacity of 2 members with respective banner for interaction with the audience and participants.",
+        "The organisation may display their own explicit logo/advertisement in the LED TV (55\") as provided.",
+        "A single banner of the organisation (2\"X6\") will be displayed.",
         "Registration kit @1,000/- INR free upto 4 delegates in the final day."
       ]
     },
     {
       title: "SILVER SPONSORSHIP PACKAGE",
-      price: "RS. 25000",
+      price: "RS. 25,000",
       categoryKey: "Silver",
       features: [
-        "A single banner of the organization (2'X6') will be displayed.",
-        "Registration kit @1,000/- INR free upto 4 delegates in the final day."
+        "A single banner of the organisation (2\"X6\") will be displayed.",
+        "Registration kit @1,000/- INR free upto 2 delegates in the final day."
       ]
     },
     {
       title: "BRONZE SPONSORSHIP PACKAGE",
-      price: "RS. 10000",
+      price: "RS. 10,000",
       categoryKey: "Bronze",
       features: [
-        "A single banner of the organization (2'X6') will be displayed.",
-        "Registration kit @1,000/- INR free upto 4 delegates in the final day."
+        "A single banner of the organisation (2\"X6\") will be displayed.",
+        "Registration kit @1,000/- INR free upto 2 delegates in the final day."
       ]
     }
   ];
@@ -409,9 +408,9 @@ export default function Sponsors({ initialFormOpen = false }) {
                               : "hover:bg-white/20 text-white bg-black/20"
                           }`}
                         >
-                          <td className="p-2 border-r border-white/20">{row.sr}</td>
-                          <td className="p-2 border-r border-white/20 font-heading tracking-wider">{row.category}</td>
-                          <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-cyan-300"}`}>
+                          <td className="p-2 border-r border-white/20 font-mono">{row.sr}</td>
+                          <td className="p-2 border-r border-white/20 font-heading tracking-wider uppercase">{row.category}</td>
+                          <td className={`p-2 font-mono ${formData.sponsoringFor === row.category ? "text-black" : "text-white"}`}>
                             ₹ {row.inr}
                           </td>
                         </tr>
@@ -457,7 +456,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                     value={formData.organizationName}
                     onChange={handleInputChange}
                     placeholder="Full Organisation / Corporate Name"
-                    className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                   />
                 </div>
 
@@ -472,7 +471,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       value={formData.place}
                       onChange={handleInputChange}
                       placeholder="City / Location"
-                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                      className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                     />
                   </div>
 
@@ -486,7 +485,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       value={formData.district}
                       onChange={handleInputChange}
                       placeholder="District Name"
-                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                      className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                     />
                   </div>
                 </div>
@@ -503,7 +502,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       value={formData.contactPerson}
                       onChange={handleInputChange}
                       placeholder="Full Name"
-                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                      className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                     />
                   </div>
 
@@ -518,7 +517,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="partner@company.com"
-                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                      className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                     />
                   </div>
 
@@ -534,7 +533,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       value={formData.phone}
                       onChange={handlePhoneChange}
                       placeholder="10-digit number"
-                      className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                      className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                     />
                   </div>
                 </div>
@@ -546,7 +545,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                   FEE PAYMENT VIA UPI QR
                 </h4>
                 <p className="font-body text-xs sm:text-sm text-white/90 leading-relaxed">
-                  For online payment, you can directly pay through any UPI App to the QR displayed here for the selected <span className="font-heading font-black text-cyan-300">{formData.sponsoringFor}</span> package (Amount: <span className="font-mono font-black text-cyan-300">₹ {currentFee}</span>):
+                  For online payment, you can directly pay through any UPI App to the QR displayed here for the selected <span className="font-heading font-black text-white">{formData.sponsoringFor}</span> package (Amount: <span className="font-mono font-black text-white">₹ {currentFee}</span>):
                 </p>
 
                 {/* IDBI UPI Payment QR Image */}
@@ -581,7 +580,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                     value={formData.transactionId}
                     onChange={handleInputChange}
                     placeholder="Enter 12-digit UTR / UPI Transaction ID"
-                    className="w-full bg-black/50 border border-white/40 focus:border-cyan-300 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
+                    className="w-full bg-black/50 border border-white/40 focus:border-white text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition placeholder:text-white/50 focus:bg-black/70"
                   />
                 </div>
 
@@ -617,7 +616,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                 <button
                   type="submit"
                   disabled={sponsorMutation.isPending}
-                  className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-cyan-300 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
+                  className="px-8 py-3.5 border-2 border-white rounded-full bg-white text-black hover:bg-white/90 font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-xl cursor-pointer disabled:opacity-50 w-full sm:w-auto text-center"
                 >
                   {sponsorMutation.isPending ? "SUBMITTING SPONSORSHIP..." : "SUBMIT SPONSORSHIP FORM"}
                 </button>
@@ -637,14 +636,14 @@ export default function Sponsors({ initialFormOpen = false }) {
       {/* Dark Overlay for max readability matching mockup */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-black/95 pointer-events-none z-0" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col items-center text-center">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col items-center text-center">
         
         {/* NON-STICKY TOP HEADER (No sticky navbar) */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full flex items-center justify-between py-5 mb-10 border-b-2 border-white/30"
+          className="w-full flex items-center justify-between py-4 mb-12 border-b-2 border-white/20"
         >
           <Link
             to="/"
@@ -653,7 +652,10 @@ export default function Sponsors({ initialFormOpen = false }) {
             HOME
           </Link>
 
-          <h1 className="font-heading font-black text-2xl sm:text-4xl md:text-5xl text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+          <h1 
+            className="font-heading font-black text-white tracking-widest uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]"
+            style={{ fontSize: 'clamp(1.5rem, 5vw, 3.25rem)' }}
+          >
             OUR SPONSORS
           </h1>
 
@@ -666,33 +668,37 @@ export default function Sponsors({ initialFormOpen = false }) {
           </button>
         </motion.header>
 
-        {/* TOP SPONSORS SECTIONS (MATCHING MOCKUP DESIGN) */}
-        <div className="w-full max-w-4xl space-y-12 mb-16">
+        {/* TOP SPONSORS SECTIONS (MATCHING MOCKUP DESIGN WITH ENLARGED LOGOS) */}
+        <div className="w-full max-w-5xl space-y-16 mb-20">
           {/* 1. TECHNICAL CO-SPONSORS */}
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, margin: "-40px" }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.6 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               TECHNICAL CO-SPONSORS
             </h2>
-            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 w-full">
+            <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 w-full">
               {technicalCoSponsors.map((item, idx) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: false }}
+                  viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] w-44 sm:w-56 h-36 sm:h-44 transition-all duration-300"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-56 sm:w-72 md:w-80 h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
                 >
-                  <SponsorLogo
+                  <img
                     src={item.src}
                     alt={item.name}
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -703,11 +709,14 @@ export default function Sponsors({ initialFormOpen = false }) {
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, margin: "-40px" }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               IN ASSOCIATION WITH
             </h2>
             <div className="flex items-center justify-center w-full">
@@ -716,14 +725,15 @@ export default function Sponsors({ initialFormOpen = false }) {
                   key={item.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: false }}
+                  viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] w-48 sm:w-60 h-38 sm:h-48 transition-all duration-300"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-60 sm:w-80 md:w-96 h-48 sm:h-60 md:h-68 transition-all duration-300 transform-gpu overflow-hidden"
                 >
-                  <SponsorLogo
+                  <img
                     src={item.src}
                     alt={item.name}
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -734,27 +744,31 @@ export default function Sponsors({ initialFormOpen = false }) {
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: false, margin: "-40px" }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center transform-gpu"
           >
-            <h2 className="font-heading font-black text-xl sm:text-2xl md:text-3xl text-white tracking-widest uppercase mb-6 drop-shadow-md">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
               POWERED BY
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 w-full max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-10 w-full max-w-5xl mx-auto">
               {poweredBySponsors.map((item, idx) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: false }}
+                  viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
                   whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-5 sm:p-6 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.7)] h-36 sm:h-44 transition-all duration-300"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
                 >
-                  <SponsorLogo
+                  <img
                     src={item.src}
                     alt={item.name}
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </motion.div>
               ))}
@@ -770,7 +784,10 @@ export default function Sponsors({ initialFormOpen = false }) {
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}
+          >
             BE OUR SPONSOR
           </h2>
 
@@ -787,7 +804,8 @@ export default function Sponsors({ initialFormOpen = false }) {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, margin: "-40px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-blue-950/80 via-purple-950/90 to-indigo-950/80 border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
+                className="border-2 border-white rounded-2xl p-5 sm:p-6 shadow-[0_10px_30px_rgba(0,0,0,0.6)] backdrop-blur-md text-center hover:border-cyan-300 transition-all duration-300"
+                style={{ background: "radial-gradient(circle at 0% 0%, rgba(119, 32, 61, 0.9), rgba(60, 86, 175, 0.9))" }}
               >
                 <p className="font-body text-sm sm:text-base md:text-lg font-black text-white leading-relaxed tracking-wide">
                   {text}
@@ -805,7 +823,10 @@ export default function Sponsors({ initialFormOpen = false }) {
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}
+          >
             SPONSORSHIP TIERS
           </h2>
 
@@ -817,7 +838,8 @@ export default function Sponsors({ initialFormOpen = false }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: false, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
-                className="bg-gradient-to-r from-purple-950/90 via-slate-950/95 to-blue-950/90 border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
+                className="border-2 border-white rounded-3xl p-6 sm:p-8 shadow-[0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-md text-left hover:border-purple-300 transition-all duration-300"
+                style={{ background: "radial-gradient(circle at 0% 0%, #77203d, #3c56af)" }}
               >
                 <div className="border-b-2 border-white/30 pb-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <h3 className="font-heading font-black text-base sm:text-lg md:text-xl text-white tracking-wider uppercase">
@@ -829,7 +851,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                       setFormData((prev) => ({ ...prev, sponsoringFor: tier.categoryKey }));
                       setIsFormOpen(true);
                     }}
-                    className="font-heading font-black text-sm sm:text-base md:text-lg text-cyan-300 tracking-widest uppercase bg-black/50 hover:bg-white hover:text-black px-4 py-1.5 rounded-full border border-cyan-400/50 transition cursor-pointer self-start sm:self-auto"
+                    className="font-heading font-black text-sm sm:text-base md:text-lg text-white tracking-widest uppercase bg-black/50 hover:bg-white hover:text-black px-4 py-1.5 rounded-full border border-white/50 transition cursor-pointer self-start sm:self-auto"
                   >
                     {tier.price} — SPONSOR NOW
                   </button>
@@ -838,7 +860,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                 <ul className="space-y-3">
                   {tier.features.map((feature, fIdx) => (
                     <li key={fIdx} className="flex items-start gap-3 font-body text-xs sm:text-sm md:text-base font-bold text-white/95 leading-relaxed">
-                      <span className="text-cyan-400 font-black text-sm sm:text-base shrink-0 mt-0.5">•</span>
+                      <span className="text-white font-black text-sm sm:text-base shrink-0 mt-0.5">•</span>
                       <span>{feature}</span>
                     </li>
                   ))}
@@ -854,7 +876,7 @@ export default function Sponsors({ initialFormOpen = false }) {
           whileInView={{ scale: 1, opacity: 1 }}
           viewport={{ once: false }}
           transition={{ duration: 0.5 }}
-          className="mb-20"
+          className="mb-20 transform-gpu"
         >
           <button
             type="button"
@@ -871,23 +893,26 @@ export default function Sponsors({ initialFormOpen = false }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, margin: "-80px" }}
           transition={{ duration: 0.7 }}
-          className="w-full mb-16 flex flex-col items-center overflow-hidden"
+          className="w-full mb-16 flex flex-col items-center overflow-hidden transform-gpu"
         >
-          <h2 className="font-heading font-black text-3xl sm:text-5xl text-white tracking-widest uppercase mb-10 drop-shadow-xl">
+          <h2 
+            className="font-heading font-black text-white tracking-widest uppercase mb-10 drop-shadow-xl"
+            style={{ fontSize: "clamp(1.5rem, 4.5vw, 3rem)" }}
+          >
             PREVIOUS SPONSORS
           </h2>
 
           <div className="w-full overflow-hidden relative py-6">
-            <div className="animate-marquee flex items-center gap-8">
+            <div className="animate-marquee flex items-center gap-8 sm:gap-12">
               {[...currentSponsors, ...currentSponsors, ...currentSponsors, ...currentSponsors].map((item, idx) => (
                 <div
                   key={idx}
-                  className="bg-white rounded-3xl p-5 min-w-[260px] sm:min-w-[320px] max-w-[350px] flex items-center justify-center border-4 border-white shadow-[0_10px_25px_rgba(0,0,0,0.6)] shrink-0 transform hover:scale-105 transition-all duration-200"
+                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 min-w-[300px] sm:min-w-[380px] md:min-w-[440px] h-48 sm:h-60 md:h-64 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.8)] shrink-0 transform-gpu hover:scale-105 transition-all duration-200 overflow-hidden"
                 >
                   <SponsorLogo
                     src={item.src}
                     alt={item.name}
-                    imgClassName="h-32 sm:h-40 md:h-44 w-auto object-contain rounded-lg"
+                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                   />
                 </div>
               ))}

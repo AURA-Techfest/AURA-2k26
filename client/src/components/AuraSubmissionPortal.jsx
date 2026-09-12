@@ -440,7 +440,7 @@ export default function AuraSubmissionPortal({ onBack }) {
     });
   };
 
-  // College ID Card Upload Handler
+  // College ID Card Upload Handler (Max 2MB)
   const handleIdCardUpload = (e, memberKey) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -448,8 +448,8 @@ export default function AuraSubmissionPortal({ onBack }) {
       alert("Please upload a valid image file (JPG/PNG).");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("College ID card image must be smaller than 5 MB.");
+    if (file.size > 2 * 1024 * 1024) {
+      alert("College ID card image must be smaller than 2 MB.");
       return;
     }
     setFiles((prev) => ({ ...prev, [memberKey]: file }));
@@ -475,7 +475,7 @@ export default function AuraSubmissionPortal({ onBack }) {
     setFormData((prev) => ({ ...prev, [name]: digitsOnly }));
   };
 
-  // Abstract Idea Document Upload Handler (PDF & DOCX)
+  // Abstract Idea Document Upload Handler (PDF & DOCX, Max 5MB)
   const handleAbstractDocUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -486,8 +486,8 @@ export default function AuraSubmissionPortal({ onBack }) {
       alert("Please upload a valid PDF or DOCX file for the Abstract Idea.");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Abstract Idea document must be smaller than 10 MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Abstract Idea document must be smaller than 5 MB.");
       return;
     }
     setFiles((prev) => ({ ...prev, abstractPdf: file }));
@@ -1095,7 +1095,7 @@ export default function AuraSubmissionPortal({ onBack }) {
               <div id="field-group-10" className="space-y-4 pt-4 border-t border-white/10">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <label className="block font-heading text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
-                    College ID Verification Uploads (JPG/PNG, Max 5MB each) *
+                    College ID Verification Uploads (JPG/PNG, Max 2MB each) *
                   </label>
                   <span className="text-[11px] font-mono text-purple-300 font-bold">
                     Mandatory for all {parseInt(formData.teamSize) || 4} members
@@ -1300,7 +1300,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                     Abstract Idea Upload (PDF / DOCX) *
                   </label>
                   <span className="text-[11px] font-mono text-white/60">
-                    Format: PDF / DOCX | Max size: 10MB
+                    Format: PDF / DOCX | Max size: 5MB
                   </span>
                 </div>
                 <p className="text-[11px] font-mono font-bold text-purple-300 tracking-wide uppercase bg-purple-950/40 p-2.5 rounded-lg border border-purple-400/30">
