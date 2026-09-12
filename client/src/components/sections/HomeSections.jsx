@@ -583,7 +583,11 @@ function HomeSections({ onRegisterClick }) {
                 {/* Card Image Box */}
                 <div className="w-full aspect-[4/3] rounded-xl overflow-hidden mb-4 bg-slate-100 border border-slate-200 shadow-inner">
                   <img
-                    src={crewPlaceholder}
+                    src={
+                      year === "2024"
+                        ? "https://res.cloudinary.com/dpw89wko7/image/upload/v1789209443/AURA_24_-_01.JPG_ktxaqc.jpg"
+                        : crewPlaceholder
+                    }
                     alt={`AURA ${year}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
