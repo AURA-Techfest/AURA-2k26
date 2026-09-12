@@ -10,24 +10,27 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
-  'http://localhost:5173',           // local dev, always allowed
-  process.env.FRONTEND_URL,          // deployed frontend, from env
+  "http://localhost:5173",
+  "https://aura2k26.com",
+  "https://www.aura2k26.com",
+  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (curl, Postman, server-to-server)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
-    }
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (curl, Postman, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Not allowed by CORS: ${origin}`));
+      }
+    },
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
-
 
 app.get("/", (req, res) => {
   res.json({
@@ -84,5 +87,3 @@ connectDB();
 app.listen(PORT, () => {
   console.log(`AURA backend running on http://localhost:${PORT}`);
 });
-
-
