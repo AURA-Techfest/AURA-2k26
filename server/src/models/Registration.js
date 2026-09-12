@@ -56,6 +56,7 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // College ID Card URLs
     teamLeaderIdCard: {
       type: String,
       trim: true,
@@ -73,6 +74,7 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Project Details
     projectTitle: {
       type: String,
       required: true,
@@ -137,17 +139,28 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 4000,
+      maxlength: 5000,
     },
     solutionDescription: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 4000,
+      maxlength: 5000,
     },
     innovationDescription: {
       type: String,
       required: true,
+      trim: true,
+      maxlength: 5000,
+    },
+
+    // Abstract Idea Document
+    abstractPdf: {
+      type: String,
+      trim: true,
+    },
+    abstractPdfOriginalName: {
+      type: String,
       trim: true,
     },
 
@@ -178,6 +191,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
     majorHardwareComponents: {
       type: [String],
@@ -210,6 +224,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     productPotential: {
@@ -228,6 +243,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     safetyHazards: {
@@ -254,6 +270,7 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      maxlength: 5000,
     },
 
     requiresContinuousSupervision: {
@@ -275,11 +292,13 @@ const registrationSchema = new mongoose.Schema(
     previousExhibitionDetails: {
       type: String,
       trim: true,
+      maxlength: 5000,
     },
 
     registrationFeeStatus: {
       type: String,
       enum: ["no_fee", "external_fee"],
+      default: "no_fee",
       required: true,
     },
 
@@ -295,7 +314,7 @@ const registrationSchema = new mongoose.Schema(
 
     registrationFee: {
       type: Number,
-      min: 0,
+      default: 0,
       required: true,
     },
 
@@ -348,3 +367,4 @@ const registrationSchema = new mongoose.Schema(
 const Registration = mongoose.model("Registration", registrationSchema);
 
 export default Registration;
+

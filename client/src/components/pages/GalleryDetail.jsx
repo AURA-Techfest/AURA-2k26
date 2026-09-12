@@ -33,8 +33,7 @@ export default function GalleryDetail({ onRegisterClick }) {
         </button>
 
         <h1
-          className="font-heading font-black text-white tracking-widest uppercase text-center drop-shadow-md hidden sm:block"
-          style={{ fontSize: "clamp(1.25rem, 3vw, 2.25rem)" }}
+          className="font-heading font-black text-white tracking-widest uppercase text-center drop-shadow-md hidden sm:block text-2xl"
         >
           GALLERY {displayYear}
         </h1>
@@ -67,10 +66,7 @@ export default function GalleryDetail({ onRegisterClick }) {
           AURA {displayYear} EVENT GALLERY
         </span>
 
-        <h2 
-          className="font-heading font-black text-white uppercase tracking-widest mb-4 drop-shadow-xl"
-          style={{ fontSize: "clamp(1.5rem, 4.5vw, 3rem)" }}
-        >
+        <h2 className="font-heading font-black text-3xl sm:text-5xl text-white uppercase tracking-widest mb-4 drop-shadow-xl">
           COMING SOON
         </h2>
 

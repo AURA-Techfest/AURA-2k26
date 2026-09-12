@@ -11,23 +11,28 @@ cloudinary.config({
 
 export const uploadToCloudinary = (
   fileBuffer,
-  { folder = "aura-registrations", resource_type = "auto", public_id } = {},
+  {
+    folder = "aura-registrations",
+    resource_type = "auto",
+    filename = undefined,
+  } = {}
 ) => {
   return new Promise((resolve, reject) => {
-    const options = {
+    const uploadOptions = {
       folder,
       resource_type,
     };
-    if (public_id) {
-      options.public_id = public_id;
+
+    if (filename) {
+      uploadOptions.public_id = filename.replace(/\.[^/.]+$/, "");
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
-      options,
+      uploadOptions,
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
-      },
+      }
     );
     uploadStream.end(fileBuffer);
   });
@@ -35,9 +40,24 @@ export const uploadToCloudinary = (
 
 export const uploadImage = (
   fileBuffer,
-  folder = "aura-registrations/payment-screenshots",
+  folder = "aura-registrations/id-cards"
 ) => {
-  return uploadToCloudinary(fileBuffer, { folder, resource_type: "image" });
+  return uploadToCloudinary(fileBuffer, {
+    folder,
+    resource_type: "image",
+  });
+};
+
+export const uploadDocument = (
+  fileBuffer,
+  folder = "aura-registrations/abstract-docs",
+  filename = undefined
+) => {
+  return uploadToCloudinary(fileBuffer, {
+    folder,
+    resource_type: "auto",
+    filename,
+  });
 };
 
 export default cloudinary;

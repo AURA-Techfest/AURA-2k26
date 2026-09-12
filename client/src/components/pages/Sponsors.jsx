@@ -11,8 +11,49 @@ const API_URL = (rawApiUrl && rawApiUrl !== 'undefined')
   : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/ieee_pes_logo.png";
-import iicLogo from "../../assets/iic_logo.png";
-import ietLogo from "../../assets/iet_logo.png";
+import iicLogo from "../../assets/iic_logo.jpg";
+import ietLogo from "../../assets/iet_logo.jpg";
+
+function SponsorLogo({ src, alt, className = "", imgClassName = "" }) {
+  const [hasError, setHasError] = useState(false);
+
+  if (!src || hasError) {
+    return (
+      <div className={`flex flex-col items-center justify-center text-center p-2 select-none w-full h-full ${className}`}>
+        <span className="font-heading font-black text-xs sm:text-sm text-slate-900 uppercase tracking-wider leading-snug break-words">
+          {alt || "SPONSOR"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt || "Sponsor"}
+      onError={() => setHasError(true)}
+      className={imgClassName || "max-h-full max-w-full object-contain rounded-xl"}
+    />
+  );
+}
+
+const fetchSponsorsHeaderData = async () => {
+  return {
+    technicalCoSponsors: [
+      { id: "tech-1", name: "IEEE PES", src: ieeePesLogo || null },
+      { id: "tech-2", name: "IET", src: ietLogo || null }
+    ],
+    inAssociationWith: [
+      { id: "assoc-1", name: "IIC ALIAH UNIVERSITY", src: iicLogo || null }
+    ],
+    poweredBy: [
+      { id: "pow-1", name: "IEEE PES", src: ieeePesLogo || null },
+      { id: "pow-2", name: "IET", src: ietLogo || null },
+      { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo || null }
+    ]
+  };
+};
+
 
 const fetchSponsorsHeaderData = async () => {
   return {
@@ -56,6 +97,7 @@ export default function Sponsors({ initialFormOpen = false }) {
   });
   const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
   // Auto-scroll to top when opening form page
   useEffect(() => {
@@ -526,11 +568,19 @@ export default function Sponsors({ initialFormOpen = false }) {
 
                 {/* IDBI UPI Payment QR Image */}
                 <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border-2 border-white max-w-xs mx-auto shadow-2xl">
-                  <img
-                    src={paymentQr}
-                    alt="AURA 2K26 IDBI UPI Payment QR"
-                    className="w-48 sm:w-56 h-auto object-contain rounded-lg"
-                  />
+                  {paymentQr && !qrError ? (
+                    <img
+                      src={paymentQr}
+                      alt="AURA 2K26 IDBI UPI Payment QR"
+                      onError={() => setQrError(true)}
+                      className="w-48 sm:w-56 h-auto object-contain rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-48 sm:w-56 h-48 bg-slate-100 flex flex-col items-center justify-center p-4 rounded-lg text-slate-900 select-none">
+                      <span className="font-heading font-black text-xs sm:text-sm uppercase tracking-wider">UPI PAYMENT QR</span>
+                      <span className="text-[11px] font-mono text-slate-600 mt-2 text-center">Scan via any UPI App</span>
+                    </div>
+                  )}
                   <span className="text-[10px] font-heading font-black text-slate-900 uppercase tracking-widest mt-2">
                     SCAN & PAY VIA ANY UPI APP
                   </span>
@@ -842,7 +892,7 @@ export default function Sponsors({ initialFormOpen = false }) {
         <motion.div
           initial={{ scale: 0.85, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
+          viewport={{ once: false }}
           transition={{ duration: 0.5 }}
           className="mb-20 transform-gpu"
         >
@@ -859,7 +909,7 @@ export default function Sponsors({ initialFormOpen = false }) {
         <motion.section
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          viewport={{ once: false, margin: "-80px" }}
           transition={{ duration: 0.7 }}
           className="w-full mb-16 flex flex-col items-center overflow-hidden transform-gpu"
         >
@@ -877,7 +927,7 @@ export default function Sponsors({ initialFormOpen = false }) {
                   key={idx}
                   className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 min-w-[300px] sm:min-w-[380px] md:min-w-[440px] h-48 sm:h-60 md:h-64 flex items-center justify-center border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.8)] shrink-0 transform-gpu hover:scale-105 transition-all duration-200 overflow-hidden"
                 >
-                  <img
+                  <SponsorLogo
                     src={item.src}
                     alt={item.name}
                     className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"

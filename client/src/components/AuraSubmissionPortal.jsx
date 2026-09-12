@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 import websiteBg from "../assets/WEBSITE_BG.png";
 // import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
 // import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
-import paymentQr from "../assets/payment_qr.jpeg";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL = (rawApiUrl && rawApiUrl !== 'undefined') 
@@ -623,19 +622,7 @@ export default function AuraSubmissionPortal({ onBack }) {
       return;
     }
 
-    // Step 4 validation (Fee)
-    let paymentScreenshotFileObj = null;
-    if (calculatedFee > 0) {
-      if (!formData.transactionId.trim()) {
-        alert("Transaction ID / UTR is required for fee submission.");
-        return;
-      }
-      paymentScreenshotFileObj = files.paymentScreenshot || dataURLtoFile(formData.paymentScreenshotPreview, "paymentScreenshot.png");
-      if (!paymentScreenshotFileObj) {
-        alert("Payment screenshot image is required for fee submission.");
-        return;
-      }
-    }
+
 
     try {
       const formDataToSend = new FormData();
@@ -695,17 +682,8 @@ export default function AuraSubmissionPortal({ onBack }) {
       }
 
       // Fees
-      // Fees
-      const feeStatus = calculatedFee > 0 ? "external_fee" : "no_fee";
-      formDataToSend.append("registrationFeeStatus", feeStatus);
-      formDataToSend.append("registrationFee", calculatedFee);
-
-      if (calculatedFee > 0) {
-        formDataToSend.append("transactionId", formData.transactionId.trim());
-        if (paymentScreenshotFileObj) {
-          formDataToSend.append("paymentScreenshot", paymentScreenshotFileObj);
-        }
-      }
+      formDataToSend.append("registrationFeeStatus", "no_fee");
+      formDataToSend.append("registrationFee", 0);
 
       // File uploads
       if (leaderFileObj) formDataToSend.append("teamLeaderIdCard", leaderFileObj);
