@@ -164,6 +164,11 @@ const registrationSchema = new mongoose.Schema(
       trim: true,
     },
 
+    abstractPdf: {
+      type: String,
+      trim: true,
+    },
+
     intendedBeneficiaries: {
       type: [String],
       enum: [

@@ -18,4 +18,4 @@ router.get(
   checkEmailOrTeamName
 );
 
-export default router;
+export default router;

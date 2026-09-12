@@ -71,4 +71,4 @@ export const uploadRegistrationFiles = upload.fields([
   { name: "paymentScreenshot", maxCount: 1 },
 ]);
 
-export default upload;
+export default upload;
