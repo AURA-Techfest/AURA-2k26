@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import websiteBg from "../assets/WEBSITE_BG.png";
-import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
-import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
+// import desktopBg from "../assets/Registration_bg_desktop-ver.jpeg";
+// import mobileBg from "../assets/Registration_bg_mobile-ver.jpeg";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL = (rawApiUrl && rawApiUrl !== 'undefined') 
