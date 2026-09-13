@@ -1279,7 +1279,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                     Problem Statement, Solution & Innovation Details *
                   </label>
                   <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 400 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
-                    {countWords(formData.problemSolutionInnovation)} / 250 words
+                    {countWords(formData.problemSolutionInnovation)} / 400 words
                   </span>
                 </div>
                 <textarea
