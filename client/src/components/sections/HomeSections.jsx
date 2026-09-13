@@ -131,8 +131,8 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.1",
-    title: "Login to Pay Window Opens",
-    date: "to be notified via email",
+    title: "Early Bird Registration Opens for Payment Confirmation",
+    date: "Till October 31, 2026",
     t: 0.50,
     x: 640,
     y: 380,
@@ -141,8 +141,8 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.2",
-    title: "Login to Pay Window Ends",
-    date: "to be notified via email",
+    title: "Registration Closes for Payment Confirmation",
+    date: "November 10, 2026",
     t: 0.65,
     x: 260,
     y: 380,
@@ -369,7 +369,6 @@ function HomeSections({ onRegisterClick }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs md:text-sm font-body text-white/80 font-semibold pt-1">
                 <div>• <strong className="text-white">Main Hub:</strong> New Town Campus (Engineering & Science)</div>
                 <div>• <strong className="text-white">City Campuses:</strong> Park Circus & Taltala</div>
-                <div>• <strong className="text-white">Departments:</strong> CSE, ECE, Civil, ME, EE, Sciences</div>
                 <div>• <strong className="text-white">Recognition:</strong> Minority State Univ (Act XXVII, 2007)</div>
               </div>
             </div>

@@ -1278,7 +1278,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   <label className="block font-heading text-xs sm:text-sm uppercase tracking-wider text-white font-bold">
                     Problem Statement, Solution & Innovation Details *
                   </label>
-                  <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 250 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
+                  <span className={`text-xs font-mono font-bold ${countWords(formData.problemSolutionInnovation) >= 400 ? 'text-fuchsia-400 font-black' : 'text-purple-300'}`}>
                     {countWords(formData.problemSolutionInnovation)} / 250 words
                   </span>
                 </div>
@@ -1286,8 +1286,8 @@ export default function AuraSubmissionPortal({ onBack }) {
                   rows={5}
                   name="problemSolutionInnovation"
                   value={formData.problemSolutionInnovation}
-                  onChange={(e) => handleWordLimitedChange(e, 250)}
-                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.problemSolutionInnovation, 250)}
+                  onChange={(e) => handleWordLimitedChange(e, 400)}
+                  onKeyDown={(e) => handleWordLimitedKeyDown(e, formData.problemSolutionInnovation, 400)}
                   placeholder="Describe the problem your project addresses, your hardware solution, and what makes your system innovative (Strict Max 250 words)"
                   className="w-full bg-black/40 border border-white/30 focus:border-white text-white font-body text-sm focus:outline-none transition-all p-3 rounded-lg placeholder:text-white/30 leading-relaxed"
                 />
@@ -1304,7 +1304,7 @@ export default function AuraSubmissionPortal({ onBack }) {
                   </span>
                 </div>
                 <p className="text-[11px] font-mono font-bold text-purple-300 tracking-wide uppercase bg-purple-950/40 p-2.5 rounded-lg border border-purple-400/30">
-                  UPLOAD ABOUT YOUR PROJECTS' IDEA, METHODOLOGY AND IMPACT IN BRIEF
+                  ONE PAGE WRITE-UP : TITLE, METHODOLOGY, PROPOSED BLOCK DIAGRAM, PROPOSED OUTCOME WITHIN 400 WORDS
                 </p>
                 <input
                   type="file"
