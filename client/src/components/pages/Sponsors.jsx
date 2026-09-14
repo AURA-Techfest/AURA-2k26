@@ -10,9 +10,9 @@ const API_URL = (rawApiUrl && rawApiUrl !== 'undefined')
   ? rawApiUrl.replace(/\/$/, '')
   : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 import paymentQr from "../../assets/payment_qr.jpeg";
-import ieeePesLogo from "../../assets/ieee_pes_logo.png";
-import iicLogo from "../../assets/iic_logo.jpg";
-import ietLogo from "../../assets/iet_logo.jpg";
+import ieeePesLogo from "../../assets/IEEE_LOGO.png";
+import iicLogo from "../../assets/IIC_LOGO.png";
+import ietLogo from "../../assets/IET_LOGO.png";
 
 function SponsorLogo({ src, alt, className = "", imgClassName = "" }) {
   const [hasError, setHasError] = useState(false);
