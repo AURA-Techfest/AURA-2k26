@@ -125,7 +125,7 @@ const fetchFacultyData = async () => {
   return sections;
 };
 
-// Interactive Faculty Card with vibrant color and hover effects (No position inside the card)
+// Interactive Faculty Card styled with #6f2138 hover effects, accent line, and post color
 function FacultyCard({ member, index }) {
   return (
     <motion.div
@@ -145,10 +145,10 @@ function FacultyCard({ member, index }) {
         transition: { type: "spring", stiffness: 350, damping: 20 }
       }}
       whileTap={{ scale: 0.98 }}
-      className="group relative bg-white/95 rounded-2xl p-4 sm:p-5 border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_50px_rgba(147,51,234,0.45),0_0_25px_rgba(255,255,255,0.3)] hover:border-purple-300 transition-all duration-300 flex flex-col items-start text-left cursor-pointer overflow-hidden w-full h-full"
+      className="group relative bg-white/95 rounded-2xl p-4 sm:p-5 border-4 border-white shadow-[0_15px_35px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_50px_rgba(111,33,56,0.45),0_0_25px_rgba(111,33,56,0.25)] hover:border-[#6f2138]/50 transition-all duration-300 flex flex-col items-start text-left cursor-pointer overflow-hidden w-full h-full"
     >
-      {/* Ambient Neon Glow Bloom on Hover */}
-      <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-500 to-indigo-600 rounded-2xl opacity-0 group-hover:opacity-50 blur-md transition-opacity duration-300 pointer-events-none -z-10" />
+      {/* Ambient #6f2138 Glow Bloom on Hover */}
+      <div className="absolute -inset-1 bg-[#6f2138] rounded-2xl opacity-0 group-hover:opacity-40 blur-md transition-opacity duration-300 pointer-events-none -z-10" />
 
       {/* Shimmer Light Reflection Beam on Hover */}
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/50 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out pointer-events-none z-10" />
@@ -166,18 +166,18 @@ function FacultyCard({ member, index }) {
         />
       </div>
 
-      {/* Member Details: Just Name and Post with Color Accent */}
+      {/* Member Details: Just Name and Post with #6f2138 Color Accent */}
       <div className="w-full space-y-1.5 z-20 mt-auto">
-        {/* Color Accent Bar */}
-        <div className="w-8 h-1 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full mb-1.5 group-hover:w-16 transition-all duration-300" />
+        {/* Color Accent Bar in #6f2138 */}
+        <div className="w-8 h-1 bg-[#6f2138] rounded-full mb-1.5 group-hover:w-16 transition-all duration-300" />
 
         {/* Member Name */}
-        <h4 className="font-heading font-black text-sm sm:text-base text-slate-900 group-hover:text-purple-950 uppercase tracking-wider line-clamp-2 leading-tight transition-colors duration-300">
+        <h4 className="font-heading font-black text-sm sm:text-base text-slate-900 group-hover:text-[#6f2138] uppercase tracking-wider line-clamp-2 leading-tight transition-colors duration-300">
           {member.name}
         </h4>
 
-        {/* Member Post (Dept / Affiliation) */}
-        <p className="font-body font-bold text-xs sm:text-sm text-purple-800 group-hover:text-indigo-600 leading-snug transition-colors duration-300">
+        {/* Member Post (Dept / Affiliation) in #6f2138 */}
+        <p className="font-body font-bold text-xs sm:text-sm text-[#6f2138] leading-snug transition-colors duration-300">
           {member.post}
         </p>
       </div>
@@ -228,8 +228,8 @@ export default function People({ onRegisterClick }) {
       className="min-h-screen w-full relative bg-cover bg-center overflow-x-hidden font-sans text-white select-none"
       style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: "fixed" }}
     >
-      {/* Dark Overlay for high contrast */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-black/95 pointer-events-none z-0" />
+      {/* Uniform dark overlay keeping the exact same opacity everywhere on scroll */}
+      <div className="fixed inset-0 bg-black/75 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col items-center text-center">
         
