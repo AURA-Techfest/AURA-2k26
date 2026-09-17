@@ -228,8 +228,8 @@ export default function People({ onRegisterClick }) {
       className="min-h-screen w-full relative bg-cover bg-center overflow-x-hidden font-sans text-white select-none"
       style={{ backgroundImage: `url(${websiteBg})`, backgroundAttachment: "fixed" }}
     >
-      {/* Uniform dark overlay keeping the exact same opacity everywhere on scroll */}
-      <div className="fixed inset-0 bg-black/75 pointer-events-none z-0" />
+      {/* Dark Overlay for high contrast */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/70 to-black/95 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8 flex flex-col items-center text-center">
         
