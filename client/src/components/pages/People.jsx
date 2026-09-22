@@ -6,25 +6,34 @@ import { useQuery } from "@tanstack/react-query";
 import websiteBg from "../../assets/WEBSITE_BG.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
 import facultyCsvRaw from "../../assets/People/faculty.csv?raw";
+import volunteerCsvRaw from "../../assets/People/volunteer.csv?raw";
 
-// Dynamic import of faculty images from the assets folder
-const facultyImageModules = import.meta.glob("../../assets/People/faculty/*.jpg", {
+// Dynamic import of faculty and volunteer images from the assets folder
+const facultyImageModules = import.meta.glob("../../assets/People/faculty/*.{jpg,jpeg,png}", {
   eager: true,
   import: "default"
 });
 
-const getFacultyImage = (picNo) => {
+const volunteerImageModules = import.meta.glob("../../assets/People/volunteers/*.{jpg,jpeg,png}", {
+  eager: true,
+  import: "default"
+});
+
+const getPersonImage = (picNo, type = "faculty") => {
   if (!picNo) return crewPlaceholder;
   const fileName = picNo.trim();
 
+  const imageModules = type === "volunteer" ? volunteerImageModules : facultyImageModules;
+  const folderPath = type === "volunteer" ? "../../assets/People/volunteers" : "../../assets/People/faculty";
+
   // Try direct key match first
-  const directKey = `../../assets/People/faculty/${fileName}`;
-  if (facultyImageModules[directKey]) {
-    return facultyImageModules[directKey];
+  const directKey = `${folderPath}/${fileName}`;
+  if (imageModules[directKey]) {
+    return imageModules[directKey];
   }
 
   // Fallback match by filename suffix
-  for (const [key, val] of Object.entries(facultyImageModules)) {
+  for (const [key, val] of Object.entries(imageModules)) {
     if (key.endsWith(`/${fileName}`) || key.endsWith(`\\${fileName}`)) {
       return val;
     }
@@ -33,7 +42,7 @@ const getFacultyImage = (picNo) => {
   return crewPlaceholder;
 };
 
-// Fallback data in case the raw CSV file cannot be loaded directly
+// Fallback data for Faculty
 const FALLBACK_FACULTY_DATA = [
   { id: "fac-1", position: "Chief Patron", name: "Hon'ble Vice-Chancellor", post: "Aliah University", picNo: "1.jpg" },
   { id: "fac-2", position: "Patron", name: "Registrar", post: "Aliah University", picNo: "2.jpg" },
@@ -58,7 +67,16 @@ const FALLBACK_FACULTY_DATA = [
   { id: "fac-21", position: "Executive Member", name: "Mr. Sk. Hasibur Rahman", post: "Accountant", picNo: "21.jpg" }
 ];
 
-function parseFacultyCsv(csvText) {
+// Fallback data for Tech Team / Volunteers (Yousuf, Hasnain, Ekramul, Tabrez, Saikat)
+const FALLBACK_VOLUNTEER_DATA = [
+  { id: "vol-1", position: "Tech Team", name: "Yousuf", post: "Tech Team / Developer", picNo: "yousuf.jpg" },
+  { id: "vol-2", position: "Tech Team", name: "Hasnain", post: "Tech Team / Developer", picNo: "hasnain.jpg" },
+  { id: "vol-3", position: "Tech Team", name: "Ekramul", post: "Tech Team / UI & Developer", picNo: "ekramul.jpg" },
+  { id: "vol-4", position: "Tech Team", name: "Tabrez", post: "Tech Team / Full Stack Developer", picNo: "tabrez.jpg" },
+  { id: "vol-5", position: "Tech Team", name: "Saikat", post: "Tech Team / Developer", picNo: "saikat.jpg" }
+];
+
+function parseCsvRecords(csvText, idPrefix = "person") {
   if (!csvText || typeof csvText !== "string") return [];
   const lines = csvText.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -76,7 +94,7 @@ function parseFacultyCsv(csvText) {
       const post = parts.slice(2, parts.length - 1).join(",").trim();
 
       records.push({
-        id: `fac-${i}`,
+        id: `${idPrefix}-${i}`,
         position,
         name,
         post,
@@ -88,33 +106,33 @@ function parseFacultyCsv(csvText) {
   return records;
 }
 
-// Async fetcher for Faculty Data: each position in its own section/row
-const fetchFacultyData = async () => {
-  const parsed = parseFacultyCsv(facultyCsvRaw);
-  const rawList = parsed.length > 0 ? parsed : FALLBACK_FACULTY_DATA;
+// Async fetcher for People Data (Faculty Sections & Tech Team)
+const fetchPeopleData = async () => {
+  // Parse Faculty
+  const parsedFaculty = parseCsvRecords(facultyCsvRaw, "fac");
+  const rawFacultyList = parsedFaculty.length > 0 ? parsedFaculty : FALLBACK_FACULTY_DATA;
 
-  const populated = rawList.map((item) => ({
+  const populatedFaculty = rawFacultyList.map((item) => ({
     ...item,
     dept: item.post,
-    img: getFacultyImage(item.picNo)
+    img: getPersonImage(item.picNo, "faculty")
   }));
 
-  // Preserve order of appearance of each position from faculty.csv
   const groupsMap = new Map();
-  for (const item of populated) {
+  for (const item of populatedFaculty) {
     if (!groupsMap.has(item.position)) {
       groupsMap.set(item.position, []);
     }
     groupsMap.get(item.position).push(item);
   }
 
-  const sections = [];
+  const facultySections = [];
   for (const [position, members] of groupsMap.entries()) {
     const title = members.length > 1 && !position.toLowerCase().endsWith("s")
       ? `${position}s`
       : position;
 
-    sections.push({
+    facultySections.push({
       id: position.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       position,
       title,
@@ -122,11 +140,21 @@ const fetchFacultyData = async () => {
     });
   }
 
-  return sections;
+  // Parse Tech Team / Volunteers
+  const parsedVolunteers = parseCsvRecords(volunteerCsvRaw, "vol");
+  const rawVolunteerList = parsedVolunteers.length > 0 ? parsedVolunteers : FALLBACK_VOLUNTEER_DATA;
+
+  const techTeamMembers = rawVolunteerList.map((item) => ({
+    ...item,
+    dept: item.post,
+    img: getPersonImage(item.picNo, "volunteer")
+  }));
+
+  return { facultySections, techTeamMembers };
 };
 
-// Interactive Faculty Card styled with #6f2138 hover effects, accent line, and post color
-function FacultyCard({ member, index }) {
+// Interactive Person Card styled with #6f2138 hover effects, accent line, and post color
+function PersonCard({ member, index }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30, scale: 0.95 }}
@@ -195,12 +223,12 @@ function PositionSection({ title, members }) {
       transition={{ duration: 0.5 }}
       className="w-full flex flex-col items-center mb-14 sm:mb-16"
     >
-      <h2 
+      <h3 
         className="font-heading font-black text-white tracking-widest uppercase mb-6 sm:mb-8 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] text-center px-2"
         style={{ fontSize: "clamp(1.2rem, 3.2vw, 2.2rem)" }}
       >
         {title}
-      </h2>
+      </h3>
 
       <div className="flex flex-wrap justify-center gap-6 sm:gap-8 w-full max-w-5xl">
         {members.map((member, idx) => (
@@ -208,7 +236,7 @@ function PositionSection({ title, members }) {
             key={member.id}
             className="w-full sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] max-w-xs flex"
           >
-            <FacultyCard member={member} index={idx} />
+            <PersonCard member={member} index={idx} />
           </div>
         ))}
       </div>
@@ -217,11 +245,13 @@ function PositionSection({ title, members }) {
 }
 
 export default function People({ onRegisterClick }) {
-  const { data: facultySections = [] } = useQuery({
-    queryKey: ["facultyPeopleData"],
-    queryFn: fetchFacultyData,
+  const { data: peopleData = { facultySections: [], techTeamMembers: [] } } = useQuery({
+    queryKey: ["peopleCrewData"],
+    queryFn: fetchPeopleData,
     staleTime: 1000 * 60 * 10
   });
+
+  const { facultySections, techTeamMembers } = peopleData;
 
   return (
     <div
@@ -263,22 +293,53 @@ export default function People({ onRegisterClick }) {
           </button>
         </motion.header>
 
-        {/* EACH POSITION IN DIFFERENT ROW */}
-        <div className="w-full max-w-5xl space-y-4">
-          {facultySections.map((section) => (
-            <PositionSection
-              key={section.id}
-              title={section.title}
-              members={section.members}
-            />
-          ))}
+        <div className="w-full max-w-5xl space-y-12">
+          {/* SECTION 1: ORGANISING COMMITTEE & FACULTY */}
+          <div className="space-y-6">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] text-center border-b-2 border-white/20 pb-4"
+              style={{ fontSize: "clamp(1.4rem, 4vw, 2.5rem)" }}
+            >
+              ORGANISING COMMITTEE
+            </h2>
+
+            {facultySections.map((section) => (
+              <PositionSection
+                key={section.id}
+                title={section.title}
+                members={section.members}
+              />
+            ))}
+          </div>
+
+          {/* SECTION 2: TECH TEAM (VOLUNTEERS) */}
+          <div className="space-y-6 pt-8 border-t-2 border-white/20">
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] text-center border-b-2 border-white/20 pb-4"
+              style={{ fontSize: "clamp(1.4rem, 4vw, 2.5rem)" }}
+            >
+              TECH TEAM
+            </h2>
+
+            <div className="flex flex-wrap justify-center gap-6 sm:gap-8 w-full max-w-5xl">
+              {techTeamMembers.map((member, idx) => (
+                <div
+                  key={member.id}
+                  className="w-full sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] max-w-xs flex"
+                >
+                  <PersonCard member={member} index={idx} />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* FOOTER */}
-        <footer className="w-full pt-10 border-t-2 border-white/20 text-center font-body text-sm sm:text-base font-bold text-white/70 mt-12">
+        <footer className="w-full pt-10 border-t-2 border-white/20 text-center font-body text-sm sm:text-base font-bold text-white/70 mt-16">
           <p>Contact us at <a href="mailto:aura@aliah.ac.in" className="text-white underline font-black hover:text-purple-300">aura@aliah.ac.in</a></p>
         </footer>
       </div>
     </div>
   );
 }
+
