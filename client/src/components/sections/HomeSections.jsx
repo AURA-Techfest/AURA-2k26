@@ -6,6 +6,7 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
+import brochurePdf from "../../assets/One-Page Brochure Ver5.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
@@ -243,13 +244,15 @@ function HomeSections({ onRegisterClick }) {
             >
               Register Now
             </button>
-            <button
-              type="button"
-              onClick={() => alert("AURA 2K26 Official Event Brochure will be available for download soon!")}
-              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg"
+            <a
+              href={brochurePdf}
+              download="AURA_2K26_Brochure.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
             >
               Download Brochure
-            </button>
+            </a>
           </div>
         </motion.div>
       </section>
