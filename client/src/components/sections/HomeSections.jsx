@@ -7,6 +7,7 @@ import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
 import brochurePdf from "../../assets/One-Page Brochure Ver5.pdf";
+import guidelinesPdf from "../../assets/Visiting_PPT.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
@@ -252,6 +253,15 @@ function HomeSections({ onRegisterClick }) {
               className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
             >
               Download Brochure
+            </a>
+            <a
+              href={guidelinesPdf}
+              download="AURA_2K26_Guidelines.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
+            >
+              Download Guidelines
             </a>
           </div>
         </motion.div>
