@@ -171,7 +171,7 @@ const FALLBACK_VOLUNTEER_DATA = [
   { id: "vol-3", post: "Sponsorship Outreach", name: "Rifat Sarkar", year: "2nd Year, Btech, Electrical", picNo: "3.png", socialMedia: "https://www.linkedin.com/in/rifat-sarkar-7971b8381" },
   { id: "vol-4", post: "Non-Technical", name: "Md Sahid Hossain Mondal", year: "3rd Year, Btech, Mechanical", picNo: "4.png", socialMedia: "https://www.instagram.com/your_mshm" },
   { id: "vol-5", post: "Tech Team", name: "Gulam Hasnain Raza", year: "3rd Year, Btech, CSE", picNo: "5.png", socialMedia: "https://www.linkedin.com/in/gulam-hasnain-raza-aa385a325" },
-  { id: "vol-6", post: "Non-Technical", name: "Safiulla Hoque", year: "5th Year, MSc, Chemistry", picNo: "6.png", socialMedia: "" },
+  { id: "vol-6", post: "Host / Anchoring", name: "Safiullah Haque", year: "5th Year, MSc, Chemistry", picNo: "6.png", socialMedia: "" },
   { id: "vol-7", post: "Sponsorship Outreach", name: "Naim Abdullah", year: "2nd Year, Btech, Electrical", picNo: "7.png", socialMedia: "https://www.linkedin.com/in/naim-abdullah-2328b437a" },
   { id: "vol-8", post: "Decorations and Kits", name: "Md Sharique Siddiqui", year: "3rd Year, Btech, Mechanical", picNo: "8.png", socialMedia: "https://www.linkedin.com/in/md-sharique-siddiqui" },
   { id: "vol-9", post: "Non-Technical", name: "Bakhtiar Kharaz", year: "3rd Year, Btech, Electrical", picNo: "9.png", socialMedia: "https://in.linkedin.com/in/bakhtiar-kharaz-225271356" },
