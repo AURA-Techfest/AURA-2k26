@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const registrationSchema = new mongoose.Schema(
   {
+    registrationId: {
+      type: String,
+      unique: true,
+      trim: true,
+      index: true,
+    },
     teamName: {
       type: String,
       required: true,
@@ -358,6 +364,20 @@ const registrationSchema = new mongoose.Schema(
         message: "Final Confirmation must be accepted",
       },
     },
+
+    emailStatus: {
+      type: String,
+      enum: ["pending", "sent", "failed"],
+      default: "pending",
+      index: true,
+    },
+    emailSentAt: {
+      type: Date,
+    },
+    emailMessageId: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -367,4 +387,3 @@ const registrationSchema = new mongoose.Schema(
 const Registration = mongoose.model("Registration", registrationSchema);
 
 export default Registration;
-
