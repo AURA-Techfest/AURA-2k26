@@ -6,7 +6,7 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
-import brochurePdf from "../../assets/One-Page Brochure Ver5.pdf";
+import brochurePdf from "../../assets/One-Page Brochure Ver6.pdf";
 import guidelinesPdf from "../../assets/Visiting_PPT.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
@@ -114,7 +114,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    date: "30 Sep, 2026",
+    date: "10 Oct, 2026",
     t: 0.20,
     x: 470,
     y: 0,
@@ -124,7 +124,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    date: "5 Oct, 2026",
+    date: "15 Oct, 2026",
     t: 0.35,
     x: 820,
     y: 0,
