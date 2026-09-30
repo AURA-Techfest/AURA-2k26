@@ -247,7 +247,7 @@ function HomeSections({ onRegisterClick }) {
             </button>
             <a
               href={brochurePdf}
-              download="AURA_2K26_Brochure.pdf"
+              download="AURA-2K26_Brochure.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
