@@ -62,9 +62,16 @@ const TimelineEventCard = ({ event, progress }) => {
         {event.title}
       </h3>
       {event.date && (
-        <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5 drop-shadow">
-          {event.date}
-        </span>
+        <div className="font-mono text-sm sm:text-base font-black text-white mt-1.5 drop-shadow flex flex-wrap items-center gap-x-2">
+          {event.oldDate && (
+            <span className="line-through text-white/40 decoration-red-500 decoration-2">
+              {event.oldDate}
+            </span>
+          )}
+          <span className={event.oldDate ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" : ""}>
+            {event.date}
+          </span>
+        </div>
       )}
     </motion.div>
   );
@@ -114,6 +121,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
+    oldDate: "30 Sep, 2026",
     date: "10 Oct, 2026",
     t: 0.20,
     x: 470,
@@ -519,7 +527,18 @@ function HomeSections({ onRegisterClick }) {
               >
                 <span className="text-xs font-mono font-black tracking-widest text-white/80 uppercase">// {event.stage}</span>
                 <h3 className="font-heading text-lg sm:text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
-                {event.date && <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5">{event.date}</span>}
+                {event.date && (
+                  <div className="font-mono text-sm sm:text-base font-black text-white mt-1.5 flex flex-wrap items-center gap-x-2">
+                    {event.oldDate && (
+                      <span className="line-through text-white/40 decoration-red-500 decoration-2">
+                        {event.oldDate}
+                      </span>
+                    )}
+                    <span className={event.oldDate ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" : ""}>
+                      {event.date}
+                    </span>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
