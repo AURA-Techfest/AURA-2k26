@@ -74,9 +74,9 @@ const getVolunteerImage = (picNo) => {
 
 // Fallback data in case the raw CSV file cannot be loaded directly
 const FALLBACK_FACULTY_DATA = [
-  { id: "fac-1", position: "Chief Patron", name: "Hon'ble Vice-Chancellor", post: "Aliah University", picNo: "1.jpg" },
-  { id: "fac-2", position: "Patron", name: "Registrar", post: "Aliah University", picNo: "2.jpg" },
-  { id: "fac-3", position: "Co-Patron", name: "Dean", post: "Faculty of Science and Engineering", picNo: "3.jpg" },
+  { id: "fac-1", position: "Chief Patron", name: "Prof. (Dr.) Rafikul Islam", post: "Vice-Chancellor, Aliah University", picNo: "1.jpg" },
+  { id: "fac-2", position: "Patron", name: "Dr. Md. Abdul Khan", post: "Registrar, Aliah University", picNo: "2.jpg" },
+  { id: "fac-3", position: "Co-Patron", name: "Prof. Sk. Moinul Haque", post: "Dean, Faculty of Science and Engineering", picNo: "3.jpg" },
   { id: "fac-4", position: "Organising Secretary", name: "Dr. Rumpa Saha", post: "Dept. of Electrical Engineering", picNo: "4.jpg" },
   { id: "fac-5", position: "Jt. Organising Secretary", name: "Prof. Shamim Haidar", post: "Dept. of Mechanical Engineering", picNo: "5.jpg" },
   { id: "fac-6", position: "Convener", name: "Mr. Pallav Dutta", post: "Dept. of Electrical Engineering", picNo: "6.jpg" },
