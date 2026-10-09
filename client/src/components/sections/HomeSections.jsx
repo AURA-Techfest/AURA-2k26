@@ -121,8 +121,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    oldDate: "30 Sep, 2026",
-    date: "10 Oct, 2026",
+    date: "15 Oct, 2026",
     t: 0.20,
     x: 470,
     y: 0,
@@ -132,7 +131,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    date: "15 Oct, 2026",
+    date: "20 Oct, 2026",
     t: 0.35,
     x: 820,
     y: 0,
