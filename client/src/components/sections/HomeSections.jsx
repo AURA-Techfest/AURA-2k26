@@ -6,7 +6,8 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
-import brochurePdf from "../../assets/One-Page Brochure Ver5.pdf";
+import brochurePdf from "../../assets/One-Page Brochure Ver6.pdf";
+import guidelinesPdf from "../../assets/Visiting_PPT.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
 const GiantAHeading = ({ topText, bottomText }) => {
@@ -61,9 +62,16 @@ const TimelineEventCard = ({ event, progress }) => {
         {event.title}
       </h3>
       {event.date && (
-        <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5 drop-shadow">
-          {event.date}
-        </span>
+        <div className="font-mono text-sm sm:text-base font-black text-white mt-1.5 drop-shadow flex flex-wrap items-center gap-x-2">
+          {event.oldDate && (
+            <span className="line-through text-white/40 decoration-red-500 decoration-2">
+              {event.oldDate}
+            </span>
+          )}
+          <span className={event.oldDate ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" : ""}>
+            {event.date}
+          </span>
+        </div>
       )}
     </motion.div>
   );
@@ -113,7 +121,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    date: "30 Sep, 2026",
+    date: "15 Oct, 2026",
     t: 0.20,
     x: 470,
     y: 0,
@@ -123,7 +131,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    date: "5 Oct, 2026",
+    date: "20 Oct, 2026",
     t: 0.35,
     x: 820,
     y: 0,
@@ -246,12 +254,21 @@ function HomeSections({ onRegisterClick }) {
             </button>
             <a
               href={brochurePdf}
-              download="AURA_2K26_Brochure.pdf"
+              download="AURA-2K26_Brochure.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
             >
               Download Brochure
+            </a>
+            <a
+              href={guidelinesPdf}
+              download="AURA_2K26_Guidelines.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg block"
+            >
+              Download Guidelines
             </a>
           </div>
         </motion.div>
@@ -509,7 +526,18 @@ function HomeSections({ onRegisterClick }) {
               >
                 <span className="text-xs font-mono font-black tracking-widest text-white/80 uppercase">// {event.stage}</span>
                 <h3 className="font-heading text-lg sm:text-xl font-black uppercase mt-1 text-white">{event.title}</h3>
-                {event.date && <span className="font-mono text-sm sm:text-base font-black text-white mt-1.5">{event.date}</span>}
+                {event.date && (
+                  <div className="font-mono text-sm sm:text-base font-black text-white mt-1.5 flex flex-wrap items-center gap-x-2">
+                    {event.oldDate && (
+                      <span className="line-through text-white/40 decoration-red-500 decoration-2">
+                        {event.oldDate}
+                      </span>
+                    )}
+                    <span className={event.oldDate ? "text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" : ""}>
+                      {event.date}
+                    </span>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
