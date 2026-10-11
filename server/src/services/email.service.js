@@ -22,7 +22,7 @@ export const getEmailTransporter = () => {
     service: "gmail",
     auth: {
       user: user.trim(),
-      pass: pass.trim(),
+      pass: pass.replace(/\s+/g, ""),
     },
   });
 };
@@ -327,16 +327,21 @@ See you at AURA 2K26! 🚀
  * @param {Object} registration - Mongoose document or plain object of registration
  * @returns {Promise<{ success: boolean, messageId?: string, reason?: string, error?: string }>}
  */
-export const sendRegistrationConfirmation = async (registration) => {
+export const sendRegistrationConfirmation = async (
+  registration,
+  options = {},
+) => {
   if (!registration) {
     return { success: false, reason: "NO_REGISTRATION_DATA" };
   }
 
-  if (registration.emailStatus === "sent") {
+  const force = Boolean(options && options.force);
+
+  if (registration.emailStatus === "sent" && !force) {
     console.log(
       `[AURA Email] Email already sent for registration ID: ${registration.registrationId || registration._id}. Skipping duplicate send.`,
     );
-    return { success: true, reason: "ALREADY_SENT" };
+    return { success: true, reason: "ALREADY_SENT", skipped: true };
   }
 
   const recipientEmail = registration.teamLeaderEmail;
@@ -396,21 +401,6 @@ export const sendTestEmail = async (targetEmail) => {
       "EMAIL_USER or EMAIL_PASS is missing in environment variables.",
     );
   }
-
-  const dummyRegistration = {
-    registrationId: "AURA2K26-TEST01",
-    teamLeaderName: "Test Participant",
-    teamName: "Test Cyber Team",
-    teamLeaderEmail: recipient,
-    projectTitle: "Automated Drone Prototype",
-    teamSize: 3,
-    teamAffiliation: "all_aliah",
-    aliahMembers: 3,
-    otherInstitutionMembers: 0,
-    hardwareProjectCategories: ["Robotics", "AI-Enabled Hardware"],
-    prototypeType: "Robotic System",
-    currentWorkingStatus: "Fully functional and ready for live demonstration",
-  };
 
   const senderUser = process.env.EMAIL_USER.trim();
   const mailOptions = {

@@ -3,7 +3,7 @@ import { uploadImage, uploadDocument } from "../config/cloudinary.js";
 import Registration from "../models/Registration.js";
 import { sendRegistrationConfirmation } from "../services/email.service.js";
 
-const generateRegistrationId = () => {
+export const generateRegistrationId = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "";
   const randomBytes = crypto.randomBytes(6);
