@@ -118,7 +118,7 @@ const TIMELINE_EVENTS = [
     dotX: 180,
     dotY: 160
   },
-  {
+   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
     date: "26 Oct, 2026",
