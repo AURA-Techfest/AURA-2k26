@@ -10,7 +10,14 @@
  *   node scripts/test-email.js test@example.com
  */
 
-import "../src/config/env.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config(); // fallback to cwd
+
 import {
   verifyEmailConfig,
   sendTestEmail,
@@ -21,7 +28,8 @@ async function runEmailTest() {
   console.log("    AURA 2K26 — Email Automation Diagnostic Test   ");
   console.log("==================================================");
 
-  const targetEmail = "yousuf.mallik79@gmail.com";
+  // Recipient email from CLI argument, falling back to EMAIL_USER
+  const targetEmail = process.argv[2] || process.env.EMAIL_USER;
 
   console.log(`\n1. Checking Environment Variables:`);
   console.log(

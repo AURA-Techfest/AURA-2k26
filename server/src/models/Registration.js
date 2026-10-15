@@ -5,6 +5,7 @@ const registrationSchema = new mongoose.Schema(
     registrationId: {
       type: String,
       unique: true,
+      sparse: true,
       trim: true,
       index: true,
     },

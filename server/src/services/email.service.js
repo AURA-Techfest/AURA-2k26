@@ -389,6 +389,21 @@ export const sendRegistrationConfirmation = async (
   }
 };
 
+export const dummyRegistration = {
+  registrationId: "AURA2K26-TEST01",
+  teamLeaderName: "Test Participant",
+  teamName: "Team Alpha",
+  projectTitle: "Smart Autonomous Rover",
+  teamSize: 4,
+  prototypeType: "Working Prototype",
+  currentWorkingStatus: "Ready / Operational",
+  hardwareProjectCategories: ["Robotics", "IoT"],
+  teamAffiliation: "all_aliah",
+  aliahMembers: 4,
+  otherInstitutionMembers: 0,
+  teamLeaderEmail: "test@example.com",
+};
+
 export const sendTestEmail = async (targetEmail) => {
   const recipient = targetEmail || process.env.EMAIL_USER;
   if (!recipient) {

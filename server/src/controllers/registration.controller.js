@@ -362,7 +362,7 @@ export const createRegistration = async (req, res) => {
     let registrationId = generateRegistrationId();
     let isUnique = false;
     let attempts = 0;
-    while (!isUnique && attempts < 5) {
+    while (!isUnique && attempts < 10) {
       const existingId = await Registration.findOne({ registrationId });
       if (!existingId) {
         isUnique = true;
@@ -430,31 +430,29 @@ export const createRegistration = async (req, res) => {
 
     const registration = await Registration.create(newRegistrationData);
 
-    // 13. Send Confirmation Email asynchronously after DB save (failure does NOT invalidate registration)
-    try {
-      if (registration.emailStatus !== "sent") {
-        const emailResult = await sendRegistrationConfirmation(registration);
+    // 13. Send Confirmation Email asynchronously in background (failure does NOT invalidate or delay registration)
+    sendRegistrationConfirmation(registration)
+      .then(async (emailResult) => {
         if (emailResult && emailResult.success) {
           registration.emailStatus = "sent";
           registration.emailSentAt = new Date();
           if (emailResult.messageId) {
             registration.emailMessageId = emailResult.messageId;
           }
-          await registration.save();
         } else {
           registration.emailStatus = "failed";
-          await registration.save();
         }
-      }
-    } catch (emailErr) {
-      console.error("[AURA Email Service] Error triggering confirmation email:", emailErr);
-      try {
-        registration.emailStatus = "failed";
         await registration.save();
-      } catch (saveErr) {
-        console.error("[AURA Email Service] Failed to save failed email status:", saveErr);
-      }
-    }
+      })
+      .catch(async (emailErr) => {
+        console.error("[AURA Email Service] Error triggering confirmation email:", emailErr);
+        try {
+          registration.emailStatus = "failed";
+          await registration.save();
+        } catch (saveErr) {
+          console.error("[AURA Email Service] Failed to save failed email status:", saveErr);
+        }
+      });
 
     return res.status(201).json({
       success: true,
