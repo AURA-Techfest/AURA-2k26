@@ -6,7 +6,7 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
-import brochurePdf from "../../assets/One-Page Brochure Ver6.pdf";
+import brochurePdf from "../../assets/One-Page Brochure Ver7.pdf";
 import guidelinesPdf from "../../assets/Visiting_PPT.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
@@ -118,10 +118,10 @@ const TIMELINE_EVENTS = [
     dotX: 180,
     dotY: 160
   },
-  {
+   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    date: "15 Oct, 2026",
+    date: "26 Oct, 2026",
     t: 0.20,
     x: 470,
     y: 0,
@@ -131,7 +131,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    date: "20 Oct, 2026",
+    date: "30 Oct, 2026",
     t: 0.35,
     x: 820,
     y: 0,
@@ -140,8 +140,8 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.1",
-    title: "Early Bird Registration Opens for Payment Confirmation",
-    date: "Till October 31, 2026",
+    title: "Payment Confirmation Starts",
+    date: "October 31, 2026",
     t: 0.50,
     x: 640,
     y: 380,
@@ -150,7 +150,7 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.2",
-    title: "Registration Closes for Payment Confirmation",
+    title: "Payment Confirmation Closes",
     date: "November 10, 2026",
     t: 0.65,
     x: 260,
