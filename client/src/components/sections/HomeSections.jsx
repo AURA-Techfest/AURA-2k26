@@ -121,7 +121,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.2",
     title: "Abstraction Submission End",
-    date: "15 Oct, 2026",
+    date: "26 Oct, 2026",
     t: 0.20,
     x: 470,
     y: 0,
@@ -131,7 +131,7 @@ const TIMELINE_EVENTS = [
   {
     stage: "Stage 1.3",
     title: "Abstract Acceptance Notification",
-    date: "20 Oct, 2026",
+    date: "30 Oct, 2026",
     t: 0.35,
     x: 820,
     y: 0,
@@ -140,8 +140,8 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.1",
-    title: "Early Bird Registration Opens for Payment Confirmation",
-    date: "Till October 31, 2026",
+    title: "Payment Confirmation Starts",
+    date: "October 31, 2026",
     t: 0.50,
     x: 640,
     y: 380,
@@ -150,7 +150,7 @@ const TIMELINE_EVENTS = [
   },
   {
     stage: "Stage 2.2",
-    title: "Registration Closes for Payment Confirmation",
+    title: "Payment Confirmation Closes",
     date: "November 10, 2026",
     t: 0.65,
     x: 260,
