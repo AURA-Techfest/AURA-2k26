@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import registrationRouter from "./routes/registration.routes.js";
 import sponsorshipRouter from "./routes/sponsorship.routes.js";
+import { verifyEmailConfig } from "./services/email.service.js";
 
 const app = express();
 
@@ -107,8 +108,20 @@ app.use((err, req, res, next) => {
 
 connectDB();
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`AURA backend running on http://localhost:${PORT}`);
+  
+  // Non-blocking email configuration startup check
+  const emailStatus = await verifyEmailConfig();
+  if (emailStatus.configured && !emailStatus.connectionFailed) {
+    console.log(`[AURA Email Service] ✅ ${emailStatus.message}`);
+  } else if (emailStatus.configured && emailStatus.connectionFailed) {
+    console.warn(`[AURA Email Service] ⚠️ ${emailStatus.message}`);
+  } else {
+    console.warn(
+      `[AURA Email Service] ⚠️ EMAIL_USER or EMAIL_PASS not set. Registration emails will be skipped.`
+    );
+  }
 });
 
 

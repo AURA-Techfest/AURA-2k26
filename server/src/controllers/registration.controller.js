@@ -1,5 +1,17 @@
+import crypto from "crypto";
 import { uploadImage, uploadDocument } from "../config/cloudinary.js";
 import Registration from "../models/Registration.js";
+import { sendRegistrationConfirmation } from "../services/email.service.js";
+
+export const generateRegistrationId = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  const randomBytes = crypto.randomBytes(6);
+  for (let i = 0; i < 6; i++) {
+    result += chars[randomBytes[i] % chars.length];
+  }
+  return `AURA2K26-${result}`;
+};
 
 const parseBoolean = (value) => {
   if (value === undefined || value === null) return false;
@@ -346,8 +358,23 @@ export const createRegistration = async (req, res) => {
       });
     }
 
-    // 11. Construct new Registration document
+    // 11. Generate Unique Registration ID
+    let registrationId = generateRegistrationId();
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 10) {
+      const existingId = await Registration.findOne({ registrationId });
+      if (!existingId) {
+        isUnique = true;
+      } else {
+        registrationId = generateRegistrationId();
+        attempts++;
+      }
+    }
+
+    // 12. Construct new Registration document
     const newRegistrationData = {
+      registrationId,
       teamName: teamName.trim(),
       teamSize: parsedTeamSize,
       hasWorkingPrototype,
@@ -398,13 +425,39 @@ export const createRegistration = async (req, res) => {
       safetyEventRulesAgreement: parsedSafetyEventRulesAgreement,
       mediaPermission: parsedMediaPermission,
       finalConfirmation: parsedFinalConfirmation,
+      emailStatus: "pending",
     };
 
     const registration = await Registration.create(newRegistrationData);
 
+    // 13. Send Confirmation Email asynchronously in background (failure does NOT invalidate or delay registration)
+    sendRegistrationConfirmation(registration)
+      .then(async (emailResult) => {
+        if (emailResult && emailResult.success) {
+          registration.emailStatus = "sent";
+          registration.emailSentAt = new Date();
+          if (emailResult.messageId) {
+            registration.emailMessageId = emailResult.messageId;
+          }
+        } else {
+          registration.emailStatus = "failed";
+        }
+        await registration.save();
+      })
+      .catch(async (emailErr) => {
+        console.error("[AURA Email Service] Error triggering confirmation email:", emailErr);
+        try {
+          registration.emailStatus = "failed";
+          await registration.save();
+        } catch (saveErr) {
+          console.error("[AURA Email Service] Failed to save failed email status:", saveErr);
+        }
+      });
+
     return res.status(201).json({
       success: true,
       message: "Registration successfully completed!",
+      registrationId: registration.registrationId,
       data: registration,
     });
   } catch (error) {
