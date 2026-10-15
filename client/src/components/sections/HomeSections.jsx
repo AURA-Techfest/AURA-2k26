@@ -6,7 +6,7 @@ import websiteBg from "../../assets/WEBSITE_BG.png";
 import aliahLogo from "../../assets/ALIAH_LOGO_WHITE.png";
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import crewPlaceholder from "../../assets/crew_placeholder.png";
-import brochurePdf from "../../assets/One-Page Brochure Ver7.pdf";
+import brochurePdf from "../../assets/One-Page Brochure Ver8.pdf";
 import guidelinesPdf from "../../assets/Visiting_PPT.pdf";
 
 // Reusable typographic heading matching the exact design with fluid responsive sizing using CSS clamp()
