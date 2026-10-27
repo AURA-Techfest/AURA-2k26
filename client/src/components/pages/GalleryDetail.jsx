@@ -370,8 +370,9 @@ export default function GalleryDetail({ onRegisterClick }) {
         </div>
 
         <button
-          onClick={onRegisterClick}
-          className="px-5 sm:px-6 py-2 border-2 border-white rounded-full bg-black/50 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
+          type="button"
+          disabled
+          className="px-5 sm:px-6 py-2 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-xs sm:text-sm font-black tracking-widest uppercase cursor-not-allowed shadow-none select-none transition-none"
         >
           JOIN US
         </button>
