@@ -689,8 +689,8 @@ export default function People({ onRegisterClick }) {
 
           <button
             type="button"
-            onClick={onRegisterClick}
-            className="px-5 py-2 border-2 border-white rounded-full bg-black/60 hover:bg-white hover:text-black text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all shadow-md cursor-pointer"
+            disabled
+            className="px-5 py-2 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-xs sm:text-sm font-black tracking-widest uppercase shadow-none cursor-not-allowed select-none transition-none"
           >
             JOIN US
           </button>
