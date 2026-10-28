@@ -65,6 +65,14 @@ html, body, #root {
   scrollbar-color: rgba(255, 255, 255, 0.4) #0b0909;
 }
 
+/* Light mode overrides strictly scoped to Admin page */
+body.admin-light-mode {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  scrollbar-color: rgba(100, 116, 139, 0.4) #f1f5f9;
+}
+
+
 /* System scrollbar for WebKit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
   width: 8px;

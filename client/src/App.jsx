@@ -9,6 +9,13 @@ import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
 import Sponsors from "./components/pages/Sponsors";
 import People from "./components/pages/People";
 import GalleryDetail from "./components/pages/GalleryDetail";
+import AdminLogin from "./components/admin/AdminLogin";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminRoute from "./components/admin/AdminRoute";
+import { AdminThemeProvider } from "./context/AdminThemeContext";
+import { Navigate } from "react-router-dom";
+
+
 
 function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
   // Initialize Lenis smooth scroll for desktop viewports
@@ -121,8 +128,31 @@ function App() {
             )
           }
         />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route
+          path="/admin/login"
+          element={
+            <AdminThemeProvider>
+              <AdminLogin />
+            </AdminThemeProvider>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminThemeProvider>
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            </AdminThemeProvider>
+          }
+        />
       </Routes>
+
     </BrowserRouter>
+
   );
 }
 
