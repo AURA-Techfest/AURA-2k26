@@ -125,9 +125,11 @@ function Navbar({ onRegisterClick }) {
         {/* Right Action Container (Desktop & Mobile) */}
         <div className="flex items-center gap-3 w-auto lg:w-28 justify-end shrink-0">
           <button
-            type="button"
-            disabled
-            className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-[9px] sm:text-[10px] font-black tracking-widest uppercase cursor-not-allowed shadow-none select-none transition-none"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (onRegisterClick) onRegisterClick();
+            }}
+            className="px-3.5 sm:px-4.5 py-1.5 sm:py-2 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
           >
             Register
           </button>
@@ -187,9 +189,11 @@ function Navbar({ onRegisterClick }) {
 
             <div className="pt-2 flex flex-col gap-3">
               <button
-                type="button"
-                disabled
-                className="w-full py-3 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-xs font-black tracking-widest uppercase shadow-none cursor-not-allowed select-none transition-none"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (onRegisterClick) onRegisterClick();
+                }}
+                className="w-full py-3 border-2 border-white rounded-full bg-white text-black font-heading text-xs font-black tracking-widest uppercase transition-all shadow-lg"
               >
                 Register Now
               </button>

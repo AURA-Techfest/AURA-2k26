@@ -247,9 +247,8 @@ function HomeSections({ onRegisterClick }) {
           {/* Vertically stacked outline pill buttons */}
           <div className="flex flex-col gap-4 mt-8 w-full max-w-[240px]">
             <button
-              type="button"
-              disabled
-              className="px-8 py-3 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-xs font-bold tracking-widest uppercase text-center cursor-not-allowed shadow-none select-none transition-none"
+              onClick={onRegisterClick}
+              className="px-8 py-3 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 text-center cursor-pointer shadow-lg"
             >
               Register Now
             </button>
@@ -332,9 +331,8 @@ function HomeSections({ onRegisterClick }) {
           className="relative z-20 flex justify-center pt-8 pb-4"
         >
           <button
-            type="button"
-            disabled
-            className="px-10 py-3.5 border-2 border-neutral-600 rounded-full bg-neutral-800 text-neutral-400 font-heading text-xs font-bold tracking-widest uppercase cursor-not-allowed shadow-none select-none transition-none"
+            onClick={onRegisterClick}
+            className="px-10 py-3.5 border-2 border-white rounded-full bg-black/40 hover:bg-white hover:text-black text-white font-heading text-xs font-bold tracking-widest uppercase transition-all duration-200 cursor-pointer shadow-lg"
           >
             Register Now
           </button>
@@ -842,9 +840,8 @@ function HomeSections({ onRegisterClick }) {
             <ul className="space-y-2 text-xs sm:text-sm font-bold text-white/80">
               <li>
                 <button
-                  type="button"
-                  disabled
-                  className="text-neutral-500 cursor-not-allowed text-left uppercase font-heading text-xs tracking-wider select-none transition-none"
+                  onClick={onRegisterClick}
+                  className="hover:text-cyan-300 transition-colors cursor-pointer text-left uppercase font-heading text-xs tracking-wider"
                 >
                   • Register Now
                 </button>
