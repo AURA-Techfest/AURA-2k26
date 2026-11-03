@@ -36,7 +36,7 @@ const fileFilter = (req, file, cb) => {
     );
   }
 
-  // ID Cards and legacy payment screenshot
+  // ID Cards and payment screenshots
   const isImageMime =
     file.mimetype.startsWith("image/") || ALLOWED_IMAGE_MIMES.has(file.mimetype);
   const isImageExt = ALLOWED_IMAGE_EXTENSIONS.some((ext) =>
@@ -49,7 +49,7 @@ const fileFilter = (req, file, cb) => {
 
   return cb(
     new Error(
-      `Invalid file format for ${file.fieldname}. Please upload a valid image file (JPG/PNG).`
+      `Invalid file format for ${file.fieldname}. Please upload a valid image file (JPG/PNG/WEBP).`
     )
   );
 };
@@ -70,5 +70,16 @@ export const uploadRegistrationFiles = upload.fields([
   { name: "abstractPdf", maxCount: 1 },
   { name: "paymentScreenshot", maxCount: 1 },
 ]);
+
+// Single payment screenshot upload for RSVP (max 5 MB)
+const rsvpUpload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB max for payment screenshot
+  },
+  fileFilter,
+});
+
+export const uploadRsvpScreenshot = rsvpUpload.single("paymentScreenshot");
 
 export default upload;

@@ -320,13 +320,6 @@ See you at AURA 2K26! 🚀
   `.trim();
 };
 
-/**
- * Sends registration confirmation email to the team leader.
- * Safely handles missing credentials, duplicate checks, and SMTP errors.
- *
- * @param {Object} registration - Mongoose document or plain object of registration
- * @returns {Promise<{ success: boolean, messageId?: string, reason?: string, error?: string }>}
- */
 export const sendRegistrationConfirmation = async (
   registration,
   options = {},
@@ -429,8 +422,207 @@ export const sendTestEmail = async (targetEmail) => {
   return await transporter.sendMail(mailOptions);
 };
 
+export const generateRsvpOtpEmailHtml = (registration, otp) => {
+  const regId = escapeHtml(registration?.registrationId || "N/A");
+  const teamName = escapeHtml(registration?.teamName || "Team");
+  const leaderName = escapeHtml(registration?.teamLeaderName || "Team Leader");
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA 2K26 RSVP Verification Code</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0c0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0c0a0a; padding: 30px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background-color: #171414; border: 1px solid #3d221e; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #2b1310 0%, #150908 100%); padding: 24px; border-bottom: 2px solid #5a2820; text-align: center;">
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #ffffff;">AURA 2K26</h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; letter-spacing: 1.5px; color: #a87268; text-transform: uppercase;">Team RSVP & Payment Verification</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px;">
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #dedede;">Hello <strong>${leaderName}</strong>,</p>
+              <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #aba19c;">
+                We received a request to access the RSVP and Payment portal for your team <strong>${teamName}</strong> (ID: <code>${regId}</code>).
+              </p>
+              <div style="background-color: #211917; border: 2px dashed #8b3c2d; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+                <span style="display: block; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #d5a23a; text-transform: uppercase; margin-bottom: 8px;">Your Verification Code</span>
+                <span style="display: inline-block; font-family: 'Courier New', monospace; font-size: 32px; font-weight: 900; letter-spacing: 6px; color: #ffffff; background-color: #0f0a09; padding: 10px 24px; border-radius: 8px; border: 1px solid #4a221b;">${otp}</span>
+                <span style="display: block; font-size: 12px; color: #8e8077; margin-top: 10px;">This code is valid for <strong>10 minutes</strong>. Do not share it with anyone.</span>
+              </div>
+              <p style="margin: 20px 0 0 0; font-size: 12px; color: #887a71; line-height: 1.5;">
+                If you did not request this verification code, please ignore this email or contact <a href="mailto:aura@aliah.ac.in" style="color: #c9715a; text-decoration: none;">aura@aliah.ac.in</a>.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #110d0d; padding: 14px 20px; text-align: center; border-top: 1px solid #291a17; font-size: 11px; color: #6e6159;">
+              AURA 2K26 &bull; Aliah University, Kolkata &bull; Research & Innovation Fest
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+};
+
+export const sendRsvpOtpEmail = async (email, otp, registration) => {
+  const recipientEmail = email || registration?.teamLeaderEmail;
+  if (!recipientEmail) {
+    return { success: false, reason: "MISSING_RECIPIENT_EMAIL" };
+  }
+
+  const transporter = getEmailTransporter();
+  if (!transporter) {
+    console.warn("[AURA Email] Email service not configured. OTP generated for dev:", otp);
+    return { success: true, simulated: true, otp };
+  }
+
+  const senderUser = process.env.EMAIL_USER.trim();
+  const mailOptions = {
+    from: `"AURA 2K26 | RSVP Verification" <${senderUser}>`,
+    to: recipientEmail.trim().toLowerCase(),
+    replyTo: "aura@aliah.ac.in",
+    subject: `RSVP Verification Code: ${otp} [${registration?.teamName || "AURA 2K26"}]`,
+    text: `Your AURA 2K26 RSVP verification code is: ${otp}. It expires in 10 minutes.`,
+    html: generateRsvpOtpEmailHtml(registration, otp),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[AURA Email] RSVP OTP sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error(`[AURA Email] Failed to send RSVP OTP to ${recipientEmail}:`, error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+export const generateRsvpConfirmationEmailHtml = (registration, rsvp) => {
+  const regId = escapeHtml(registration?.registrationId || rsvp.registrationId);
+  const teamName = escapeHtml(registration?.teamName || rsvp.teamName);
+  const leaderName = escapeHtml(registration?.teamLeaderName || rsvp.teamLeaderName);
+  const category = escapeHtml(rsvp.teamCategory || "standard").toUpperCase();
+  const amount = rsvp.amountPayable || 0;
+  const isFree = amount === 0;
+  const status = rsvp.paymentStatus === "not_required" ? "Confirmed (Free RSVP)" : "Submitted (Pending Verification)";
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AURA 2K26 RSVP Confirmation</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #0c0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #0c0a0a; padding: 30px 10px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #171414; border: 1px solid #3d221e; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #1b2e1a 0%, #0d170d 100%); padding: 24px; border-bottom: 2px solid #2c4c28; text-align: center;">
+              <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 2px; color: #a3e635;">RSVP CONFIRMATION</h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; letter-spacing: 1.5px; color: #86efac; text-transform: uppercase;">AURA 2K26 &bull; Aliah University</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px;">
+              <p style="margin: 0 0 16px 0; font-size: 14px; color: #dedede;">Dear <strong>${leaderName}</strong>,</p>
+              <p style="margin: 0 0 20px 0; font-size: 13px; line-height: 1.6; color: #aba19c;">
+                We have received the RSVP submission for your team <strong>${teamName}</strong>. Below are your details:
+              </p>
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #1f1a19; border: 1px solid #3d2822; border-radius: 8px; font-size: 13px; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83; width: 40%;">Registration ID</td>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #ffffff; font-weight: bold; font-family: monospace;">${regId}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83;">Team Category</td>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #ffffff;">${category} TEAM</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83;">RSVP / Payment Status</td>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: ${isFree ? "#4ade80" : "#facc15"}; font-weight: bold;">${status}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83;">Total Amount</td>
+                  <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #ffffff;">₹${amount}</td>
+                </tr>
+                ${rsvp.paymentReferenceNumber ? `
+                <tr>
+                  <td style="padding: 10px 14px; color: #9a8c83;">Payment Reference / UTR</td>
+                  <td style="padding: 10px 14px; color: #ffffff; font-family: monospace;">${escapeHtml(rsvp.paymentReferenceNumber)}</td>
+                </tr>
+                ` : ""}
+              </table>
+              <div style="background-color: #1a1615; border-left: 3px solid #d5a23a; padding: 12px 16px; border-radius: 4px; font-size: 12px; color: #cfc5bd; line-height: 1.5;">
+                ${isFree 
+                  ? "Your team is fully confirmed for on-site participation at AURA 2K26. Please carry valid college ID cards for all team members."
+                  : "Your payment proof is under verification by our finance desk. You will receive an update once verified. You can also view status anytime at /rsvp."}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color: #110d0d; padding: 14px 20px; text-align: center; border-top: 1px solid #291a17; font-size: 11px; color: #6e6159;">
+              Aliah University, Newtown Campus &bull; aura@aliah.ac.in
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+};
+
+export const sendRsvpConfirmationEmail = async (registration, rsvp) => {
+  const recipientEmail = rsvp.teamLeaderEmail || registration?.teamLeaderEmail;
+  if (!recipientEmail) {
+    return { success: false, reason: "MISSING_RECIPIENT_EMAIL" };
+  }
+
+  const transporter = getEmailTransporter();
+  if (!transporter) {
+    console.warn("[AURA Email] Email service not configured. RSVP email skipped.");
+    return { success: true, simulated: true };
+  }
+
+  const senderUser = process.env.EMAIL_USER.trim();
+  const mailOptions = {
+    from: `"AURA 2K26 | Desk" <${senderUser}>`,
+    to: recipientEmail.trim().toLowerCase(),
+    replyTo: "aura@aliah.ac.in",
+    subject: `RSVP Confirmed: ${rsvp.teamName} [${rsvp.registrationId}]`,
+    text: `RSVP confirmed for team ${rsvp.teamName} (${rsvp.registrationId}). Total Amount: ₹${rsvp.amountPayable}. Status: ${rsvp.paymentStatus}.`,
+    html: generateRsvpConfirmationEmailHtml(registration, rsvp),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`[AURA Email] RSVP confirmation sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error(`[AURA Email] Failed to send RSVP confirmation to ${recipientEmail}:`, error.message);
+    return { success: false, error: error.message };
+  }
+};
+
 export default {
   sendRegistrationConfirmation,
+  sendRsvpOtpEmail,
+  sendRsvpConfirmationEmail,
   verifyEmailConfig,
   sendTestEmail,
   generateRegistrationEmailHtml,
