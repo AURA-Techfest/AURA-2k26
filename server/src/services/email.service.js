@@ -484,7 +484,10 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 
   const transporter = getEmailTransporter();
   if (!transporter) {
-    console.warn("[AURA Email] Email service not configured. OTP generated for dev:", otp);
+    console.warn(
+      "[AURA Email] Email service not configured. OTP generated for dev:",
+      otp,
+    );
     return { success: true, simulated: true, otp };
   }
 
@@ -500,10 +503,15 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[AURA Email] RSVP OTP sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    console.log(
+      `[AURA Email] RSVP OTP sent to ${recipientEmail} (MsgID: ${info.messageId})`,
+    );
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[AURA Email] Failed to send RSVP OTP to ${recipientEmail}:`, error.message);
+    console.error(
+      `[AURA Email] Failed to send RSVP OTP to ${recipientEmail}:`,
+      error.message,
+    );
     return { success: false, error: error.message };
   }
 };
@@ -511,11 +519,16 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 export const generateRsvpConfirmationEmailHtml = (registration, rsvp) => {
   const regId = escapeHtml(registration?.registrationId || rsvp.registrationId);
   const teamName = escapeHtml(registration?.teamName || rsvp.teamName);
-  const leaderName = escapeHtml(registration?.teamLeaderName || rsvp.teamLeaderName);
+  const leaderName = escapeHtml(
+    registration?.teamLeaderName || rsvp.teamLeaderName,
+  );
   const category = escapeHtml(rsvp.teamCategory || "standard").toUpperCase();
   const amount = rsvp.amountPayable || 0;
   const isFree = amount === 0;
-  const status = rsvp.paymentStatus === "not_required" ? "Confirmed (Free RSVP)" : "Submitted (Pending Verification)";
+  const status =
+    rsvp.paymentStatus === "not_required"
+      ? "Confirmed (Free RSVP)"
+      : "Submitted (Pending Verification)";
 
   return `
 <!DOCTYPE html>
@@ -559,17 +572,23 @@ export const generateRsvpConfirmationEmailHtml = (registration, rsvp) => {
                   <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83;">Total Amount</td>
                   <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #ffffff;">₹${amount}</td>
                 </tr>
-                ${rsvp.paymentReferenceNumber ? `
+                ${
+                  rsvp.paymentReferenceNumber
+                    ? `
                 <tr>
                   <td style="padding: 10px 14px; color: #9a8c83;">Payment Reference / UTR</td>
                   <td style="padding: 10px 14px; color: #ffffff; font-family: monospace;">${escapeHtml(rsvp.paymentReferenceNumber)}</td>
                 </tr>
-                ` : ""}
+                `
+                    : ""
+                }
               </table>
               <div style="background-color: #1a1615; border-left: 3px solid #d5a23a; padding: 12px 16px; border-radius: 4px; font-size: 12px; color: #cfc5bd; line-height: 1.5;">
-                ${isFree 
-                  ? "Your team is fully confirmed for on-site participation at AURA 2K26. Please carry valid college ID cards for all team members."
-                  : "Your payment proof is under verification by our finance desk. You will receive an update once verified. You can also view status anytime at /rsvp."}
+                ${
+                  isFree
+                    ? "Your team is fully confirmed for on-site participation at AURA 2K26. Please carry valid college ID cards for all team members."
+                    : "Your payment proof is under verification by our finance desk. You will receive an update once verified. You can also view status anytime at /rsvp."
+                }
               </div>
             </td>
           </tr>
@@ -595,7 +614,9 @@ export const sendRsvpConfirmationEmail = async (registration, rsvp) => {
 
   const transporter = getEmailTransporter();
   if (!transporter) {
-    console.warn("[AURA Email] Email service not configured. RSVP email skipped.");
+    console.warn(
+      "[AURA Email] Email service not configured. RSVP email skipped.",
+    );
     return { success: true, simulated: true };
   }
 
@@ -611,11 +632,329 @@ export const sendRsvpConfirmationEmail = async (registration, rsvp) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[AURA Email] RSVP confirmation sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    console.log(
+      `[AURA Email] RSVP confirmation sent to ${recipientEmail} (MsgID: ${info.messageId})`,
+    );
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[AURA Email] Failed to send RSVP confirmation to ${recipientEmail}:`, error.message);
+    console.error(
+      `[AURA Email] Failed to send RSVP confirmation to ${recipientEmail}:`,
+      error.message,
+    );
     return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Dynamic template placeholder replacement helper.
+ * Replaces both {{key}} and {key} tokens.
+ */
+export const replacePlaceholders = (template, data = {}) => {
+  if (!template || typeof template !== "string") return "";
+
+  const replacements = {
+    teamName: data.teamName || "",
+    participantName:
+      data.participantName || data.teamLeaderName || "Participant",
+    teamLeaderName:
+      data.teamLeaderName || data.participantName || "Team Leader",
+    eventName: data.eventName || "AURA 2K26",
+    websiteUrl:
+      data.websiteUrl ||
+      process.env.FRONTEND_URL ||
+      "https://aura2k26.com",
+    registrationId: data.registrationId || "PENDING",
+    projectTitle: data.projectTitle || "N/A",
+    rsvpUrl:
+      data.rsvpUrl ||
+      `${(data.websiteUrl || process.env.FRONTEND_URL || "https://aura2k26.com").replace(/\/+$/, "")}/rsvp`,
+  };
+
+  let result = template;
+  for (const [key, val] of Object.entries(replacements)) {
+    const doubleRegex = new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, "gi");
+    const singleRegex = new RegExp(`\\{\\s*${key}\\s*\\}`, "gi");
+    result = result.replace(doubleRegex, val).replace(singleRegex, val);
+  }
+
+  return result;
+};
+
+/**
+ * Generate HTML for Acceptance / Shortlist Notification Email.
+ */
+export const generateAcceptanceEmailHtml = (registration, options = {}) => {
+  const eventName = options.eventName || "AURA 2K26";
+  const websiteUrl = (
+    options.websiteUrl ||
+    process.env.FRONTEND_URL ||
+    "https://aura2k26.com"
+  ).replace(/\/+$/, "");
+
+  const rawData = {
+    teamName: registration?.teamName || "Team",
+    participantName: registration?.teamLeaderName || "Participant",
+    teamLeaderName: registration?.teamLeaderName || "Team Leader",
+    eventName,
+    websiteUrl,
+    registrationId: registration?.registrationId || "PENDING",
+    projectTitle: registration?.projectTitle || "Hardware Innovation",
+  };
+
+  const regId = escapeHtml(rawData.registrationId);
+  const teamLeaderName = escapeHtml(rawData.participantName);
+  const teamName = escapeHtml(rawData.teamName);
+  const projectTitle = escapeHtml(rawData.projectTitle);
+
+  // Custom body or follow-up note
+  let customBodyHtml = "";
+  if (options.customBody && options.customBody.trim()) {
+    const processedBody = replacePlaceholders(
+      options.customBody.trim(),
+      rawData,
+    );
+    const paragraphs = processedBody
+      .split(/\r?\n\r?\n/)
+      .map(
+        (p) =>
+          `<p style="margin: 0 0 10px 0; font-size: 13.5px; color: #334155; line-height: 1.55;">${escapeHtml(p).replace(/\n/g, "<br/>")}</p>`,
+      )
+      .join("");
+    customBodyHtml = `
+      <div style="background-color: #fdf2f4; border-left: 3px solid #6f2138; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
+        ${paragraphs}
+      </div>
+    `;
+  }
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${eventName} — Official Acceptance (Follow-Up)</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+        <!-- Main Email Container (Pure White Card with #6f2138 Accent) -->
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 540px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: 5px solid #6f2138; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.05);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 24px 28px 16px 28px; text-align: left; border-bottom: 1px solid #f1f5f9;">
+              <span style="display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: #6f2138; text-transform: uppercase; background-color: #fdf2f4; padding: 4px 10px; border-radius: 6px; border: 1px solid #fad2db;">
+                Follow-Up &bull; Official Acceptance
+              </span>
+              <h1 style="margin: 10px 0 2px 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; color: #0f172a;">
+                ${eventName}
+              </h1>
+              <p style="margin: 0; font-size: 13px; color: #64748b; font-weight: 500;">
+                Aliah University Techfest &bull; Research & Innovation
+              </p>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 22px 28px;">
+              <p style="margin: 0 0 12px 0; font-size: 15px; color: #0f172a; line-height: 1.5;">
+                Hello <strong style="color: #6f2138;">${teamLeaderName}</strong>,
+              </p>
+              <p style="margin: 0 0 12px 0; font-size: 13.5px; color: #334155; line-height: 1.6;">
+                This is a follow-up transmission regarding your hackathon registration. We previously dispatched acceptance emails to all shortlisted teams, but as some participants reported deliverability or spam filter issues, we are sending this direct confirmation.
+              </p>
+              <p style="margin: 0 0 14px 0; font-size: 13.5px; color: #334155; line-height: 1.6;">
+                We are pleased to re-confirm that your team <strong style="color: #0f172a;">${teamName}</strong> has been <strong>OFFICIALLY SHORTLISTED & ACCEPTED</strong> for the live hardware demonstration and evaluation round at <strong>${eventName}</strong>!
+              </p>
+
+              <!-- Compact Details Card -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; margin: 16px 0; font-size: 13px;">
+                <tr>
+                  <td style="padding: 9px 14px; border-bottom: 1px solid #edf2f7; color: #64748b; width: 36%; font-weight: 600;">Registration ID</td>
+                  <td style="padding: 9px 14px; border-bottom: 1px solid #edf2f7; color: #6f2138; font-family: monospace; font-weight: 800; font-size: 14px;">${regId}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 9px 14px; border-bottom: 1px solid #edf2f7; color: #64748b; font-weight: 600;">Team Name</td>
+                  <td style="padding: 9px 14px; border-bottom: 1px solid #edf2f7; color: #0f172a; font-weight: 700;">${teamName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 9px 14px; color: #64748b; font-weight: 600;">Project Title</td>
+                  <td style="padding: 9px 14px; color: #0f172a;">${projectTitle}</td>
+                </tr>
+              </table>
+
+              ${customBodyHtml}
+
+              <!-- Key Reminders (Frontend Red Accent #6f2138) -->
+              <div style="background-color: #fdf2f4; border-left: 3px solid #6f2138; padding: 12px 14px; border-radius: 6px; margin-top: 18px; font-size: 12.5px; color: #4a1523; line-height: 1.55;">
+                <strong>Key Participation Reminders:</strong>
+                <ul style="margin: 6px 0 0 0; padding-left: 18px;">
+                  <li>Bring your functional hardware prototype and all necessary accessories/cables.</li>
+                  <li>Every team member must carry a physical college ID card for security check-in.</li>
+                  <li>Venue: Aliah University, Newtown Campus, IIA/27, Action Area II, Newtown, Kolkata 700160.</li>
+                </ul>
+              </div>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #ffffff; padding: 16px 28px; text-align: center; border-top: 1px solid #f1f5f9; font-size: 11.5px; color: #94a3b8;">
+              <p style="margin: 0 0 4px 0; font-weight: 600; color: #64748b;">
+                Team ${eventName} &bull; Aliah University
+              </p>
+              <p style="margin: 0;">
+                Questions or issues? Contact us directly at <a href="mailto:aura@aliah.ac.in" style="color: #6f2138; text-decoration: none; font-weight: 600;">aura@aliah.ac.in</a>.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+};
+
+/**
+ * Generate plain-text version for Acceptance Follow-Up Email.
+ */
+export const generateAcceptanceEmailText = (registration, options = {}) => {
+  const eventName = options.eventName || "AURA 2K26";
+  const websiteUrl = (
+    options.websiteUrl ||
+    process.env.FRONTEND_URL ||
+    "https://aura2k26.com"
+  ).replace(/\/+$/, "");
+
+  const rawData = {
+    teamName: registration?.teamName || "Team",
+    participantName: registration?.teamLeaderName || "Participant",
+    teamLeaderName: registration?.teamLeaderName || "Team Leader",
+    eventName,
+    websiteUrl,
+    registrationId: registration?.registrationId || "PENDING",
+    projectTitle: registration?.projectTitle || "Hardware Innovation",
+  };
+
+  const customBody = options.customBody
+    ? replacePlaceholders(options.customBody.trim(), rawData)
+    : "";
+
+  return `
+========================================================================
+     ${eventName} — OFFICIAL ACCEPTANCE NOTIFICATION (FOLLOW-UP)
+========================================================================
+
+Hello ${rawData.participantName},
+
+This is a follow-up transmission regarding your hackathon registration.
+We previously dispatched acceptance emails to all shortlisted teams, but
+as some participants reported deliverability or spam filter issues, we are
+re-issuing this direct confirmation.
+
+We are delighted to re-confirm that your team "${rawData.teamName}"
+(Registration ID: ${rawData.registrationId}) has been OFFICIALLY SHORTLISTED &
+ACCEPTED for the live hardware demonstration and evaluation round at ${eventName}!
+
+${customBody ? `NOTE FROM ORGANIZERS:\n${customBody}\n\n` : ""}SHORTLIST SUMMARY:
+- Registration ID: ${rawData.registrationId}
+- Team Name:       ${rawData.teamName}
+- Team Leader:     ${rawData.participantName}
+- Project Title:   ${rawData.projectTitle}
+
+KEY REMINDERS:
+1. Bring your functional hardware prototype and all necessary cables/supplies.
+2. Every team member must present a valid physical college ID card at check-in.
+3. Venue: Aliah University, Newtown Campus, IIA/27, Action Area II, Newtown, Kolkata 700160.
+
+Support & Inquiries: aura@aliah.ac.in
+Website: ${websiteUrl}
+
+— Team ${eventName} | Aliah University
+  `.trim();
+};
+
+/**
+ * Send personalized Acceptance Follow-Up Email to a team registration.
+ */
+export const sendAcceptanceEmail = async (registration, options = {}) => {
+  if (!registration) {
+    return { success: false, reason: "NO_REGISTRATION_DATA" };
+  }
+
+  const force = Boolean(options && options.force);
+  if (registration.acceptanceEmailStatus === "sent" && !force) {
+    return { success: true, reason: "ALREADY_SENT", skipped: true };
+  }
+
+  const recipientEmail = registration.teamLeaderEmail;
+  if (!recipientEmail || !recipientEmail.includes("@")) {
+    return { success: false, reason: "INVALID_OR_MISSING_EMAIL" };
+  }
+
+  const transporter = getEmailTransporter();
+  if (!transporter) {
+    return { success: false, reason: "CREDENTIALS_NOT_CONFIGURED" };
+  }
+
+  const senderUser = process.env.EMAIL_USER.trim();
+  const eventName = options.eventName || "AURA 2K26";
+  const websiteUrl = (
+    options.websiteUrl ||
+    process.env.FRONTEND_URL ||
+    "https://aura2k26.com"
+  ).replace(/\/+$/, "");
+
+  const placeholderData = {
+    teamName: registration.teamName || "Team",
+    participantName: registration.teamLeaderName || "Participant",
+    teamLeaderName: registration.teamLeaderName || "Team Leader",
+    eventName,
+    websiteUrl,
+    registrationId: registration.registrationId || "PENDING",
+    projectTitle: registration.projectTitle || "Hardware Innovation",
+  };
+
+  const defaultSubject = `Follow-Up: Project Acceptance — Team ${placeholderData.teamName} [${placeholderData.registrationId}]`;
+  const subject = options.subject
+    ? replacePlaceholders(options.subject, placeholderData)
+    : defaultSubject;
+
+  const mailOptions = {
+    from: `"${eventName} | Selection Committee" <${senderUser}>`,
+    to: recipientEmail.trim().toLowerCase(),
+    replyTo: "aura@aliah.ac.in",
+    subject,
+    text: generateAcceptanceEmailText(registration, {
+      ...options,
+      eventName,
+      websiteUrl,
+    }),
+    html: generateAcceptanceEmailHtml(registration, {
+      ...options,
+      eventName,
+      websiteUrl,
+    }),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    return {
+      success: true,
+      messageId: info.messageId,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
   }
 };
 
@@ -623,6 +962,10 @@ export default {
   sendRegistrationConfirmation,
   sendRsvpOtpEmail,
   sendRsvpConfirmationEmail,
+  sendAcceptanceEmail,
+  generateAcceptanceEmailHtml,
+  generateAcceptanceEmailText,
+  replacePlaceholders,
   verifyEmailConfig,
   sendTestEmail,
   generateRegistrationEmailHtml,

@@ -379,6 +379,38 @@ const registrationSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    // Selection / Shortlisting status
+    isShortlisted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    selectionStatus: {
+      type: String,
+      enum: ["pending", "shortlisted", "selected", "rejected", "waitlisted"],
+      default: "pending",
+      index: true,
+    },
+
+    // Acceptance Email Tracking
+    acceptanceEmailStatus: {
+      type: String,
+      enum: ["pending", "sent", "failed"],
+      default: "pending",
+      index: true,
+    },
+    acceptanceEmailSentAt: {
+      type: Date,
+    },
+    acceptanceEmailMessageId: {
+      type: String,
+      trim: true,
+    },
+    acceptanceEmailError: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

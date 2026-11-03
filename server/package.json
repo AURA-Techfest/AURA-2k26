@@ -9,7 +9,10 @@
     "test:email": "node scripts/test-email.js",
     "test:rsvp": "node scripts/test-rsvp.js && node scripts/test-rsvp-api.js",
     "send:emails": "node scripts/send-registration-emails.js",
-    "send-emails": "node scripts/send-registration-emails.js"
+    "send-emails": "node scripts/send-registration-emails.js",
+    "send:acceptance": "node scripts/send-acceptance-emails.js",
+    "send-acceptance": "node scripts/send-acceptance-emails.js",
+    "mark-shortlisted": "node scripts/mark-all-shortlisted.js"
   },
   "keywords": [],
   "author": "",

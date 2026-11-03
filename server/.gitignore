@@ -9,3 +9,7 @@ yarn-debug.log*
 
 .DS_Store
 
+# Generated reports
+reports/*.json
+reports/*.csv
+!reports/.gitkeep
