@@ -48,6 +48,16 @@ export const uploadImage = (
   });
 };
 
+export const uploadPaymentScreenshot = (
+  fileBuffer,
+  folder = "aura-registrations/payment-screenshots"
+) => {
+  return uploadToCloudinary(fileBuffer, {
+    folder,
+    resource_type: "image",
+  });
+};
+
 export const uploadDocument = (
   fileBuffer,
   folder = "aura-registrations/abstract-docs",
@@ -61,4 +71,3 @@ export const uploadDocument = (
 };
 
 export default cloudinary;
-

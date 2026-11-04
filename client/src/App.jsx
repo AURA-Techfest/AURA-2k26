@@ -9,6 +9,7 @@ import AuraSubmissionPortal from "./components/AuraSubmissionPortal";
 import Sponsors from "./components/pages/Sponsors";
 import People from "./components/pages/People";
 import GalleryDetail from "./components/pages/GalleryDetail";
+import RsvpPage from "./components/pages/RsvpPage";
 
 function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
   // Initialize Lenis smooth scroll for desktop viewports
@@ -70,6 +71,10 @@ function App() {
               setShowRegistrationForm={setShowRegistrationForm}
             />
           }
+        />
+        <Route
+          path="/rsvp"
+          element={<RsvpPage />}
         />
         <Route
           path="/sponsors"

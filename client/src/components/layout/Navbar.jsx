@@ -20,6 +20,7 @@ function Navbar({ onRegisterClick }) {
     { label: "Gallery", target: "gallery", icon: galleryIcon, isSvg: false },
     { label: "SPONSORS", path: "/sponsors", isRoute: true, isSvg: true, svgType: "sponsor" },
     { label: "People", path: "/people", isRoute: true, isSvg: true, svgType: "people" },
+    { label: "RSVP", path: "/rsvp", isRoute: true, isSvg: true, svgType: "rsvp" },
     { label: "Contact Us", target: "contact", icon: mailIcon, isSvg: false }
   ];
 
@@ -65,6 +66,19 @@ function Navbar({ onRegisterClick }) {
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      );
+    }
+    if (type === "rsvp") {
+      return (
+        <svg
+          className={className}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       );
     }
