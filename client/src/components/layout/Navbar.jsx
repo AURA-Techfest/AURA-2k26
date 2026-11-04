@@ -125,6 +125,7 @@ function Navbar({ onRegisterClick }) {
         {/* Right Action Container (Desktop & Mobile) */}
         <div className="flex items-center gap-3 w-auto lg:w-28 justify-end shrink-0">
           <button
+          disabled
             onClick={() => {
               setMobileMenuOpen(false);
               if (onRegisterClick) onRegisterClick();
@@ -189,6 +190,7 @@ function Navbar({ onRegisterClick }) {
 
             <div className="pt-2 flex flex-col gap-3">
               <button
+              disabled
                 onClick={() => {
                   setMobileMenuOpen(false);
                   if (onRegisterClick) onRegisterClick();
