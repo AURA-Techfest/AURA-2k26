@@ -22,6 +22,9 @@ import {
 import auraLogo from "../../assets/AURA_26_LOGO.png";
 import paymentQrImage from "../../assets/payment_qr.jpeg";
 
+const PAYMENT_QR_URL =
+  "https://res.cloudinary.com/dxkje9whm/image/upload/v1793797831/payment-qr-aura_vyvsvw.jpg";
+
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
   rawApiUrl && rawApiUrl !== "undefined"
@@ -31,13 +34,18 @@ const API_URL =
     : "";
 
 const SESSION_TOKEN_KEY = "aura_2026_rsvp_token";
+const SESSION_REG_ID_KEY = "aura_2026_rsvp_reg_id";
 const SESSION_EMAIL_KEY = "aura_2026_rsvp_email";
 
 export default function RsvpPage() {
   // Verification step state
-  const [step, setStep] = useState("auth"); // 'auth' | 'otp' | 'dashboard' | 'success'
-  const [email, setEmail] = useState(() => sessionStorage.getItem(SESSION_EMAIL_KEY) || "");
-  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState("auth"); // 'auth' | 'dashboard' | 'success'
+  const [registrationId, setRegistrationId] = useState(
+    () => sessionStorage.getItem(SESSION_REG_ID_KEY) || ""
+  );
+  const [email, setEmail] = useState(
+    () => sessionStorage.getItem(SESSION_EMAIL_KEY) || ""
+  );
   const [token, setToken] = useState(
     () => sessionStorage.getItem(SESSION_TOKEN_KEY) || ""
   );
@@ -95,15 +103,6 @@ export default function RsvpPage() {
     }
   }, []);
 
-  // OTP Timer countdown
-  useEffect(() => {
-    if (otpTimer <= 0) return;
-    const interval = setInterval(() => {
-      setOtpTimer((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [otpTimer]);
-
   // Check existing session token on mount
   useEffect(() => {
     const savedToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
@@ -112,11 +111,25 @@ export default function RsvpPage() {
     }
   }, [fetchRsvpDetails]);
 
-  // 1. Request OTP
-  const handleRequestOtp = async (e) => {
+  // 1. Verify Team Registration ID & Leader Email
+  const handleVerifyCredentials = async (e) => {
     e?.preventDefault();
-    if (!email || !email.trim()) {
-      setErrorMessage("Please enter the registered team leader email.");
+    const trimmedRegId = registrationId.trim().toUpperCase();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (!trimmedRegId) {
+      setErrorMessage("Please enter your Team Registration ID.");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setErrorMessage("Please enter the registered Team Leader Email address.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setErrorMessage("Please enter a valid email address format.");
       return;
     }
 
@@ -125,58 +138,28 @@ export default function RsvpPage() {
     setSuccessMessage("");
 
     try {
-      const res = await fetch(`${API_URL}/api/rsvp/request-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to send verification code.");
-      }
-
-      setSuccessMessage(data.message);
-      setStep("otp");
-      setOtpTimer(60);
-      sessionStorage.setItem(SESSION_EMAIL_KEY, email.trim().toLowerCase());
-    } catch (err) {
-      setErrorMessage(err.message || "An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 2. Verify OTP
-  const handleVerifyOtp = async (e) => {
-    e?.preventDefault();
-    if (!otp || otp.trim().length !== 6) {
-      setErrorMessage("Please enter the 6-digit code sent to your email.");
-      return;
-    }
-
-    setLoading(true);
-    setErrorMessage("");
-    setSuccessMessage("");
-
-    try {
-      const res = await fetch(`${API_URL}/api/rsvp/verify-otp`, {
+      const res = await fetch(`${API_URL}/api/rsvp/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          otp: otp.trim(),
+          registrationId: trimmedRegId,
+          email: trimmedEmail,
         }),
       });
+
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || "Invalid verification code.");
+        throw new Error(data.message || "Invalid Registration ID or Leader Email.");
       }
 
       sessionStorage.setItem(SESSION_TOKEN_KEY, data.token);
+      sessionStorage.setItem(SESSION_REG_ID_KEY, data.registrationId);
+      sessionStorage.setItem(SESSION_EMAIL_KEY, trimmedEmail);
+
       setToken(data.token);
       await fetchRsvpDetails(data.token);
     } catch (err) {
-      setErrorMessage(err.message || "Verification failed.");
+      setErrorMessage(err.message || "Verification failed. Please check credentials.");
     } finally {
       setLoading(false);
     }
@@ -262,14 +245,17 @@ export default function RsvpPage() {
   // Logout / Switch Team
   const handleLogout = () => {
     sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_REG_ID_KEY);
     sessionStorage.removeItem(SESSION_EMAIL_KEY);
     setToken("");
+    setRegistrationId("");
     setEmail("");
-    setOtp("");
     setTeamData(null);
     setCalculation(null);
     setRsvpRecord(null);
     setStep("auth");
+    setErrorMessage("");
+    setSuccessMessage("");
   };
 
   return (
@@ -325,7 +311,7 @@ export default function RsvpPage() {
           </div>
         )}
 
-        {/* ================= STEP 1: AUTHENTICATION ================= */}
+        {/* ================= STEP 1: CREDENTIAL VERIFICATION ================= */}
         {step === "auth" && (
           <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
             <div className="text-center space-y-2">
@@ -333,17 +319,36 @@ export default function RsvpPage() {
                 <ShieldCheck className="w-8 h-8 text-purple-300" />
               </div>
               <h1 className="font-heading font-black text-2xl sm:text-3xl uppercase tracking-wider text-white">
-                Team Leader Verification
+                Team RSVP Verification
               </h1>
               <p className="font-body text-xs sm:text-sm text-white/60 max-w-lg mx-auto">
-                Enter the email address used during the original hackathon registration to access your team's RSVP status and payment options.
+                Enter your Team Registration ID and the Team Leader's registered email address to access your RSVP dashboard and confirmation details.
               </p>
             </div>
 
-            <form onSubmit={handleRequestOtp} className="max-w-md mx-auto space-y-4">
+            <form onSubmit={handleVerifyCredentials} className="max-w-md mx-auto space-y-4">
               <div className="space-y-1.5">
                 <label className="block font-heading text-xs uppercase tracking-wider text-white/80 font-bold">
-                  Registered Leader Email Address
+                  Registration ID
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={registrationId}
+                  onChange={(e) => setRegistrationId(e.target.value)}
+                  placeholder="e.g. AURA2K26-ABC123"
+                  className="w-full bg-black/60 border border-white/20 focus:border-purple-400 text-white font-mono uppercase text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30 tracking-wider"
+                  disabled={loading}
+                />
+                <p className="text-[11px] font-mono text-white/40">
+                  Unique Registration ID issued upon team registration submission.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block font-heading text-xs uppercase tracking-wider text-white/80 font-bold">
+                  Team Leader's Email Address
                 </label>
                 <input
                   type="email"
@@ -352,102 +357,37 @@ export default function RsvpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="leader@gmail.com"
                   className="w-full bg-black/60 border border-white/20 focus:border-purple-400 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30"
+                  disabled={loading}
                 />
+                <p className="text-[11px] font-mono text-white/40">
+                  Must match the registered email address of the team leader.
+                </p>
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !registrationId.trim() || !email.trim()}
                 className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Verifying Leader...</span>
+                    <span>Verifying Credentials...</span>
                   </>
                 ) : (
-                  <span>Send Verification Code</span>
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Verify &amp; Continue</span>
+                  </>
                 )}
               </button>
             </form>
 
             <div className="border-t border-white/5 pt-4 text-center">
               <p className="font-mono text-[11px] text-white/40">
-                🔒 Security note: Only the registered team leader email can confirm RSVP or submit payment proof.
+                🔒 Direct verification: No email delivery or OTP required. Both details must match an existing team record.
               </p>
             </div>
-          </div>
-        )}
-
-        {/* ================= STEP 2: OTP VERIFICATION ================= */}
-        {step === "otp" && (
-          <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-cyan-900/40 to-blue-900/40 border border-cyan-500/30 mb-2">
-                <Clock className="w-8 h-8 text-cyan-300" />
-              </div>
-              <h1 className="font-heading font-black text-2xl sm:text-3xl uppercase tracking-wider text-white">
-                Enter Verification Code
-              </h1>
-              <p className="font-body text-xs sm:text-sm text-white/60 max-w-lg mx-auto">
-                A 6-digit one-time code has been sent to{" "}
-                <span className="font-mono text-purple-300 font-bold">{email}</span>. Please enter it below.
-              </p>
-            </div>
-
-            <form onSubmit={handleVerifyOtp} className="max-w-md mx-auto space-y-4">
-              <div className="space-y-1.5">
-                <label className="block font-heading text-xs uppercase tracking-wider text-white/80 font-bold text-center">
-                  6-Digit OTP Code
-                </label>
-                <input
-                  type="text"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="123456"
-                  className="w-full text-center tracking-[0.5em] font-mono text-2xl bg-black/60 border border-white/20 focus:border-cyan-400 text-white p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/20"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || otp.length !== 6}
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Verifying Code...</span>
-                  </>
-                ) : (
-                  <span>Verify & Access RSVP</span>
-                )}
-              </button>
-
-              <div className="flex items-center justify-between text-xs pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("auth");
-                    setOtp("");
-                  }}
-                  className="text-white/50 hover:text-white transition-colors cursor-pointer"
-                >
-                  Change Email
-                </button>
-                <button
-                  type="button"
-                  disabled={otpTimer > 0 || loading}
-                  onClick={handleRequestOtp}
-                  className="text-purple-400 hover:text-purple-300 font-mono disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {otpTimer > 0 ? `Resend Code in ${otpTimer}s` : "Resend Code"}
-                </button>
-              </div>
-            </form>
           </div>
         )}
 
@@ -670,8 +610,13 @@ export default function RsvpPage() {
 
                       <div className="p-2 bg-white rounded-xl shadow-xl">
                         <img
-                          src={paymentQrImage}
+                          src={PAYMENT_QR_URL}
                           alt="Official AURA Payment QR Code"
+                          onError={(e) => {
+                            if (e.currentTarget.src !== paymentQrImage) {
+                              e.currentTarget.src = paymentQrImage;
+                            }
+                          }}
                           className="w-48 h-48 sm:w-56 sm:h-56 object-contain rounded-lg"
                         />
                       </div>

@@ -484,7 +484,10 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 
   const transporter = getEmailTransporter();
   if (!transporter) {
-    console.warn("[AURA Email] Email service not configured. OTP generated for dev:", otp);
+    console.warn(
+      "[AURA Email] Email service not configured. OTP generated for dev:",
+      otp,
+    );
     return { success: true, simulated: true, otp };
   }
 
@@ -500,10 +503,15 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[AURA Email] RSVP OTP sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    console.log(
+      `[AURA Email] RSVP OTP sent to ${recipientEmail} (MsgID: ${info.messageId})`,
+    );
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[AURA Email] Failed to send RSVP OTP to ${recipientEmail}:`, error.message);
+    console.error(
+      `[AURA Email] Failed to send RSVP OTP to ${recipientEmail}:`,
+      error.message,
+    );
     return { success: false, error: error.message };
   }
 };
@@ -511,11 +519,16 @@ export const sendRsvpOtpEmail = async (email, otp, registration) => {
 export const generateRsvpConfirmationEmailHtml = (registration, rsvp) => {
   const regId = escapeHtml(registration?.registrationId || rsvp.registrationId);
   const teamName = escapeHtml(registration?.teamName || rsvp.teamName);
-  const leaderName = escapeHtml(registration?.teamLeaderName || rsvp.teamLeaderName);
+  const leaderName = escapeHtml(
+    registration?.teamLeaderName || rsvp.teamLeaderName,
+  );
   const category = escapeHtml(rsvp.teamCategory || "standard").toUpperCase();
   const amount = rsvp.amountPayable || 0;
   const isFree = amount === 0;
-  const status = rsvp.paymentStatus === "not_required" ? "Confirmed (Free RSVP)" : "Submitted (Pending Verification)";
+  const status =
+    rsvp.paymentStatus === "not_required"
+      ? "Confirmed (Free RSVP)"
+      : "Submitted (Pending Verification)";
 
   return `
 <!DOCTYPE html>
@@ -559,17 +572,23 @@ export const generateRsvpConfirmationEmailHtml = (registration, rsvp) => {
                   <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #9a8c83;">Total Amount</td>
                   <td style="padding: 10px 14px; border-bottom: 1px solid #2f201c; color: #ffffff;">₹${amount}</td>
                 </tr>
-                ${rsvp.paymentReferenceNumber ? `
+                ${
+                  rsvp.paymentReferenceNumber
+                    ? `
                 <tr>
                   <td style="padding: 10px 14px; color: #9a8c83;">Payment Reference / UTR</td>
                   <td style="padding: 10px 14px; color: #ffffff; font-family: monospace;">${escapeHtml(rsvp.paymentReferenceNumber)}</td>
                 </tr>
-                ` : ""}
+                `
+                    : ""
+                }
               </table>
               <div style="background-color: #1a1615; border-left: 3px solid #d5a23a; padding: 12px 16px; border-radius: 4px; font-size: 12px; color: #cfc5bd; line-height: 1.5;">
-                ${isFree 
-                  ? "Your team is fully confirmed for on-site participation at AURA 2K26. Please carry valid college ID cards for all team members."
-                  : "Your payment proof is under verification by our finance desk. You will receive an update once verified. You can also view status anytime at /rsvp."}
+                ${
+                  isFree
+                    ? "Your team is fully confirmed for on-site participation at AURA 2K26. Please carry valid college ID cards for all team members."
+                    : "Your payment proof is under verification by our finance desk. You will receive an update once verified. You can also view status anytime at /rsvp."
+                }
               </div>
             </td>
           </tr>
@@ -595,7 +614,9 @@ export const sendRsvpConfirmationEmail = async (registration, rsvp) => {
 
   const transporter = getEmailTransporter();
   if (!transporter) {
-    console.warn("[AURA Email] Email service not configured. RSVP email skipped.");
+    console.warn(
+      "[AURA Email] Email service not configured. RSVP email skipped.",
+    );
     return { success: true, simulated: true };
   }
 
@@ -611,10 +632,15 @@ export const sendRsvpConfirmationEmail = async (registration, rsvp) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`[AURA Email] RSVP confirmation sent to ${recipientEmail} (MsgID: ${info.messageId})`);
+    console.log(
+      `[AURA Email] RSVP confirmation sent to ${recipientEmail} (MsgID: ${info.messageId})`,
+    );
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`[AURA Email] Failed to send RSVP confirmation to ${recipientEmail}:`, error.message);
+    console.error(
+      `[AURA Email] Failed to send RSVP confirmation to ${recipientEmail}:`,
+      error.message,
+    );
     return { success: false, error: error.message };
   }
 };

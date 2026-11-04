@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  verifyRegistrationCredentials,
   requestOtp,
   verifyOtp,
   getRsvpDetails,
@@ -13,6 +14,7 @@ import { uploadRsvpScreenshot } from "../middleware/upload.middleware.js";
 const router = express.Router();
 
 // Public verification endpoints
+router.post("/verify", verifyRegistrationCredentials);
 router.post("/request-otp", requestOtp);
 router.post("/verify-otp", verifyOtp);
 

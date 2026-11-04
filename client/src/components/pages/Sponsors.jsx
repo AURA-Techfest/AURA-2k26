@@ -10,6 +10,9 @@ const API_URL = (rawApiUrl && rawApiUrl !== 'undefined')
   ? rawApiUrl.replace(/\/$/, '')
   : (import.meta.env.DEV ? 'http://localhost:5000' : '');
 import paymentQr from "../../assets/payment_qr.jpeg";
+
+const PAYMENT_QR_URL =
+  "https://res.cloudinary.com/dxkje9whm/image/upload/v1793797831/payment-qr-aura_vyvsvw.jpg";
 import ieeePesLogo from "../../assets/IEEE_LOGO.png";
 import iicLogo from "../../assets/IIC_LOGO.png";
 import ietLogo from "../../assets/IET_LOGO.png";
@@ -552,9 +555,15 @@ export default function Sponsors({ initialFormOpen = false }) {
                 <div className="flex flex-col items-center justify-center p-3 bg-white rounded-2xl border-2 border-white max-w-xs mx-auto shadow-2xl">
                   {paymentQr && !qrError ? (
                     <img
-                      src={paymentQr}
+                      src={PAYMENT_QR_URL}
                       alt="AURA 2K26 IDBI UPI Payment QR"
-                      onError={() => setQrError(true)}
+                      onError={(e) => {
+                        if (e.currentTarget.src !== paymentQr) {
+                          e.currentTarget.src = paymentQr;
+                        } else {
+                          setQrError(true);
+                        }
+                      }}
                       className="w-48 sm:w-56 h-auto object-contain rounded-lg"
                     />
                   ) : (

@@ -7,6 +7,7 @@ import {
   sendRsvpOtpEmail,
   sendRsvpConfirmationEmail,
 } from "../services/email.service.js";
+import { rsvpRateLimiter } from "../middleware/rateLimiter.middleware.js";
 
 const TOKEN_SECRET =
   process.env.ADMIN_JWT_SECRET ||
@@ -236,6 +237,109 @@ export const computeTeamRsvpBreakdown = (registration) => {
     amountPayable: calculatedFee,
     participantBreakdown: breakdown,
   };
+};
+
+/**
+ * 0. Verify Team Credentials (Registration ID + Team Leader Email)
+ * Direct verification without email/OTP dependency.
+ */
+export const verifyRegistrationCredentials = async (req, res) => {
+  try {
+    const { registrationId, email } = req.body || {};
+    const clientIp =
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      "unknown";
+
+    // 1. Validate presence of both fields
+    if (
+      !registrationId ||
+      typeof registrationId !== "string" ||
+      !registrationId.trim() ||
+      !email ||
+      typeof email !== "string" ||
+      !email.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Both Team Registration ID and Team Leader Email are required.",
+      });
+    }
+
+    const trimmedRegId = registrationId.trim().toUpperCase();
+    const trimmedEmail = email.trim().toLowerCase();
+
+    // 2. Validate email structure
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email address.",
+      });
+    }
+
+    // 3. Rate limiting check
+    const rateStatus = rsvpRateLimiter.isRateLimited(clientIp, trimmedRegId);
+    if (rateStatus.limited) {
+      res.setHeader("Retry-After", rateStatus.retryAfterSeconds);
+      return res.status(429).json({
+        success: false,
+        message: `Too many failed verification attempts. Please wait ${Math.ceil(
+          rateStatus.retryAfterSeconds / 60
+        )} minute(s) before trying again.`,
+        retryAfter: rateStatus.retryAfterSeconds,
+      });
+    }
+
+    rsvpRateLimiter.recordRequest(clientIp);
+
+    // 4. Find the team using its Registration ID
+    const registration = await Registration.findOne({
+      registrationId: trimmedRegId,
+    });
+
+    // 5. Verify that the supplied email matches the registered team leader's email
+    // Generic error message prevents revealing whether Registration ID or email exists independently
+    if (
+      !registration ||
+      !registration.teamLeaderEmail ||
+      registration.teamLeaderEmail.trim().toLowerCase() !== trimmedEmail
+    ) {
+      rsvpRateLimiter.recordFailure(clientIp, trimmedRegId);
+      return res.status(401).json({
+        success: false,
+        message:
+          "Invalid Registration ID or Team Leader Email address. Please verify your details.",
+      });
+    }
+
+    // Successful match - clear failed attempts
+    rsvpRateLimiter.recordSuccess(clientIp, trimmedRegId);
+
+    // 6. Establish secure server-side verification session (HMAC-SHA256 signed token, 6 hr expiration)
+    const token = signRsvpToken({
+      registrationId: registration.registrationId,
+      email: registration.teamLeaderEmail,
+      teamName: registration.teamName,
+      exp: Date.now() + 6 * 60 * 60 * 1000,
+    });
+
+    // 7. Return only necessary team info required for initial verification confirmation
+    return res.status(200).json({
+      success: true,
+      message: "Credentials verified successfully!",
+      token,
+      registrationId: registration.registrationId,
+      teamName: registration.teamName,
+    });
+  } catch (error) {
+    console.error("Error in verifyRegistrationCredentials:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error verifying credentials. Please try again later.",
+      error: error.message,
+    });
+  }
 };
 
 /**
