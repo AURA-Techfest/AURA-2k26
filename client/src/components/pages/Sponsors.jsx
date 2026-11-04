@@ -13,6 +13,7 @@ import paymentQr from "../../assets/payment_qr.jpeg";
 import ieeePesLogo from "../../assets/IEEE_LOGO.png";
 import iicLogo from "../../assets/IIC_LOGO.png";
 import ietLogo from "../../assets/IET_LOGO.png";
+import shawLogo from "../../assets/SHAW_ENTERPRISE.png";
 
 function SponsorLogo({ src, alt, className = "", imgClassName = "" }) {
   const [hasError, setHasError] = useState(false);
@@ -49,7 +50,8 @@ const fetchSponsorsHeaderData = async () => {
     poweredBy: [
       { id: "pow-1", name: "IEEE PES", src: ieeePesLogo || null },
       { id: "pow-2", name: "IET", src: ietLogo || null },
-      { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo || null }
+      { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo || null },
+      { id: "pow-4", name: "SHAW ENTERPRISE", src: shawLogo || null }
     ]
   };
 };
@@ -221,7 +223,8 @@ export default function Sponsors({ initialFormOpen = false }) {
   const poweredBySponsors = sponsorsHeaderData?.poweredBy || [
     { id: "pow-1", name: "IEEE PES", src: ieeePesLogo },
     { id: "pow-2", name: "IET", src: ietLogo },
-    { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo }
+    { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo },
+    { id: "pow-4", name: "SHAW ENTERPRISE", src: shawLogo }
   ];
 
   const currentSponsors = [
@@ -755,23 +758,30 @@ export default function Sponsors({ initialFormOpen = false }) {
               POWERED BY
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-10 w-full max-w-5xl mx-auto">
-              {poweredBySponsors.map((item, idx) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  whileHover={{ scale: 1.05, translateY: -4 }}
-                  className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
-                >
-                  <img
-                    src={item.src}
-                    alt={item.name}
-                    className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
-                  />
-                </motion.div>
-              ))}
+              {poweredBySponsors.map((item, idx) => {
+                const isSingleOnLastRow =
+                  poweredBySponsors.length % 3 === 1 && idx === poweredBySponsors.length - 1;
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    whileHover={{ scale: 1.05, translateY: -4 }}
+                    className={`bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden ${
+                      isSingleOnLastRow ? "sm:col-start-2" : ""
+                    }`}
+                  >
+                    <img
+                      src={item.src}
+                      alt={item.name}
+                      className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         </div>
