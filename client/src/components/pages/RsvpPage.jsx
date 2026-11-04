@@ -259,7 +259,7 @@ export default function RsvpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0909] text-white selection:bg-purple-500 selection:text-white relative">
+    <div className="min-h-screen bg-[#0b0909] text-white selection:bg-[#6f2138] selection:text-white relative">
       {/* Background Dots Pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1.5px,transparent_1.5px)] [background-size:28px_28px] pointer-events-none" />
 
@@ -278,7 +278,7 @@ export default function RsvpPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-[10px] sm:text-xs font-mono text-purple-300 font-bold px-2.5 py-1 bg-purple-950/60 border border-purple-500/30 rounded-full">
+          <span className="text-[10px] sm:text-xs font-mono text-rose-200 font-bold px-2.5 py-1 bg-[#6f2138]/40 border border-[#831835]/60 rounded-full">
             RSVP & Payment Portal
           </span>
           {token && (
@@ -315,8 +315,8 @@ export default function RsvpPage() {
         {step === "auth" && (
           <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-6">
             <div className="text-center space-y-2">
-              <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-purple-900/40 to-cyan-900/40 border border-purple-500/30 mb-2">
-                <ShieldCheck className="w-8 h-8 text-purple-300" />
+              <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-[#6f2138]/50 to-red-950/60 border border-red-500/40 mb-2">
+                <ShieldCheck className="w-8 h-8 text-rose-300" />
               </div>
               <h1 className="font-heading font-black text-2xl sm:text-3xl uppercase tracking-wider text-white">
                 Team RSVP Verification
@@ -338,7 +338,7 @@ export default function RsvpPage() {
                   value={registrationId}
                   onChange={(e) => setRegistrationId(e.target.value)}
                   placeholder="e.g. AURA2K26-ABC123"
-                  className="w-full bg-black/60 border border-white/20 focus:border-purple-400 text-white font-mono uppercase text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30 tracking-wider"
+                  className="w-full bg-black/60 border border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500/30 text-white font-mono uppercase text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30 tracking-wider"
                   disabled={loading}
                 />
                 <p className="text-[11px] font-mono text-white/40">
@@ -356,7 +356,7 @@ export default function RsvpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="leader@gmail.com"
-                  className="w-full bg-black/60 border border-white/20 focus:border-purple-400 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30"
+                  className="w-full bg-black/60 border border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500/30 text-white font-body text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30"
                   disabled={loading}
                 />
                 <p className="text-[11px] font-mono text-white/40">
@@ -367,7 +367,7 @@ export default function RsvpPage() {
               <button
                 type="submit"
                 disabled={loading || !registrationId.trim() || !email.trim()}
-                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#831835] via-[#6f2138] to-[#501323] hover:from-[#9c1d40] hover:via-[#831835] hover:to-[#63182c] border border-red-500/40 text-white font-heading text-xs font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-950/50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -396,11 +396,11 @@ export default function RsvpPage() {
           <div className="space-y-8">
             {/* Team Overview Card */}
             <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#6f2138]/20 rounded-full blur-3xl pointer-events-none" />
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
                 <div>
-                  <span className="text-[10px] font-mono tracking-widest uppercase text-purple-400 font-bold">
+                  <span className="text-[10px] font-mono tracking-widest uppercase text-rose-400 font-bold">
                     Hackathon Registration
                   </span>
                   <h2 className="font-heading font-black text-2xl sm:text-3xl text-white uppercase tracking-wider">
@@ -412,8 +412,8 @@ export default function RsvpPage() {
                 </div>
 
                 <div className="flex flex-wrap sm:flex-col items-start sm:items-end gap-2">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/80 border border-purple-500/30 text-purple-300 font-mono text-xs font-bold">
-                    <span>ID:</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/80 border border-red-500/40 text-rose-200 font-mono text-xs font-bold">
+                    <span className="text-white/60">ID:</span>
                     <span className="text-white">{teamData.registrationId}</span>
                   </div>
                   <span
@@ -456,7 +456,7 @@ export default function RsvpPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h3 className="font-heading font-black text-lg sm:text-xl uppercase tracking-wider text-white flex items-center gap-2">
-                    <Users className="w-5 h-5 text-purple-400" />
+                    <Users className="w-5 h-5 text-rose-400" />
                     <span>Participant Breakdown</span>
                   </h3>
                   <p className="font-body text-xs text-white/50">
@@ -494,7 +494,7 @@ export default function RsvpPage() {
                           <div className="flex items-center gap-2">
                             <span>{member.name}</span>
                             {member.role === "Leader" && (
-                              <span className="text-[9px] font-heading uppercase tracking-wider px-1.5 py-0.5 rounded bg-purple-950 border border-purple-500/40 text-purple-300 font-bold">
+                              <span className="text-[9px] font-heading uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-950 border border-red-500/40 text-rose-200 font-bold">
                                 Leader
                               </span>
                             )}
@@ -592,7 +592,7 @@ export default function RsvpPage() {
                 <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-8">
                   <div className="space-y-1">
                     <h3 className="font-heading font-black text-lg sm:text-xl uppercase tracking-wider text-white flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-purple-400" />
+                      <CreditCard className="w-5 h-5 text-rose-400" />
                       <span>Payment Verification Details</span>
                     </h3>
                     <p className="font-body text-xs text-white/50">
@@ -603,7 +603,7 @@ export default function RsvpPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                     {/* Official QR Code Box */}
                     <div className="bg-black/80 border border-white/20 p-5 rounded-2xl flex flex-col items-center text-center space-y-3">
-                      <div className="flex items-center gap-1.5 text-xs font-heading font-bold uppercase tracking-wider text-purple-300">
+                      <div className="flex items-center gap-1.5 text-xs font-heading font-bold uppercase tracking-wider text-rose-300">
                         <QrCode className="w-4 h-4" />
                         <span>Official Payment QR</span>
                       </div>
@@ -623,7 +623,7 @@ export default function RsvpPage() {
 
                       <div className="space-y-1 text-center">
                         <span className="text-xs font-mono text-white/80 block">
-                          Pay Exact Amount: <strong className="text-purple-300 font-bold">₹{calculation.amountPayable}</strong>
+                          Pay Exact Amount: <strong className="text-rose-300 font-bold">₹{calculation.amountPayable}</strong>
                         </span>
                         <p className="text-[11px] font-body text-white/50">
                           Supports Google Pay, PhonePe, Paytm, BHIM, or any UPI App
@@ -644,7 +644,7 @@ export default function RsvpPage() {
                           value={paymentRefNumber}
                           onChange={(e) => setPaymentRefNumber(e.target.value)}
                           placeholder="e.g. 12-digit UTR or Transaction ID"
-                          className="w-full bg-black/60 border border-white/20 focus:border-purple-400 text-white font-mono text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30"
+                          className="w-full bg-black/60 border border-white/20 focus:border-red-500 focus:ring-1 focus:ring-red-500/30 text-white font-mono text-sm p-3.5 rounded-xl focus:outline-none transition-all placeholder:text-white/30"
                         />
                         <span className="text-[11px] text-white/40 block">
                           You can find the 12-digit UTR/UPI Ref ID in your banking/UPI receipt.
@@ -684,8 +684,8 @@ export default function RsvpPage() {
                             </button>
                           </div>
                         ) : (
-                          <label className="border-2 border-dashed border-white/20 hover:border-purple-400 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-black/40 group">
-                            <Upload className="w-8 h-8 text-white/40 group-hover:text-purple-400 transition-colors mb-2" />
+                          <label className="border-2 border-dashed border-white/20 hover:border-red-500 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-black/40 group">
+                            <Upload className="w-8 h-8 text-white/40 group-hover:text-rose-400 transition-colors mb-2" />
                             <span className="text-xs font-heading uppercase tracking-wider text-white font-bold">
                               Click or Drag & Drop Screenshot
                             </span>
@@ -713,7 +713,7 @@ export default function RsvpPage() {
                   id="confirm-rsvp-check"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-white/30 text-purple-600 focus:ring-purple-500 bg-black/60 cursor-pointer"
+                  className="mt-1 w-4 h-4 rounded border-white/30 text-[#831835] focus:ring-red-500 bg-black/60 cursor-pointer"
                 />
                 <label htmlFor="confirm-rsvp-check" className="text-xs font-body text-white/80 cursor-pointer select-none">
                   I confirm that all team details are accurate, the listed participants will attend the AURA 2K26 Hardware Hackathon in-person at Aliah University Newtown Campus, and all team members will carry valid original College ID cards.
@@ -733,7 +733,11 @@ export default function RsvpPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || !agreedToTerms}
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xl flex items-center justify-center gap-2"
+                  className={`w-full sm:w-auto px-8 py-4 rounded-xl ${
+                    calculation.amountPayable === 0
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
+                      : "bg-gradient-to-r from-[#831835] via-[#6f2138] to-[#501323] hover:from-[#9c1d40] hover:via-[#831835] hover:to-[#63182c] border border-red-500/40 shadow-red-950/50"
+                  } text-white font-heading text-xs sm:text-sm font-black tracking-widest uppercase transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xl flex items-center justify-center gap-2`}
                 >
                   {isSubmitting ? (
                     <>
@@ -748,7 +752,7 @@ export default function RsvpPage() {
                   ) : (
                     <>
                       <CreditCard className="w-5 h-5" />
-                      <span>Submit Payment & Confirm RSVP</span>
+                      <span>Submit Payment &amp; Confirm RSVP</span>
                     </>
                   )}
                 </button>
@@ -760,8 +764,16 @@ export default function RsvpPage() {
         {/* ================= STEP 4: SUBMITTED / CONFIRMED SUCCESS ================= */}
         {step === "success" && rsvpRecord && (
           <div className="bg-black/60 border border-white/10 rounded-2xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl space-y-8 text-center">
-            <div className="inline-flex p-4 rounded-3xl bg-gradient-to-tr from-emerald-950/60 to-teal-950/60 border border-emerald-500/40">
-              <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+            <div className={`inline-flex p-4 rounded-3xl ${
+              rsvpRecord.paymentStatus === "verified" || rsvpRecord.paymentStatus === "not_required"
+                ? "bg-gradient-to-tr from-emerald-950/60 to-teal-950/60 border border-emerald-500/40"
+                : "bg-gradient-to-tr from-[#6f2138]/50 to-amber-950/60 border border-amber-500/40"
+            }`}>
+              {rsvpRecord.paymentStatus === "verified" || rsvpRecord.paymentStatus === "not_required" ? (
+                <CheckCircle2 className="w-12 h-12 text-emerald-400" />
+              ) : (
+                <Clock className="w-12 h-12 text-amber-300" />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -772,12 +784,12 @@ export default function RsvpPage() {
                   ? "Payment Verified & RSVP Confirmed!"
                   : "RSVP & Payment Proof Submitted!"}
               </h2>
-              <p className="font-body text-xs sm:text-sm text-white/60 max-w-lg mx-auto">
+              <p className="font-body text-xs sm:text-sm text-white/70 max-w-lg mx-auto leading-relaxed">
                 {rsvpRecord.paymentStatus === "not_required"
                   ? "Your team is fully confirmed for on-site participation at AURA 2K26. We look forward to seeing your prototype demo!"
                   : rsvpRecord.paymentStatus === "verified"
                   ? "Your payment transaction has been verified by the organizing team. Your team slot is officially locked."
-                  : "Thank you! Your payment details and screenshot have been received and are currently under verification by our finance desk."}
+                  : "Thank you! Your payment details and screenshot have been received. Please note that this receipt does not confirm your payment verification — our organizing team will verify your payment and inform you."}
               </p>
             </div>
 
@@ -789,7 +801,7 @@ export default function RsvpPage() {
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-white/50">Registration ID</span>
-                <span className="text-purple-300 font-mono font-bold">{rsvpRecord.registrationId}</span>
+                <span className="text-rose-300 font-mono font-bold">{rsvpRecord.registrationId}</span>
               </div>
               <div className="flex justify-between border-b border-white/10 pb-2">
                 <span className="text-white/50">RSVP Status</span>
@@ -824,11 +836,38 @@ export default function RsvpPage() {
                     href={rsvpRecord.paymentScreenshotUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-purple-400 hover:text-purple-300 underline font-mono text-[11px]"
+                    className="inline-flex items-center gap-1.5 text-rose-400 hover:text-rose-300 underline font-mono text-[11px]"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>View Uploaded Proof</span>
                   </a>
+                </div>
+              )}
+
+              {/* Explicit Verification Disclaimer Notice */}
+              {rsvpRecord.amountPayable > 0 && rsvpRecord.paymentStatus !== "verified" && (
+                <div className="mt-4 p-3.5 rounded-xl bg-gradient-to-r from-[#2a1317] to-[#1c0f12] border-2 border-red-500/40 text-rose-100 space-y-1.5 shadow-lg">
+                  <div className="flex items-center gap-2 font-heading font-black text-xs uppercase tracking-wider text-rose-300">
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>Payment Under Verification</span>
+                  </div>
+                  <p className="font-body text-[11px] leading-relaxed text-white/90">
+                    <strong>Please note:</strong> This acknowledgement receipt does <u>not</u> confirm successful payment verification. The organizing committee will independently verify your payment transaction and screenshot. Once verified, we will confirm your payment and inform you via your registered email address.
+                  </p>
+                </div>
+              )}
+
+              {rsvpRecord.paymentStatus === "verified" && (
+                <div className="mt-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-[11px] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Payment officially verified by AURA 2K26 organizing committee.</span>
+                </div>
+              )}
+
+              {rsvpRecord.paymentStatus === "not_required" && (
+                <div className="mt-4 p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200 text-[11px] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Internal Aliah University Team — No payment required. Team slot confirmed.</span>
                 </div>
               )}
             </div>
@@ -837,14 +876,14 @@ export default function RsvpPage() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <button
                 onClick={() => window.print()}
-                className="px-5 py-2.5 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 text-white font-heading text-xs tracking-wider uppercase flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl border border-white/20 bg-white/5 hover:bg-[#6f2138]/20 hover:border-red-500/40 text-white font-heading text-xs tracking-wider uppercase flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Print Confirmation</span>
               </button>
               <Link
                 to="/"
-                className="px-6 py-2.5 rounded-xl bg-white text-black font-heading text-xs font-black tracking-wider uppercase hover:bg-white/90 transition-colors shadow-lg"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#831835] via-[#6f2138] to-[#501323] hover:from-[#9c1d40] hover:via-[#831835] hover:to-[#63182c] border border-red-500/40 text-white font-heading text-xs font-black tracking-wider uppercase transition-all shadow-lg shadow-red-950/50"
               >
                 Return to Website
               </Link>
