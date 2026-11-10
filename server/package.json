@@ -9,7 +9,8 @@
     "test:email": "node scripts/test-email.js",
     "test:rsvp": "node scripts/test-rsvp.js && node scripts/test-rsvp-api.js && node scripts/test-rsvp-verification.js",
     "send:emails": "node scripts/send-registration-emails.js",
-    "send-emails": "node scripts/send-registration-emails.js"
+    "send-emails": "node scripts/send-registration-emails.js",
+    "update:taraksha": "node scripts/update-team-taraksha.js"
   },
   "keywords": [],
   "author": "",
