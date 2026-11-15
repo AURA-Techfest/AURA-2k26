@@ -854,7 +854,7 @@ export default function Sponsors({ initialFormOpen = false }) {
               >
                 <img
                   src={hydrationpartner}
-                  alt="Media Partner"
+                  alt="Hydration Partner"
                   className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                 />
               </motion.div>
