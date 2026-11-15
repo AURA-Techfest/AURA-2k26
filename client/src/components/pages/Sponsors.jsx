@@ -19,7 +19,7 @@ import ietLogo from "../../assets/IET_LOGO.png";
 import shawLogo from "../../assets/SHAW_ENTERPRISE.png";
 import logo1 from "../../assets/logo1.jpeg";
 import hydrationpartner from "../../assets/hydrationpartner.jpeg";
-import academy from "../../assets/academy.jpeg";
+import academyLogo from "../../assets/academyLogo.jpeg";
 function SponsorLogo({ src, alt, className = "", imgClassName = "" }) {
   const [hasError, setHasError] = useState(false);
 
@@ -57,7 +57,7 @@ const fetchSponsorsHeaderData = async () => {
       { id: "pow-2", name: "IET", src: ietLogo || null },
       { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo || null },
       { id: "pow-4", name: "SHAW ENTERPRISE", src: shawLogo || null },
-      { id: "pow-5", name: "ADARSHA ACADEMY", src: academy || null }
+      { id: "pow-5", name: "ADARSHA ACADEMY", src: academyLogo || null }
     ]
   };
 };
@@ -230,7 +230,8 @@ export default function Sponsors({ initialFormOpen = false }) {
     { id: "pow-1", name: "IEEE PES", src: ieeePesLogo },
     { id: "pow-2", name: "IET", src: ietLogo },
     { id: "pow-3", name: "IIC ALIAH UNIVERSITY", src: iicLogo },
-    { id: "pow-4", name: "SHAW ENTERPRISE", src: shawLogo }
+    { id: "pow-4", name: "SHAW ENTERPRISE", src: shawLogo },
+    { id: "pow-5", name: "ADARSHA ACADEMY", src: academyLogo }
   ];
 
   const currentSponsors = [
