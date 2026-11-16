@@ -1,0 +1,461 @@
+import VotingSession from "../models/VotingSession.js";
+import AudienceVote from "../models/AudienceVote.js";
+import Prize from "../models/Prize.js";
+import Registration from "../models/Registration.js";
+
+export const MIN_VOTING_MINUTES = 10;
+export const MAX_VOTING_MINUTES = 20;
+const TOP_PRIZE_TYPES = ["first", "second", "third"];
+
+const getEligibleCandidates = async () => {
+  // Teams that have already won a top prize (1st / 2nd / 3rd) are not eligible
+  // for the Audience Choice vote.
+  const winners = await Prize.find({
+    prizeType: { $in: TOP_PRIZE_TYPES },
+  }).select("registrationId");
+
+  const excludedIds = winners
+    .map((w) => String(w.registrationId || "").trim().toUpperCase())
+    .filter(Boolean);
+
+  const filter = excludedIds.length
+    ? { registrationId: { $nin: excludedIds } }
+    : {};
+
+  const candidates = await Registration.find(filter)
+    .select("registrationId teamName teamSize projectTitle")
+    .sort({ teamName: 1 })
+    .lean();
+
+  return candidates;
+};
+
+export const normalizeVoterKey = (registrationId, participantName) =>
+  `${String(registrationId || "")
+    .trim()
+    .toUpperCase()}::${String(participantName || "")
+    .trim()
+    .toLowerCase()}`;
+
+const getTimeRemainingSeconds = (session) => {
+  if (!session) return 0;
+  const endsAtMs = new Date(session.endsAt).getTime();
+  if (isNaN(endsAtMs)) return 0;
+  return Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000));
+};
+
+const closeSessionIfExpired = async (session) => {
+  if (
+    session &&
+    session.status === "active" &&
+    new Date(session.endsAt).getTime() < Date.now()
+  ) {
+    session.status = "closed";
+    session.closedAt = new Date();
+    await session.save();
+    return { ...session.toObject(), autoClosed: true };
+  }
+  return session;
+};
+
+export const buildTally = (votes = []) => {
+  const tallyMap = new Map();
+
+  for (const vote of votes) {
+    const key = vote.candidateRegistrationId;
+    if (!tallyMap.has(key)) {
+      tallyMap.set(key, {
+        candidateRegistrationId: key,
+        candidateTeamName: vote.candidateTeamName,
+        votes: 0,
+      });
+    }
+    tallyMap.get(key).votes += 1;
+  }
+
+  const results = Array.from(tallyMap.values())
+    .map((entry) => ({
+      ...entry,
+      percentage: votes.length
+        ? Number(((entry.votes / votes.length) * 100).toFixed(2))
+        : 0,
+    }))
+    .sort((a, b) => b.votes - a.votes);
+
+  const leader = results.length
+    ? results.reduce((best, current) =>
+        current.votes > best.votes ? current : best,
+      )
+    : null;
+
+  return {
+    results,
+    leader,
+    winner: leader && leader.votes > 0 ? leader : null,
+    votesCast: votes.length,
+  };
+};
+
+/**
+ * Admin: Start a new Audience Choice voting session.
+ * Duration must be an integer between 10 and 20 minutes (decided on spot).
+ */
+export const adminStartVotingSession = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const durationMinutes = Number(req.body?.durationMinutes);
+    if (
+      !Number.isInteger(durationMinutes) ||
+      durationMinutes < MIN_VOTING_MINUTES ||
+      durationMinutes > MAX_VOTING_MINUTES
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: `durationMinutes must be an integer between ${MIN_VOTING_MINUTES} and ${MAX_VOTING_MINUTES}.`,
+      });
+    }
+
+    const now = new Date();
+    const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
+
+    // Close any previously active session
+    await VotingSession.updateMany(
+      { status: "active" },
+      { status: "closed", closedAt: now },
+    );
+
+    const session = await VotingSession.create({
+      status: "active",
+      durationMinutes,
+      startsAt: now,
+      endsAt,
+      createdBy: "admin",
+    });
+
+    const candidates = await getEligibleCandidates();
+
+    return res.status(201).json({
+      success: true,
+      message: "Audience Choice voting session started.",
+      session,
+      durationMinutes,
+      candidates,
+      timeRemainingSeconds: durationMinutes * 60,
+    });
+  } catch (error) {
+    console.error("Error in adminStartVotingSession:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to start Audience Choice voting session.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Public: Get the current voting session status, candidates and live tally.
+ */
+export const getCurrentVotingSession = async (req, res) => {
+  try {
+    const session = await VotingSession.findOne({
+      status: "active",
+    }).sort({ createdAt: -1 });
+
+    if (!session) {
+      return res.status(200).json({
+        success: true,
+        session: null,
+        message: "No active Audience Choice voting session.",
+      });
+    }
+
+    const activeSession = await closeSessionIfExpired(session);
+    const candidates = await getEligibleCandidates();
+    const votes = await AudienceVote.find({
+      sessionId: activeSession._id,
+    });
+
+    const tally = buildTally(votes);
+
+    return res.status(200).json({
+      success: true,
+      session: activeSession,
+      timeRemainingSeconds: getTimeRemainingSeconds(activeSession),
+      candidates,
+      votesCast: tally.votesCast,
+      results: tally.results,
+      leader: tally.leader,
+      winner: tally.winner,
+    });
+  } catch (error) {
+    console.error("Error in getCurrentVotingSession:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch current voting session.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Public: Cast a single Audience Choice vote.
+ * Rules:
+ * - Session must be active and within the voting window.
+ * - Voter (participant) can cast only one vote per session.
+ * - Candidate must not have already won a top prize (1st/2nd/3rd).
+ */
+export const castAudienceVote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { registrationId, participantName, candidateRegistrationId } =
+      req.body || {};
+
+    if (
+      !registrationId ||
+      !participantName ||
+      !candidateRegistrationId
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "registrationId, participantName and candidateRegistrationId are required.",
+      });
+    }
+
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    const activeSession = await closeSessionIfExpired(session);
+    if (activeSession.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Voting is not active for this session.",
+      });
+    }
+
+    const endsAtMs = new Date(activeSession.endsAt).getTime();
+    if (endsAtMs < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "The Audience Choice voting window has ended.",
+      });
+    }
+
+    // Candidate eligibility: exclude teams that already won 1st/2nd/3rd
+    const candidate = await Registration.findOne({
+      registrationId: String(candidateRegistrationId || "")
+        .trim()
+        .toUpperCase(),
+    }).select("registrationId teamName teamSize projectTitle");
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "The selected candidate team was not found.",
+      });
+    }
+
+    const winnerRecord = await Prize.findOne({
+      registrationId: candidate.registrationId,
+      prizeType: { $in: TOP_PRIZE_TYPES },
+    });
+
+    if (winnerRecord) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This team has already won a top prize and is not eligible for the Audience Choice vote.",
+      });
+    }
+
+    // One vote per participant per session
+    const voterKey = normalizeVoterKey(registrationId, participantName);
+    const existingVote = await AudienceVote.findOne({
+      sessionId: activeSession._id,
+      voterKey,
+    });
+
+    if (existingVote) {
+      return res.status(400).json({
+        success: false,
+        message: "This participant has already cast a vote in this session.",
+      });
+    }
+
+    const vote = await AudienceVote.create({
+      sessionId: activeSession._id,
+      voterKey,
+      registrationId: String(registrationId || "").trim().toUpperCase(),
+      participantName: String(participantName || "").trim(),
+      teamName: String(
+        req.body?.teamName || candidate.teamName || "",
+      ).trim(),
+      candidateRegistrationId: candidate.registrationId,
+      candidateTeamName: candidate.teamName,
+      createdAt: new Date(),
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Vote cast successfully!",
+      vote,
+    });
+  } catch (error) {
+    console.error("Error in castAudienceVote:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cast Audience Choice vote.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Admin: Record the Audience Choice winner for a voting session and close it.
+ */
+export const adminRecordAudienceChoiceWinner = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const { id } = req.params;
+    const { candidateRegistrationId, candidateTeamName, participantName } =
+      req.body || {};
+
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    const activeSession = await closeSessionIfExpired(session);
+
+    if (activeSession.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Voting session is not active. Start a new session to re-open voting.",
+      });
+    }
+
+    const candidate = await Registration.findOne({
+      registrationId: String(candidateRegistrationId || "")
+        .trim()
+        .toUpperCase(),
+    }).select("registrationId teamName");
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "The selected candidate team was not found.",
+      });
+    }
+
+    // Record the Audience Choice win
+    const prize = await Prize.findOneAndUpdate(
+      { registrationId: candidate.registrationId },
+      {
+        registrationId: candidate.registrationId,
+        teamName: candidate.teamName,
+        prizeType: "audience_choice",
+        rank: 0,
+        awardedAt: new Date(),
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    // Close the session after winner declaration
+    activeSession.status = "closed";
+    activeSession.closedAt = new Date();
+    await activeSession.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Audience Choice winner recorded successfully!",
+      prize,
+      session: activeSession,
+    });
+  } catch (error) {
+    console.error("Error in adminRecordAudienceChoiceWinner:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to record Audience Choice winner.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Public: Get live results / tally for a voting session.
+ */
+export const getVotingResults = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    const activeSession = await closeSessionIfExpired(session);
+    const votes = await AudienceVote.find({
+      sessionId: activeSession._id,
+    });
+
+    const tally = buildTally(votes);
+
+    return res.status(200).json({
+      success: true,
+      session: activeSession,
+      votesCast: tally.votesCast,
+      results: tally.results,
+      leader: tally.leader,
+      winner: tally.winner,
+    });
+  } catch (error) {
+    console.error("Error in getVotingResults:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch voting results.",
+      error: error.message,
+    });
+  }
+};

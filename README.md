@@ -13,6 +13,7 @@ Built to bring together students, developers, creators, and tech enthusiasts thr
 - 📢 Announcements & updates
 - 🏆 Results & highlights
 - 👥 Participant-focused experience
+- 🗳️ Audience Choice voting (one vote per participant, 10–20 min live window)
 
 ### 🛠️ Built With
 

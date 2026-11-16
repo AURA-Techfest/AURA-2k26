@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import registrationRouter from "./routes/registration.routes.js";
 import sponsorshipRouter from "./routes/sponsorship.routes.js";
 import rsvpRouter from "./routes/rsvp.routes.js";
+import votingRouter from "./routes/voting.routes.js";
 import { verifyEmailConfig } from "./services/email.service.js";
 
 const app = express();
@@ -52,6 +53,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/registrations", registrationRouter);
 app.use("/api/sponsorships", sponsorshipRouter);
 app.use("/api/rsvp", rsvpRouter);
+app.use("/api/voting", votingRouter);
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
