@@ -6,6 +6,7 @@ import {
   castAudienceVote,
   getVotingResults,
   adminRecordAudienceChoiceWinner,
+  adminRecordPodiumPrizes,
 } from "../controllers/voting.controller.js";
 
 const router = express.Router();
@@ -24,5 +25,8 @@ router.get("/sessions/:id/results", getVotingResults);
 
 // Admin: record Audience Choice winner and close session
 router.post("/sessions/:id/winner", requireAdmin, adminRecordAudienceChoiceWinner);
+
+// Admin: record podium prizes (1st / 2nd / 3rd) decided on spot
+router.post("/prizes", requireAdmin, adminRecordPodiumPrizes);
 
 export default router;

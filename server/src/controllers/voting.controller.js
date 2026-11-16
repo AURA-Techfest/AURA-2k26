@@ -332,6 +332,89 @@ export const castAudienceVote = async (req, res) => {
 };
 
 /**
+ * Admin: Record podium prizes (1st / 2nd / 3rd) decided on spot.
+ * Teams recorded here automatically become ineligible for the Audience Choice vote.
+ */
+export const adminRecordPodiumPrizes = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const { prizes } = req.body || {};
+
+    if (!Array.isArray(prizes) || prizes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "A non-empty 'prizes' array is required.",
+      });
+    }
+
+    const cleanPrizes = prizes
+      .map((p) => ({
+        registrationId: String(p?.registrationId || "")
+          .trim()
+          .toUpperCase(),
+        teamName: String(p?.teamName || "").trim(),
+        prizeType: String(p?.prizeType || "")
+          .trim()
+          .toLowerCase(),
+        rank: Number(p?.rank) || 0,
+      }))
+      .filter((p) => p.registrationId && p.teamName);
+
+    if (cleanPrizes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one valid prize entry is required.",
+      });
+    }
+
+    const savedPrizes = [];
+    for (const p of cleanPrizes) {
+      const saved = await Prize.findOneAndUpdate(
+        { registrationId: p.registrationId, prizeType: p.prizeType },
+        {
+          registrationId: p.registrationId,
+          teamName: p.teamName,
+          prizeType: p.prizeType,
+          rank: p.rank,
+          awardedAt: new Date(),
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      );
+      savedPrizes.push(saved);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Podium prizes recorded successfully.",
+      prizes: savedPrizes,
+    });
+  } catch (error) {
+    console.error("Error in adminRecordPodiumPrizes:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to record podium prizes.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Admin: Record the Audience Choice winner for a voting session and close it.
  */
 export const adminRecordAudienceChoiceWinner = async (req, res) => {
