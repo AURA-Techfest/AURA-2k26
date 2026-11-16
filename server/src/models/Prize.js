@@ -21,7 +21,7 @@ const prizeSchema = new mongoose.Schema(
     },
     rank: {
       type: Number,
-      min: 1,
+      min: 0,
       max: 3,
     },
     awardedAt: {
