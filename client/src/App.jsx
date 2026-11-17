@@ -10,6 +10,7 @@ import Sponsors from "./components/pages/Sponsors";
 import People from "./components/pages/People";
 import GalleryDetail from "./components/pages/GalleryDetail";
 import RsvpPage from "./components/pages/RsvpPage";
+import AudienceVoting from "./components/pages/AudienceVoting";
 
 function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
   // Initialize Lenis smooth scroll for desktop viewports
@@ -75,6 +76,10 @@ function App() {
         <Route
           path="/rsvp"
           element={<RsvpPage />}
+        />
+        <Route
+          path="/voting"
+          element={<AudienceVoting />}
         />
         <Route
           path="/sponsors"

@@ -30,6 +30,13 @@
     <img src="https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   </p>
 
+- 🎯 Event & competition details
+- 📝 Online registrations
+- 📢 Announcements & updates
+- 🏆 Results & highlights
+- 👥 Participant-focused experience
+- 🗳️ Audience Choice voting (one vote per participant, 10–20 min live window)
+
 </div>
 
 ---
