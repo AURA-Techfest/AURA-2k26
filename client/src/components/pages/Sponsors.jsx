@@ -20,6 +20,8 @@ import shawLogo from "../../assets/SHAW_ENTERPRISE.png";
 import logo1 from "../../assets/logo1.jpeg";
 import hydrationpartner from "../../assets/hydrationpartner.jpeg";
 import academyLogo from "../../assets/academyLogo.jpeg";
+import bhaiBhaiDecoratorsLogo from "../../assets/bhaiBhaiDecorators.jpeg";
+import foodStopLogo from "../../assets/foodStop.jpeg";
 function SponsorLogo({ src, alt, className = "", imgClassName = "" }) {
   const [hasError, setHasError] = useState(false);
 
@@ -856,6 +858,70 @@ export default function Sponsors({ initialFormOpen = false }) {
                 <img
                   src={hydrationpartner}
                   alt="Hydration Partner"
+                  className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* 6. OFFICIAL DÉCOR & LIGHTING PARTNER */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-col items-center transform-gpu"
+          >
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
+              OFFICIAL DÉCOR & LIGHTING PARTNER
+            </h2>
+            <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 w-full">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                whileHover={{ scale: 1.05, translateY: -4 }}
+                className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-56 sm:w-72 md:w-80 h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
+              >
+                <img
+                  src={bhaiBhaiDecoratorsLogo}
+                  alt="Official Décor & Lighting Partner"
+                  className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
+                />
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* 7. BEVERAGE PARTNER */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-col items-center transform-gpu"
+          >
+            <h2 
+              className="font-heading font-black text-white tracking-widest uppercase mb-8 drop-shadow-md"
+              style={{ fontSize: 'clamp(1.25rem, 3.5vw, 2.5rem)' }}
+            >
+              BEVERAGE PARTNER
+            </h2>
+            <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 w-full">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                whileHover={{ scale: 1.05, translateY: -4 }}
+                className="bg-white rounded-3xl p-3 sm:p-4 md:p-5 flex items-center justify-center border-4 border-white shadow-[0_20px_45px_rgba(0,0,0,0.8)] w-56 sm:w-72 md:w-80 h-44 sm:h-56 md:h-64 transition-all duration-300 transform-gpu overflow-hidden"
+              >
+                <img
+                  src={foodStopLogo}
+                  alt="Beverage Partner"
                   className="w-full h-full max-h-full max-w-full object-contain filter drop-shadow-md p-1"
                 />
               </motion.div>
