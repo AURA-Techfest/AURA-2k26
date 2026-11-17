@@ -379,20 +379,18 @@ export default function AudienceVoting() {
                     className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                   />
                 </div>
-                {isVoterMode && (
-                  <div>
-                    <label className="block text-sm text-white/70 mb-1">
-                      Voter Name
-                    </label>
-                    <input
-                      type="text"
-                      value={voterName}
-                      onChange={(e) => setVoterName(e.target.value)}
-                      placeholder="Your name"
-                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                    />
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
+                    Voter Name
+                  </label>
+                  <input
+                    type="text"
+                    value={voterName}
+                    onChange={(e) => setVoterName(e.target.value)}
+                    placeholder="Your name"
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
                     Vote for
@@ -422,16 +420,14 @@ export default function AudienceVoting() {
                   </div>
                 )}
 
-                {isVoterMode && (
-                  <button
-                    type="button"
-                    onClick={handleRegisterVoter}
-                    disabled={isSubmitting}
-                    className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/20 transition"
-                  >
-                    {isSubmitting ? "Registering…" : "Register to get Voter ID"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleRegisterVoter}
+                  disabled={isSubmitting}
+                  className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/20 transition"
+                >
+                  {isSubmitting ? "Registering…" : "Register to get Voter ID"}
+                </button>
 
                 <button
                   type="submit"
