@@ -176,7 +176,7 @@ export default function AdminPage() {
                   type="password"
                   value={adminKey}
                   onChange={(e) => setAdminKey(e.target.value)}
-                  placeholder="2k26_au_admin"
+                  placeholder="Enter admin key"
                   className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                 />
               </div>
