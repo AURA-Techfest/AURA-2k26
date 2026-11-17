@@ -42,6 +42,7 @@ export default function AudienceVoting() {
   // Voter form state
   const [registrationId, setRegistrationId] = useState("");
   const [participantName, setParticipantName] = useState("");
+  const [voterId, setVoterId] = useState("");
   const [candidateRegistrationId, setCandidateRegistrationId] =
     useState("");
   const [hasVoted, setHasVoted] = useState(false);
@@ -124,21 +125,32 @@ export default function AudienceVoting() {
     e?.preventDefault();
     if (!session) return;
 
+    const trimmedVoterCode = voterId.trim();
     const trimmedRegId = registrationId.trim().toUpperCase();
     const trimmedParticipantName = participantName.trim();
     const trimmedCandidateId = candidateRegistrationId.trim().toUpperCase();
 
-    if (!trimmedRegId) {
-      setErrorMessage("Please enter the Team Registration ID.");
-      return;
-    }
-    if (!trimmedParticipantName) {
-      setErrorMessage("Please enter the participant's full name.");
-      return;
-    }
-    if (!trimmedCandidateId) {
-      setErrorMessage("Please select a candidate team to vote for.");
-      return;
+    // Determine voting mode: on-spot voter (volunteer / spectator) OR participant
+    const isVoterMode = trimmedVoterCode.length > 0;
+
+    if (isVoterMode) {
+      if (!trimmedCandidateId) {
+        setErrorMessage("Please select a candidate team to vote for.");
+        return;
+      }
+    } else {
+      if (!trimmedRegId) {
+        setErrorMessage("Please enter the Team Registration ID.");
+        return;
+      }
+      if (!trimmedParticipantName) {
+        setErrorMessage("Please enter the participant's full name.");
+        return;
+      }
+      if (!trimmedCandidateId) {
+        setErrorMessage("Please select a candidate team to vote for.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -149,11 +161,11 @@ export default function AudienceVoting() {
       const res = await fetch(`${API_URL}/api/voting/sessions/${session._id}/votes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          registrationId: trimmedRegId,
-          participantName: trimmedParticipantName,
-          candidateRegistrationId: trimmedCandidateId,
-        }),
+        body: JSON.stringify(
+          isVoterMode
+            ? { voterId: trimmedVoterCode, candidateRegistrationId: trimmedCandidateId }
+            : { registrationId: trimmedRegId, participantName: trimmedParticipantName, candidateRegistrationId: trimmedCandidateId }
+        ),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -314,6 +326,18 @@ export default function AudienceVoting() {
                 </div>
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
+                    Voter ID (volunteers / spectators — from on-spot registration)
+                  </label>
+                  <input
+                    type="text"
+                    value={voterId}
+                    onChange={(e) => setVoterId(e.target.value)}
+                    placeholder="AURA-V-XXXXXX"
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
                     Vote for
                   </label>
                   <select
@@ -348,6 +372,17 @@ export default function AudienceVoting() {
                 >
                   {isSubmitting ? "Casting vote…" : "Cast Vote"}
                 </button>
+
+                {voterId.trim() && (
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    <p className="text-xs text-white/50">Scan to open your voting ticket</p>
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(voterId.trim())}`}
+                      alt="Voter QR code"
+                      className="w-40 h-40 rounded-lg border border-white/15 bg-white p-2"
+                    />
+                  </div>
+                )}
               </form>
             )}
           </div>
