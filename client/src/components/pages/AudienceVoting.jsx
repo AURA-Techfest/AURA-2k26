@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Trophy,
   Clock,
@@ -53,7 +53,7 @@ export default function AudienceVoting() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voteSuccessMessage, setVoteSuccessMessage] = useState("");
 
-  const navigate = useNavigate();
+
 
   const fetchCurrent = useCallback(async () => {
     try {
@@ -286,14 +286,6 @@ export default function AudienceVoting() {
           >
             {startingFromVoting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Start Voting Session"}
           </button>
-          <div className="mt-4 text-center">
-            <button
-              onClick={() => navigate("/admin")}
-              className="text-sm text-white/50 hover:text-white underline underline-offset-4"
-            >
-              Admin login
-            </button>
-          </div>
         </div>
       );
     }
