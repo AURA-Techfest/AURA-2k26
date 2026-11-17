@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [podiumResults, setPodiumResults] = useState([]);
   const [podiumRank, setPodiumRank] = useState("first");
   const [podiumSelected, setPodiumSelected] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const adminFetch = async (path, options = {}) => {
     const res = await fetch(`${API_URL}${path}`, {
@@ -193,6 +194,33 @@ export default function AdminPage() {
       setErrorMessage("Failed to record podium prize.");
     } finally {
       setRecording(false);
+    }
+  };
+
+  const deletePodiumPrize = async () => {
+    if (!podiumSelected) {
+      setErrorMessage("Select a team first.");
+      return;
+    }
+    setDeleting(true);
+    setErrorMessage("");
+    try {
+      const res = await adminFetch(
+        `/api/voting/prizes/${encodeURIComponent(podiumSelected.registrationId)}/${podiumRank}`,
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setPodiumSelected(null);
+        setPodiumQuery("");
+        setPodiumResults([]);
+        alert("Podium prize deleted successfully.");
+        return;
+      }
+      setErrorMessage(data.message || "Failed to delete podium prize.");
+    } catch (err) {
+      setErrorMessage("Failed to delete podium prize.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -401,6 +429,13 @@ export default function AdminPage() {
                 className="w-full bg-amber-400/90 text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {recording ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Assign Winner & Record"}
+              </button>
+              <button
+                onClick={deletePodiumPrize}
+                disabled={deleting || !podiumSelected}
+                className="w-full bg-red-500/90 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed mt-3"
+              >
+                {deleting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Delete This Prize"}
               </button>
               <p className="text-white/50 text-sm mt-4">
                 Records the chosen team as the podium winner and marks them ineligible for future Audience Choice votes.

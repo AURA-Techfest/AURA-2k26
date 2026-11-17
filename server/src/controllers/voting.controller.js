@@ -609,6 +609,64 @@ export const adminRecordPodiumPrizes = async (req, res) => {
 };
 
 /**
+ * Admin: Delete a podium prize record (cleanup / corrections).
+ */
+export const adminDeletePodiumPrize = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const { registrationId, prizeType } = req.params;
+
+    if (!registrationId || !prizeType) {
+      return res.status(400).json({
+        success: false,
+        message: "registrationId and prizeType are required.",
+      });
+    }
+
+    const deleted = await Prize.findOneAndDelete({
+      registrationId: String(registrationId || "").trim().toUpperCase(),
+      prizeType: String(prizeType || "").trim().toLowerCase(),
+    });
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Prize record not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Podium prize deleted successfully.",
+      prize: deleted,
+    });
+  } catch (error) {
+    console.error("Error in adminDeletePodiumPrize:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete podium prize.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Admin: Record the Audience Choice winner for a voting session and close it.
  */
 export const adminRecordAudienceChoiceWinner = async (req, res) => {
