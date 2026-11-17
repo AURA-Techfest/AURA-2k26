@@ -43,9 +43,11 @@ export default function AudienceVoting() {
   const [registrationId, setRegistrationId] = useState("");
   const [participantName, setParticipantName] = useState("");
   const [voterId, setVoterId] = useState("");
+  const [voterName, setVoterName] = useState("");
   const [candidateRegistrationId, setCandidateRegistrationId] =
     useState("");
   const [hasVoted, setHasVoted] = useState(false);
+  const isVoterMode = voterId.trim().length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voteSuccessMessage, setVoteSuccessMessage] = useState("");
 
@@ -129,6 +131,38 @@ export default function AudienceVoting() {
     results.forEach((r) => map.set(r.candidateRegistrationId, r));
     return map;
   }, [results]);
+
+  const handleRegisterVoter = async () => {
+    const trimmedName = voterName.trim();
+    if (!trimmedName) {
+      setErrorMessage("Please enter your name to register.");
+      return;
+    }
+    setIsSubmitting(true);
+    setErrorMessage("");
+    setVoteSuccessMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/voting/voters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmedName, type: "spectator" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to register voter.");
+      }
+      setVoterId(data.voter.voterId);
+      setVoteSuccessMessage(
+        `Voter registered! Your voter ID is ${data.voter.voterId}. You can now cast your vote.`
+      );
+      await fetchCurrent();
+    } catch (err) {
+      console.error("Failed to register voter:", err);
+      setErrorMessage(err.message || "Failed to register voter.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleVote = async (e) => {
     e?.preventDefault();
@@ -345,6 +379,20 @@ export default function AudienceVoting() {
                     className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                   />
                 </div>
+                {isVoterMode && (
+                  <div>
+                    <label className="block text-sm text-white/70 mb-1">
+                      Voter Name
+                    </label>
+                    <input
+                      type="text"
+                      value={voterName}
+                      onChange={(e) => setVoterName(e.target.value)}
+                      placeholder="Your name"
+                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
                     Vote for
@@ -372,6 +420,17 @@ export default function AudienceVoting() {
                   <div className="flex items-center gap-2 text-red-400 text-sm">
                     <AlertCircle size={16} /> {errorMessage}
                   </div>
+                )}
+
+                {isVoterMode && (
+                  <button
+                    type="button"
+                    onClick={handleRegisterVoter}
+                    disabled={isSubmitting}
+                    className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/20 transition"
+                  >
+                    {isSubmitting ? "Registering…" : "Register to get Voter ID"}
+                  </button>
                 )}
 
                 <button
