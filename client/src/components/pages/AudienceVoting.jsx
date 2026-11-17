@@ -81,12 +81,19 @@ export default function AudienceVoting() {
     fetchCurrent();
   }, [fetchCurrent]);
 
-  // Support deep-linking via QR (?voterId=...) → prefill voter mode on the voting portal
+  // Support deep-linking via QR (?voterId=... for spectators, ?mode=participant&regId=...&name=... for participants)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const voterIdParam = params.get("voterId");
+    const modeParam = params.get("mode");
+    const regIdParam = params.get("regId");
+    const nameParam = params.get("name");
+
     if (voterIdParam) {
       setVoterId(voterIdParam);
+    } else if (modeParam === "participant" && regIdParam && nameParam) {
+      setRegistrationId(regIdParam);
+      setParticipantName(nameParam);
     }
   }, []);
 

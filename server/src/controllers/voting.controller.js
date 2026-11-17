@@ -233,7 +233,29 @@ export const createVoter = async (req, res) => {
     const crypto = await import("crypto");
     const voterId = `AURA-V-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
-    const voter = await Voter.create({
+    // Deduplicate on-spot voters by contact (phone or email) so the same
+    // person cannot register multiple voter identities (e.g. fake/different names).
+    const filter = {};
+    if (phone) {
+      filter.phone = String(phone).trim();
+    } else if (email) {
+      filter.email = String(email).trim().toLowerCase();
+    }
+
+    let voter;
+    if (Object.keys(filter).length > 0) {
+      voter = await Voter.findOne({ ...filter });
+    }
+
+    if (voter) {
+      return res.status(200).json({
+        success: true,
+        message: "Voter already registered.",
+        voter,
+      });
+    }
+
+    voter = await Voter.create({
       voterId,
       name: trimmedName,
       phone: phone ? String(phone).trim() : undefined,
