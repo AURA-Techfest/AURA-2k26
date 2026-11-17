@@ -79,6 +79,15 @@ export default function AudienceVoting() {
     fetchCurrent();
   }, [fetchCurrent]);
 
+  // Support deep-linking via QR (?voterId=...) → prefill voter mode on the voting portal
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const voterIdParam = params.get("voterId");
+    if (voterIdParam) {
+      setVoterId(voterIdParam);
+    }
+  }, []);
+
   // Poll live session while active
   useEffect(() => {
     if (!session || session.status !== "active") return;
