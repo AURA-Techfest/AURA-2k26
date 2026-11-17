@@ -8,6 +8,8 @@ import {
   getVotingResults,
   adminRecordAudienceChoiceWinner,
   adminRecordPodiumPrizes,
+  adminListVoters,
+  adminCloseSession,
 } from "../controllers/voting.controller.js";
 
 const router = express.Router();
@@ -26,6 +28,12 @@ router.post("/sessions/:id/votes", castAudienceVote);
 
 // Public: voting results / tally
 router.get("/sessions/:id/results", getVotingResults);
+
+// Admin: list voters (spectators / volunteers) registered for Audience Choice voting
+router.get("/voters", requireAdmin, adminListVoters);
+
+// Admin: close an Audience Choice voting session manually
+router.post("/sessions/:id/close", requireAdmin, adminCloseSession);
 
 // Admin: record Audience Choice winner and close session
 router.post("/sessions/:id/winner", requireAdmin, adminRecordAudienceChoiceWinner);

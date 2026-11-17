@@ -282,6 +282,109 @@ export const createVoter = async (req, res) => {
 };
 
 /**
+ * Admin: List voters (spectators / volunteers) registered for Audience Choice voting.
+ */
+export const adminListVoters = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const { type, search } = req.query;
+    const query = {};
+    if (type) query.type = type;
+
+    const voters = await Voter.find(query).sort({ createdAt: -1 });
+
+    if (search) {
+      const regex = new RegExp(String(search).trim(), "i");
+      voters.data = voters.data.filter(
+        (v) =>
+          v.name.toLowerCase().includes(String(search).trim().toLowerCase()) ||
+          v.voterId.toLowerCase().includes(String(search).trim().toLowerCase()) ||
+          (v.phone || "").toLowerCase().includes(String(search).trim().toLowerCase())
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      count: voters.data.length,
+      voters: voters.data,
+    });
+  } catch (error) {
+    console.error("Error in adminListVoters:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to list voters.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Admin: Close an Audience Choice voting session manually.
+ */
+export const adminCloseSession = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const { id } = req.params;
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    session.status = "closed";
+    session.closedAt = new Date();
+    await session.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Voting session closed manually.",
+      session,
+    });
+  } catch (error) {
+    console.error("Error in adminCloseSession:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to close voting session.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Public: Cast a single Audience Choice vote.
  * Rules:
  * - Session must be active and within the voting window.
@@ -403,6 +506,13 @@ export const castAudienceVote = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Vote cast successfully!",
+      receipt: {
+        voteId: vote._id,
+        voterKey: vote.voterKey,
+        candidateRegistrationId: vote.candidateRegistrationId,
+        candidateTeamName: vote.candidateTeamName,
+        createdAt: vote.createdAt,
+      },
       vote,
     });
   } catch (error) {
