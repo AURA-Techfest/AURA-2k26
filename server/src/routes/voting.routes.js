@@ -3,6 +3,7 @@ import { requireAdmin } from "../middleware/adminAuth.middleware.js";
 import {
   adminStartVotingSession,
   getCurrentVotingSession,
+  createVoter,
   castAudienceVote,
   getVotingResults,
   adminRecordAudienceChoiceWinner,
@@ -16,6 +17,9 @@ router.post("/sessions", requireAdmin, adminStartVotingSession);
 
 // Public: current session status, candidates and tally
 router.get("/sessions/current", getCurrentVotingSession);
+
+// Public: register an on-the-spot voter (spectator / volunteer) for Audience Choice voting
+router.post("/voters", createVoter);
 
 // Public: cast a vote
 router.post("/sessions/:id/votes", castAudienceVote);

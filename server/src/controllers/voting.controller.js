@@ -2,6 +2,7 @@ import VotingSession from "../models/VotingSession.js";
 import AudienceVote from "../models/AudienceVote.js";
 import Prize from "../models/Prize.js";
 import Registration from "../models/Registration.js";
+import Voter from "../models/Voter.js";
 
 export const MIN_VOTING_MINUTES = 10;
 export const MAX_VOTING_MINUTES = 20;
@@ -214,28 +215,92 @@ export const getCurrentVotingSession = async (req, res) => {
 };
 
 /**
+ * Public: Register an on-the-spot voter (spectator / volunteer) for Audience Choice voting.
+ * Used when participants / volunteers / spectators do not have a registration record.
+ */
+export const createVoter = async (req, res) => {
+  try {
+    const { name, phone, email, type, registrationId } = req.body || {};
+    const trimmedName = String(name || "").trim();
+
+    if (!trimmedName) {
+      return res.status(400).json({
+        success: false,
+        message: "Voter name is required.",
+      });
+    }
+
+    const crypto = await import("crypto");
+    const voterId = `AURA-V-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
+    const voter = await Voter.create({
+      voterId,
+      name: trimmedName,
+      phone: phone ? String(phone).trim() : undefined,
+      email: email ? String(email).trim().toLowerCase() : undefined,
+      type: type || "spectator",
+      registrationId: registrationId
+        ? String(registrationId).trim().toUpperCase()
+        : undefined,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Voter registered successfully for on-spot voting.",
+      voter,
+    });
+  } catch (error) {
+    console.error("Error in createVoter:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to register voter for on-spot voting.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Public: Cast a single Audience Choice vote.
  * Rules:
  * - Session must be active and within the voting window.
- * - Voter (participant) can cast only one vote per session.
+ * - Voter (participant / on-spot voter) can cast only one vote per session.
  * - Candidate must not have already won a top prize (1st/2nd/3rd).
  */
 export const castAudienceVote = async (req, res) => {
   try {
     const { id } = req.params;
-    const { registrationId, participantName, candidateRegistrationId } =
+    const { voterId, registrationId, participantName, candidateRegistrationId } =
       req.body || {};
 
-    if (
-      !registrationId ||
-      !participantName ||
-      !candidateRegistrationId
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "registrationId, participantName and candidateRegistrationId are required.",
-      });
+    const trimmedVoterId = String(voterId || "").trim();
+    const voterContext = {};
+
+    if (trimmedVoterId) {
+      // Voter mode: volunteer / spectator registered on spot
+      const voter = await Voter.findOne({ voterId: trimmedVoterId });
+      if (!voter) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Voter not found. Please complete on-spot registration before voting.",
+        });
+      }
+      voterContext.voterKey = voter.voterId;
+      voterContext.registrationId = voter.registrationId || voter.voterId;
+      voterContext.participantName = voter.name;
+      voterContext.teamName = voter.registrationId || voter.name;
+    } else {
+      if (!registrationId || !participantName || !candidateRegistrationId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "registrationId, participantName and candidateRegistrationId are required.",
+        });
+      }
+      voterContext.voterKey = normalizeVoterKey(registrationId, participantName);
+      voterContext.registrationId = String(registrationId || "").trim().toUpperCase();
+      voterContext.participantName = String(participantName || "").trim();
+      voterContext.teamName = String(req.body?.teamName || "").trim();
     }
 
     const session = await VotingSession.findById(id);
@@ -289,11 +354,10 @@ export const castAudienceVote = async (req, res) => {
       });
     }
 
-    // One vote per participant per session
-    const voterKey = normalizeVoterKey(registrationId, participantName);
+    // One vote per participant / voter per session
     const existingVote = await AudienceVote.findOne({
       sessionId: activeSession._id,
-      voterKey,
+      voterKey: voterContext.voterKey,
     });
 
     if (existingVote) {
@@ -305,12 +369,10 @@ export const castAudienceVote = async (req, res) => {
 
     const vote = await AudienceVote.create({
       sessionId: activeSession._id,
-      voterKey,
-      registrationId: String(registrationId || "").trim().toUpperCase(),
-      participantName: String(participantName || "").trim(),
-      teamName: String(
-        req.body?.teamName || candidate.teamName || "",
-      ).trim(),
+      voterKey: voterContext.voterKey,
+      registrationId: String(voterContext.registrationId || "").trim().toUpperCase(),
+      participantName: String(voterContext.participantName || "").trim(),
+      teamName: String(voterContext.teamName || candidate.teamName || "").trim(),
       candidateRegistrationId: candidate.registrationId,
       candidateTeamName: candidate.teamName,
       createdAt: new Date(),
