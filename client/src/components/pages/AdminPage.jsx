@@ -23,6 +23,11 @@ export default function AdminPage() {
   const [starting, setStarting] = useState(false);
   const [closing, setClosing] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [candidates, setCandidates] = useState([]);
+  const [podiumQuery, setPodiumQuery] = useState("");
+  const [podiumResults, setPodiumResults] = useState([]);
+  const [podiumRank, setPodiumRank] = useState("first");
+  const [podiumSelected, setPodiumSelected] = useState(null);
 
   const adminFetch = async (path, options = {}) => {
     const res = await fetch(`${API_URL}${path}`, {
@@ -142,6 +147,55 @@ export default function AdminPage() {
     }
   };
 
+  const runPodiumSearch = () => {
+    const q = (podiumQuery || "").trim().toLowerCase();
+    const list = (candidates || []).filter(
+      (c) =>
+        !q ||
+        String(c.teamName || "").toLowerCase().includes(q) ||
+        String(c.registrationId || "").toLowerCase().includes(q),
+    );
+    setPodiumResults(list);
+  };
+
+  const assignPodiumPrize = async () => {
+    if (!podiumSelected) {
+      setErrorMessage("Please search and select a team from the dropdown first.");
+      return;
+    }
+    const rankValue = podiumRank === "first" ? 1 : podiumRank === "second" ? 2 : 3;
+    setRecording(true);
+    setErrorMessage("");
+    try {
+      const res = await adminFetch("/api/voting/prizes", {
+        method: "POST",
+        body: JSON.stringify({
+          prizes: [
+            {
+              registrationId: String(podiumSelected.registrationId || "").trim().toUpperCase(),
+              teamName: String(podiumSelected.teamName || "").trim(),
+              prizeType: podiumRank,
+              rank: rankValue,
+            },
+          ],
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPodiumSelected(null);
+        setPodiumQuery("");
+        setPodiumResults([]);
+        alert(`Podium prize recorded: ${podiumSelected.teamName} → ${podiumRank}`);
+        return;
+      }
+      setErrorMessage(data.message || "Failed to record podium prize.");
+    } catch (err) {
+      setErrorMessage("Failed to record podium prize.");
+    } finally {
+      setRecording(false);
+    }
+  };
+
   // Load data when authed
   useEffect(() => {
     if (!authed) return;
@@ -150,7 +204,11 @@ export default function AdminPage() {
       if (votersRes.status === 200) setVoters(votersRes.data.voters || []);
       const curRes = await fetch(`${API_URL}/api/voting/sessions/current`);
       const curData = await curRes.json();
-      if (curRes.ok) setSession(curData.session || null);
+      if (curRes.ok) {
+        setSession(curData.session || null);
+        setCandidates(curData.candidates || []);
+        setResults(curData.results || []);
+      }
     };
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -267,6 +325,86 @@ export default function AdminPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Podium / winner selection */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Trophy size={22} /> Audience Choice Podium — Pick Winning Teams
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <label className="block text-sm text-white/70 mb-1">Rank</label>
+              <select
+                value={podiumRank}
+                onChange={(e) => setPodiumRank(e.target.value)}
+                className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/40 mb-4"
+              >
+                <option value="first">1st Place</option>
+                <option value="second">2nd Place</option>
+                <option value="third">3rd Place</option>
+              </select>
+
+              <label className="block text-sm text-white/70 mb-1">Search team</label>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={podiumQuery}
+                  onChange={(e) => setPodiumQuery(e.target.value)}
+                  placeholder="Team name or reg ID"
+                  className="flex-1 bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                />
+                <button
+                  onClick={runPodiumSearch}
+                  className="px-4 py-3 bg-white text-black font-bold rounded-lg"
+                >
+                  Search
+                </button>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {podiumResults.length === 0 && <p className="text-white/50">No teams found.</p>}
+                {podiumResults.map((c) => (
+                  <button
+                    key={c.registrationId}
+                    onClick={() => setPodiumSelected(c)}
+                    className={`w-full text-left rounded-lg border px-4 py-2 ${
+                      podiumSelected?.registrationId === c.registrationId
+                        ? "border-amber-400/50 bg-amber-400/10"
+                        : "border-white/10 bg-black/30 hover:border-white/30"
+                    }`}
+                  >
+                    <p className="font-semibold">{c.teamName}</p>
+                    <p className="text-xs text-white/50">{c.registrationId}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-white/70 mb-2">Selected winner</p>
+              <div className="bg-black/30 border border-white/10 rounded-xl p-4 mb-4">
+                {podiumSelected ? (
+                  <>
+                    <p className="font-bold">{podiumSelected.teamName}</p>
+                    <p className="text-xs text-white/50">{podiumSelected.registrationId}</p>
+                  </>
+                ) : (
+                  <p className="text-white/50">No team selected yet.</p>
+                )}
+              </div>
+              <button
+                onClick={assignPodiumPrize}
+                disabled={recording || !podiumSelected}
+                className="w-full bg-amber-400/90 text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {recording ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Assign Winner & Record"}
+              </button>
+              <p className="text-white/50 text-sm mt-4">
+                Records the chosen team as the podium winner and marks them ineligible for future Audience Choice votes.
+              </p>
             </div>
           </div>
         </div>
