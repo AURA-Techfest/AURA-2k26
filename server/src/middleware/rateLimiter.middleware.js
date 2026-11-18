@@ -139,3 +139,84 @@ export class VerificationRateLimiter {
 }
 
 export const rsvpRateLimiter = new VerificationRateLimiter();
+
+/**
+ * Fixed-window write limiter for the public Audience Choice endpoints
+ * (voter registration and vote casting). Protects the Mongo write path from
+ * accidental floods (a stuck client on event day) and casual abuse.
+ *
+ * Deliberately generous and configurable: everyone at the venue often shares
+ * one NAT IP, so limits are per-IP with room for hundreds of real users.
+ * Read endpoints (session polling) are intentionally NOT limited — every
+ * open phone polls them from the same IP.
+ */
+export class WriteRateLimiter {
+  constructor(options = {}) {
+    this.windowMs = options.windowMs || 60 * 1000; // 1-minute fixed window
+    this.maxRequests = options.maxRequests || 60; // writes allowed per window
+    this.records = new Map();
+
+    // Periodic cleanup so idle IPs don't leak memory.
+    this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
+    if (this.cleanupInterval.unref) {
+      this.cleanupInterval.unref();
+    }
+  }
+
+  /**
+   * Count one write from an IP and report whether it is over the limit.
+   * The over-limit request still increments (it is counted, not free).
+   */
+  consume(ip) {
+    const now = Date.now();
+    const key = String(ip || "unknown");
+    let record = this.records.get(key);
+
+    if (!record || now > record.resetTime) {
+      record = { count: 0, resetTime: now + this.windowMs };
+      this.records.set(key, record);
+    }
+
+    record.count += 1;
+
+    if (record.count > this.maxRequests) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((record.resetTime - now) / 1000),
+      );
+      return { limited: true, retryAfterSeconds };
+    }
+
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+
+  /** Clear expired windows. */
+  cleanup() {
+    const now = Date.now();
+    for (const [k, v] of this.records.entries()) {
+      if (now > v.resetTime) {
+        this.records.delete(k);
+      }
+    }
+  }
+
+  /** Reset all records (useful for test suites). */
+  reset() {
+    this.records.clear();
+  }
+}
+
+// On-spot registration: ~30 new voters per minute per IP is far above what a
+// real desk produces, while stopping scripted floods. Env-overridable so the
+// limit can be tuned on Render without a redeploy.
+export const voterRegisterLimiter = new WriteRateLimiter({
+  windowMs: Number(process.env.VOTER_REGISTER_RATE_WINDOW_MS) || 60 * 1000,
+  maxRequests: Number(process.env.VOTER_REGISTER_RATE_MAX) || 30,
+});
+
+// Vote casting: higher ceiling (everyone votes inside one short window, all
+// behind the venue's NAT) but still bounded against a write flood.
+export const voteCastLimiter = new WriteRateLimiter({
+  windowMs: Number(process.env.VOTE_CAST_RATE_WINDOW_MS) || 60 * 1000,
+  maxRequests: Number(process.env.VOTE_CAST_RATE_MAX) || 150,
+});

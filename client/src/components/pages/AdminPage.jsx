@@ -9,6 +9,7 @@ import {
   Trophy,
   Eye,
   EyeOff,
+  X,
 } from "lucide-react";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
@@ -60,6 +61,7 @@ export default function AdminPage() {
   const [closing, setClosing] = useState(false);
   const [recording, setRecording] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [removingVoterId, setRemovingVoterId] = useState(null);
 
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
@@ -116,6 +118,34 @@ export default function AdminPage() {
       if (status === 200) setVoters(data.voters || []);
     } catch {
       /* ignore */
+    }
+  };
+
+  // Delete a voter AND their vote server-side. Confirm first — removing a
+  // voter changes the tally, and lets that person register/vote again.
+  const removeVoter = async (voter) => {
+    const confirmed = window.confirm(
+      `Delete voter "${voter.name}" (${voter.voterId})?\n\n` +
+        `This also removes their vote from the tally, and the same phone number will be able to register again.`,
+    );
+    if (!confirmed) return;
+
+    setRemovingVoterId(voter.voterId);
+    try {
+      const { status, data } = await adminFetch(
+        `/api/voting/voters/${encodeURIComponent(voter.voterId)}`,
+        { method: "DELETE" },
+      );
+      if (status === 200) {
+        ok(data.message || "Voter deleted.");
+        await Promise.all([loadVoters(), loadCurrent()]);
+      } else {
+        fail(data.message || "Failed to delete voter.");
+      }
+    } catch {
+      fail("Failed to delete voter.");
+    } finally {
+      setRemovingVoterId(null);
     }
   };
 
@@ -631,6 +661,19 @@ export default function AdminPage() {
                       {v.voterId} · {v.type}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => removeVoter(v)}
+                    disabled={removingVoterId === v.voterId}
+                    title="Delete voter and their vote"
+                    className="shrink-0 p-1.5 rounded-md border border-white/15 text-white/50 hover:text-red-400 hover:border-red-400/50 transition disabled:opacity-40"
+                  >
+                    {removingVoterId === v.voterId ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <X size={14} />
+                    )}
+                  </button>
                 </div>
               ))}
             </div>

@@ -4,6 +4,17 @@ import Prize from "../models/Prize.js";
 import Registration from "../models/Registration.js";
 import Voter from "../models/Voter.js";
 
+import {
+  voterRegisterLimiter,
+  voteCastLimiter,
+} from "../middleware/rateLimiter.middleware.js";
+
+// First hop of x-forwarded-for — Render/Express set this behind the proxy.
+export const clientIpOf = (req) =>
+  String(req.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim() || req.socket?.remoteAddress || "unknown";
+
 export const MIN_VOTING_MINUTES = 10;
 export const MAX_VOTING_MINUTES = 20;
 const TOP_PRIZE_TYPES = ["first", "second", "third"];
@@ -301,7 +312,6 @@ export const getCurrentVotingSession = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch current voting session.",
-      error: error.message,
     });
   }
 };
@@ -311,6 +321,16 @@ export const getCurrentVotingSession = async (req, res) => {
  * Used when participants / volunteers / spectators do not have a registration record.
  */
 export const createVoter = async (req, res) => {
+  // Rate limit first — cheapest possible rejection, no DB round trip.
+  const rate = voterRegisterLimiter.consume(clientIpOf(req));
+  if (rate.limited) {
+    res.set("Retry-After", String(rate.retryAfterSeconds));
+    return res.status(429).json({
+      success: false,
+      message: "Too many registration attempts. Please wait a moment and try again.",
+    });
+  }
+
   try {
     const { name, phone, email, type, registrationId } = req.body || {};
     const trimmedName = String(name || "").trim();
@@ -319,6 +339,14 @@ export const createVoter = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Voter name is required.",
+      });
+    }
+
+    // Length cap keeps oversized payloads out of the DB and the admin list.
+    if (trimmedName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Voter name must be 100 characters or fewer.",
       });
     }
 
@@ -392,11 +420,36 @@ export const createVoter = async (req, res) => {
       voter,
     });
   } catch (error) {
+    // Unique partial indexes on phone/email: if two registrations for the
+    // same person race past the pre-check, the loser gets a duplicate-key
+    // error — resolve it to the existing voter (idempotent 200) instead of
+    // a 500 or a second voter identity.
+    if (error?.code === 11000) {
+      try {
+        const body = req.body || {};
+        const dupPhone = String(body.phone || "").replace(/[\s\-()]/g, "");
+        const dupEmail = String(body.email || "").trim().toLowerCase();
+        const dupFilters = [];
+        if (dupPhone) dupFilters.push({ phone: dupPhone });
+        if (dupEmail) dupFilters.push({ email: dupEmail });
+
+        const existing =
+          dupFilters.length > 0 ? await Voter.findOne({ $or: dupFilters }) : null;
+        if (existing) {
+          return res.status(200).json({
+            success: true,
+            message: "Voter already registered.",
+            voter: existing,
+          });
+        }
+      } catch (dupLookupError) {
+        console.error("Duplicate-key recovery failed in createVoter:", dupLookupError);
+      }
+    }
     console.error("Error in createVoter:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to register voter for on-spot voting.",
-      error: error.message,
     });
   }
 };
@@ -450,6 +503,64 @@ export const adminListVoters = async (req, res) => {
       success: false,
       message: "Failed to list voters.",
       error: error.message,
+    });
+  }
+};
+
+/**
+ * Admin: Delete a voter AND their vote in the current tally.
+ * Deleting the vote is essential — without it, the same phone could
+ * re-register as a "new" voter and vote a second time.
+ */
+export const adminDeleteVoter = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const normalizedVoterId = String(req.params.voterId || "").trim();
+    const voter = await Voter.findOne({ voterId: normalizedVoterId });
+
+    if (!voter) {
+      return res.status(404).json({
+        success: false,
+        message: "Voter not found.",
+      });
+    }
+
+    const deletedVotes = await AudienceVote.deleteMany({
+      voterKey: voter.voterId,
+    });
+    await Voter.deleteOne({ _id: voter._id });
+
+    return res.status(200).json({
+      success: true,
+      message: `Voter ${voter.voterId} deleted${
+        deletedVotes.deletedCount > 0
+          ? ` along with ${deletedVotes.deletedCount} vote(s) from the tally.`
+          : "."
+      }`,
+      votesRemoved: deletedVotes.deletedCount,
+      voter,
+    });
+  } catch (error) {
+    console.error("Error in adminDeleteVoter:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete voter.",
     });
   }
 };
@@ -512,10 +623,47 @@ export const adminCloseSession = async (req, res) => {
  * - Candidate must not have already won a top prize (1st/2nd/3rd).
  */
 export const castAudienceVote = async (req, res) => {
+  // Rate limit first — cheapest possible rejection, no DB round trip.
+  const rate = voteCastLimiter.consume(clientIpOf(req));
+  if (rate.limited) {
+    res.set("Retry-After", String(rate.retryAfterSeconds));
+    return res.status(429).json({
+      success: false,
+      message: "Too many vote attempts. Please wait a moment and try again.",
+    });
+  }
+
   try {
     const { id } = req.params;
     const { voterId, registrationId, participantName, candidateRegistrationId } =
       req.body || {};
+
+    // Session gate BEFORE any identity lookups: when voting is closed this is
+    // the cheapest correct rejection (and a bogus voter ID against a closed
+    // session must report "not active", not "voter not found").
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    const activeSession = await closeSessionIfExpired(session);
+    if (activeSession.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Voting is not active for this session.",
+      });
+    }
+
+    const endsAtMs = new Date(activeSession.endsAt).getTime();
+    if (endsAtMs < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "The Audience Choice voting window has ended.",
+      });
+    }
 
     const trimmedVoterId = String(voterId || "").trim();
     const voterContext = {};
@@ -574,30 +722,6 @@ export const castAudienceVote = async (req, res) => {
       voterContext.registrationId = normalizedRegId;
       voterContext.participantName = canonicalName;
       voterContext.teamName = registration.teamName;
-    }
-
-    const session = await VotingSession.findById(id);
-    if (!session) {
-      return res.status(404).json({
-        success: false,
-        message: "Voting session not found.",
-      });
-    }
-
-    const activeSession = await closeSessionIfExpired(session);
-    if (activeSession.status !== "active") {
-      return res.status(400).json({
-        success: false,
-        message: "Voting is not active for this session.",
-      });
-    }
-
-    const endsAtMs = new Date(activeSession.endsAt).getTime();
-    if (endsAtMs < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: "The Audience Choice voting window has ended.",
-      });
     }
 
     // Candidate eligibility: exclude teams that already won 1st/2nd/3rd
@@ -677,7 +801,6 @@ export const castAudienceVote = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to cast Audience Choice vote.",
-      error: error.message,
     });
   }
 };
@@ -1101,7 +1224,6 @@ export const getVotingResults = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch voting results.",
-      error: error.message,
     });
   }
 };

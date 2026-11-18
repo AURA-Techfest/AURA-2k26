@@ -43,6 +43,28 @@ const voterSchema = new mongoose.Schema(
   },
 );
 
+// One person = one voter, enforced by the database itself. The controller
+// checks phone/email before inserting, but two concurrent registrations could
+// both pass that check — the unique index makes the second insert fail so we
+// can return the existing voter instead of creating a duplicate identity.
+// Partial (not sparse) so only real, non-empty values are deduped and
+// documents missing the field never collide with each other.
+voterSchema.index(
+  { phone: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { phone: { $type: "string", $gt: "" } },
+  },
+);
+
+voterSchema.index(
+  { email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { email: { $type: "string", $gt: "" } },
+  },
+);
+
 const Voter = mongoose.model("Voter", voterSchema);
 
 export default Voter;

@@ -14,6 +14,12 @@ import {
   buildTally,
 } from "../src/controllers/voting.controller.js";
 
+import {
+  WriteRateLimiter,
+  voterRegisterLimiter,
+  voteCastLimiter,
+} from "../src/middleware/rateLimiter.middleware.js";
+
 async function testVoting() {
   console.log("==================================================");
   console.log("   AURA 2K26 — Audience Choice Voting Tests ");
@@ -137,6 +143,56 @@ async function testVoting() {
   assert(
     matchTeamMember({}, "Anyone") === null,
     "Missing registration records reject every name",
+  );
+
+  // ---- Write rate limiter (public registration / vote endpoints) ----
+  const limiter = new WriteRateLimiter({ windowMs: 60 * 1000, maxRequests: 3 });
+  assert(limiter.consume("1.1.1.1").limited === false, "1st write allowed");
+  assert(limiter.consume("1.1.1.1").limited === false, "2nd write allowed");
+  assert(limiter.consume("1.1.1.1").limited === false, "3rd write allowed (at max)");
+  const overLimit = limiter.consume("1.1.1.1");
+  assert(
+    overLimit.limited === true && overLimit.retryAfterSeconds >= 1,
+    "4th write is rate limited with Retry-After seconds",
+  );
+  assert(
+    limiter.consume("2.2.2.2").limited === false,
+    "Rate limit is per-IP (another IP unaffected — venue NAT friendly)",
+  );
+
+  const shortLimiter = new WriteRateLimiter({ windowMs: 40, maxRequests: 1 });
+  assert(shortLimiter.consume("3.3.3.3").limited === false, "Short-window 1st write allowed");
+  assert(shortLimiter.consume("3.3.3.3").limited === true, "Short-window over limit");
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert(
+    shortLimiter.consume("3.3.3.3").limited === false,
+    "Window expiry resets the counter",
+  );
+
+  const cleanupLimiter = new WriteRateLimiter({ windowMs: 30, maxRequests: 5 });
+  cleanupLimiter.consume("4.4.4.4");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  cleanupLimiter.cleanup();
+  assert(
+    cleanupLimiter.records.size === 0,
+    "cleanup() drops expired IP windows (no memory leak)",
+  );
+  cleanupLimiter.consume("5.5.5.5");
+  cleanupLimiter.reset();
+  assert(cleanupLimiter.records.size === 0, "reset() clears all records");
+
+  // Production instances: 30 registrations / 150 votes per minute per IP,
+  // env-overridable without a redeploy.
+  assert(
+    voterRegisterLimiter instanceof WriteRateLimiter &&
+      voterRegisterLimiter.maxRequests ===
+        Number(process.env.VOTER_REGISTER_RATE_MAX || 30),
+    "Voter registration limiter defaults to 30/min per IP (env-overridable)",
+  );
+  assert(
+    voteCastLimiter instanceof WriteRateLimiter &&
+      voteCastLimiter.maxRequests === Number(process.env.VOTE_CAST_RATE_MAX || 150),
+    "Vote casting limiter defaults to 150/min per IP (env-overridable)",
   );
 
   console.log("==================================================");
