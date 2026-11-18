@@ -59,9 +59,6 @@ export default function AdminPage() {
   const [recording, setRecording] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Audience Choice winner picker
-  const [selectedWinner, setSelectedWinner] = useState(null);
-
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
   const [podiumResults, setPodiumResults] = useState([]);
@@ -243,14 +240,15 @@ export default function AdminPage() {
     }
   };
 
-  // ---------------- Audience Choice winner ----------------
-  const recordSelectedWinner = async () => {
-    if (!selectedWinner) {
-      fail("Select a team first — click the Winner button on a row.");
-      return;
-    }
+  // ---------------- Audience Choice winner (decided by votes only) ----------------
+  // No manual selection: the server records the current vote leader.
+  const recordVoteLeader = async () => {
     if (!session?._id) {
       fail("Start a voting session first.");
+      return;
+    }
+    if (!votesCast) {
+      fail("No votes yet — the winner is decided once the audience votes.");
       return;
     }
     setRecording(true);
@@ -259,16 +257,15 @@ export default function AdminPage() {
     try {
       const { status, data } = await adminFetch(
         `/api/voting/sessions/${session._id}/winner`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            candidateRegistrationId: selectedWinner.registrationId,
-          }),
-        },
+        { method: "POST", body: JSON.stringify({}) },
       );
       if (status === 200) {
-        ok(`Audience Choice winner recorded: ${cleanName(selectedWinner.teamName)}`);
-        setSelectedWinner(null);
+        const teamName = cleanName(data?.prize?.teamName || "");
+        ok(
+          teamName
+            ? `Audience Choice winner recorded: ${teamName}`
+            : data.message || "Audience Choice winner recorded.",
+        );
         loadCurrent();
         loadPrizes();
       } else {
@@ -403,15 +400,6 @@ export default function AdminPage() {
   }, [authed, candidates]);
 
   // ---------------- Derived ----------------
-  const voteCountByRegId = new Map(results.map((r) => [r.candidateRegistrationId, r.votes]));
-  const winnerRows = [...(candidates || [])]
-    .map((c) => ({ ...c, votes: voteCountByRegId.get(c.registrationId) || 0 }))
-    .sort(
-      (a, b) =>
-        b.votes - a.votes ||
-        String(a.teamName || "").localeCompare(String(b.teamName || "")),
-    );
-
   const sessionStatus = !session
     ? "No Session Yet"
     : session.status === "active"
@@ -608,53 +596,41 @@ export default function AdminPage() {
           </h2>
 
           <div className="max-h-72 overflow-y-auto space-y-2 mb-4">
-            {winnerRows.length === 0 && (
-              <p className="text-white/50">No eligible candidate teams found.</p>
+            {results.length === 0 && (
+              <p className="text-white/50">
+                No votes yet — the winner will be decided by the audience's votes.
+              </p>
             )}
-            {winnerRows.map((c) => {
-              const isSelected = selectedWinner?.registrationId === c.registrationId;
-              return (
-                <div
-                  key={c.registrationId}
-                  className={`flex items-center justify-between rounded-lg border px-4 py-2 ${
-                    isSelected
-                      ? "border-amber-400/60 bg-amber-400/10"
-                      : "border-white/10 bg-black/30"
-                  }`}
-                >
-                  <div className="min-w-0 pr-3">
-                    <p className="font-semibold truncate">{cleanName(c.teamName)}</p>
-                    <p className="text-xs text-white/50">
-                      {c.registrationId} · {c.votes} vote{c.votes === 1 ? "" : "s"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedWinner(isSelected ? null : c)}
-                    className={`shrink-0 px-3 py-1.5 text-sm font-bold rounded-lg border ${
-                      isSelected
-                        ? "bg-amber-400 text-black border-amber-400"
-                        : "border-white/20 text-white/70 hover:text-white hover:border-white/50"
-                    }`}
-                  >
-                    {isSelected ? "Selected" : "Winner"}
-                  </button>
+            {results.map((r) => (
+              <div
+                key={r.candidateRegistrationId}
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-4 py-2"
+              >
+                <div className="min-w-0 pr-3">
+                  <p className="font-semibold truncate">{cleanName(r.candidateTeamName)}</p>
+                  <p className="text-xs text-white/50">{r.candidateRegistrationId}</p>
                 </div>
-              );
-            })}
+                <p className="shrink-0 text-sm font-bold text-amber-300">
+                  {r.votes} vote{r.votes === 1 ? "" : "s"} · {r.percentage}%
+                </p>
+              </div>
+            ))}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
             <p className="text-sm text-white/60">
-              {selectedWinner
-                ? `Selected: ${cleanName(selectedWinner.teamName)}`
-                : "Click Winner on a row, then record it."}
+              The winner is decided only by votes — this records the current vote leader.
             </p>
             <button
-              onClick={recordSelectedWinner}
-              disabled={recording || !selectedWinner}
+              onClick={recordVoteLeader}
+              disabled={recording || !session || !votesCast}
               className="px-6 py-3 bg-amber-400 text-black font-bold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {recording ? <Loader2 className="animate-spin" size={20} /> : "Set As Winner"}
+              {recording ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                "Record Audience Choice Winner"
+              )}
             </button>
           </div>
 
