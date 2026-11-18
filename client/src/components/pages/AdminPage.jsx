@@ -267,7 +267,7 @@ export default function AdminPage() {
         },
       );
       if (status === 200) {
-        ok(`Audience Choice winner recorded: ${selectedWinner.teamName}`);
+        ok(`Audience Choice winner recorded: ${cleanName(selectedWinner.teamName)}`);
         setSelectedWinner(null);
         loadCurrent();
         loadPrizes();
@@ -282,10 +282,20 @@ export default function AdminPage() {
   };
 
   // ---------------- Podium ----------------
+  // Some registered team names contain stray quotes/spaces (e.g. "TECHWALK") —
+  // strip them so search and display work predictably.
+  const cleanName = (s) =>
+    String(s || "")
+      .replace(/^[\s"'`]+/, "")
+      .replace(/[\s"'`]+$/, "");
+
   const runPodiumSearch = (qOverride) => {
-    const q = (qOverride ?? podiumQuery ?? "").trim().toLowerCase();
+    const q = cleanName(qOverride ?? podiumQuery ?? "").toLowerCase();
     const list = (candidates || []).filter(
-      (c) => !q || String(c.teamName || "").toLowerCase().startsWith(q),
+      (c) =>
+        !q ||
+        cleanName(c.teamName).toLowerCase().startsWith(q) ||
+        String(c.registrationId || "").toLowerCase().startsWith(q),
     );
     setPodiumResults(list);
   };
@@ -306,7 +316,7 @@ export default function AdminPage() {
           prizes: [
             {
               registrationId: String(podiumSelected.registrationId || "").trim().toUpperCase(),
-              teamName: String(podiumSelected.teamName || "").trim(),
+              teamName: cleanName(podiumSelected.teamName),
               prizeType: podiumRank,
               rank: rankValue,
             },
@@ -314,7 +324,7 @@ export default function AdminPage() {
         }),
       });
       if (status === 201) {
-        ok(`Podium prize recorded: ${podiumSelected.teamName} → ${PRIZE_LABELS[podiumRank]}`);
+        ok(`Podium prize recorded: ${cleanName(podiumSelected.teamName)} → ${PRIZE_LABELS[podiumRank]}`);
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
@@ -613,7 +623,7 @@ export default function AdminPage() {
                   }`}
                 >
                   <div className="min-w-0 pr-3">
-                    <p className="font-semibold truncate">{c.teamName}</p>
+                    <p className="font-semibold truncate">{cleanName(c.teamName)}</p>
                     <p className="text-xs text-white/50">
                       {c.registrationId} · {c.votes} vote{c.votes === 1 ? "" : "s"}
                     </p>
@@ -636,7 +646,7 @@ export default function AdminPage() {
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
             <p className="text-sm text-white/60">
               {selectedWinner
-                ? `Selected: ${selectedWinner.teamName}`
+                ? `Selected: ${cleanName(selectedWinner.teamName)}`
                 : "Click Winner on a row, then record it."}
             </p>
             <button
@@ -660,14 +670,14 @@ export default function AdminPage() {
                   <span className="text-amber-300 font-semibold">
                     {PRIZE_LABELS[p.prizeType] || p.prizeType}:
                   </span>{" "}
-                  {p.teamName}{" "}
+                  {cleanName(p.teamName)}{" "}
                   <span className="text-white/40">({p.registrationId})</span>
                 </p>
               ))}
               {audiencePrize && (
                 <p className="text-sm text-white/80">
                   <span className="text-emerald-300 font-semibold">Audience Choice:</span>{" "}
-                  {audiencePrize.teamName}{" "}
+                  {cleanName(audiencePrize.teamName)}{" "}
                   <span className="text-white/40">({audiencePrize.registrationId})</span>
                 </p>
               )}
@@ -725,7 +735,7 @@ export default function AdminPage() {
                         : "border-white/10 bg-black/30 hover:border-white/30"
                     }`}
                   >
-                    <p className="font-semibold">{c.teamName}</p>
+                    <p className="font-semibold">{cleanName(c.teamName)}</p>
                     <p className="text-xs text-white/50">{c.registrationId}</p>
                   </button>
                 ))}
@@ -737,7 +747,7 @@ export default function AdminPage() {
               <div className="bg-black/30 border border-white/10 rounded-xl p-4 mb-4">
                 {podiumSelected ? (
                   <>
-                    <p className="font-bold">{podiumSelected.teamName}</p>
+                    <p className="font-bold">{cleanName(podiumSelected.teamName)}</p>
                     <p className="text-xs text-white/50">{podiumSelected.registrationId}</p>
                   </>
                 ) : (
