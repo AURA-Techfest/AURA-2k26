@@ -603,6 +603,10 @@ export default function AdminPage() {
 
   const removeTopPrize = async (holder) => {
     if (!holder) return;
+    const confirmed = window.confirm(
+      `Remove ${PRIZE_LABELS[holder.prizeType] || "this prize"} from ${cleanName(holder.teamName)}?\n\nThe slot becomes vacant (the team becomes eligible for Audience Choice again). You can re-assign it later.`,
+    );
+    if (!confirmed) return;
     setDeleting(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -632,6 +636,10 @@ export default function AdminPage() {
 
   const removeAudiencePrize = async () => {
     if (!audiencePrize) return;
+    const confirmed = window.confirm(
+      `Remove ${cleanName(audiencePrize.teamName)} as the Audience Choice winner?\n\nYou can record the winner again from the tally above.`,
+    );
+    if (!confirmed) return;
     setDeleting(true);
     setErrorMessage("");
     setSuccessMessage("");

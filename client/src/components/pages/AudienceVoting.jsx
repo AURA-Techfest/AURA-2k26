@@ -131,7 +131,10 @@ export default function AudienceVoting() {
     } catch (err) {
       console.error("Failed to fetch voting session:", err);
       setErrorMessage(err.message || "Failed to load voting session.");
-      setSession(null);
+      // Deliberately NOT clearing the session: one failed poll (Render cold
+      // start, venue WiFi blip) must not collapse a live voting page back to
+      // "not started". On initial load the session is already null — the
+      // status card then offers a Try again button instead.
     } finally {
       setLoading(false);
     }
@@ -522,10 +525,31 @@ export default function AudienceVoting() {
         <div className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center max-w-xl mx-auto">
           <Clock className="mx-auto mb-4 text-white/60" size={40} />
           <h3 className="text-2xl font-bold mb-2">Audience Choice Voting</h3>
-          <p className="text-white/60">
-            The Audience Choice voting window has not started yet. The
-            organizing committee will open voting shortly.
-          </p>
+          {errorMessage ? (
+            <>
+              {/* Distinguish "server unreachable" from "window not open" —
+                  telling a voter "not started yet" when the server merely
+                  timed out would send them away from an open vote. */}
+              <p className="text-white/60">
+                Couldn't reach the voting server — your connection may have
+                dropped. Voting may already be open.
+              </p>
+              <button
+                onClick={() => {
+                  setLoading(true);
+                  fetchCurrent();
+                }}
+                className="mt-5 bg-white text-black font-bold px-6 py-3 rounded-lg hover:bg-white/90 transition"
+              >
+                Try again
+              </button>
+            </>
+          ) : (
+            <p className="text-white/60">
+              The Audience Choice voting window has not started yet. The
+              organizing committee will open voting shortly.
+            </p>
+          )}
         </div>
       );
     }
