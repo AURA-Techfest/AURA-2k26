@@ -184,9 +184,18 @@ export const getCurrentVotingSession = async (req, res) => {
     }
 
     if (!session) {
+      // Still return the eligible teams so the admin podium (1st/2nd/3rd)
+      // team search works even before a voting session is started.
+      const candidates = await getEligibleCandidates();
       return res.status(200).json({
         success: true,
         session: null,
+        timeRemainingSeconds: 0,
+        candidates,
+        votesCast: 0,
+        results: [],
+        leader: null,
+        winner: null,
         message: "No Audience Choice voting session has been started yet.",
       });
     }
