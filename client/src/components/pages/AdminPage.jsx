@@ -165,13 +165,10 @@ export default function AdminPage() {
     }
   };
 
-  const runPodiumSearch = () => {
-    const q = (podiumQuery || "").trim().toLowerCase();
+  const runPodiumSearch = (qOverride) => {
+    const q = (qOverride ?? podiumQuery ?? "").trim().toLowerCase();
     const list = (candidates || []).filter(
-      (c) =>
-        !q ||
-        String(c.teamName || "").toLowerCase().includes(q) ||
-        String(c.registrationId || "").toLowerCase().includes(q),
+      (c) => !q || String(c.teamName || "").toLowerCase().startsWith(q),
     );
     setPodiumResults(list);
   };
@@ -406,12 +403,15 @@ export default function AdminPage() {
                 <input
                   type="text"
                   value={podiumQuery}
-                  onChange={(e) => setPodiumQuery(e.target.value)}
-                  placeholder="Team name or reg ID"
+                  onChange={(e) => {
+                    setPodiumQuery(e.target.value);
+                    runPodiumSearch(e.target.value);
+                  }}
+                  placeholder="Type team name to filter (e.g. T…)"
                   className="flex-1 bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                 />
                 <button
-                  onClick={runPodiumSearch}
+                  onClick={() => runPodiumSearch(podiumQuery)}
                   className="px-4 py-3 bg-white text-black font-bold rounded-lg"
                 >
                   Search
