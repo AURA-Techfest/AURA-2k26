@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Users,
+  UserPlus,
+  KeyRound,
   ArrowLeft,
   Timer,
   Loader2,
@@ -48,9 +50,13 @@ export default function AudienceVoting() {
   const [candidateRegistrationId, setCandidateRegistrationId] =
     useState("");
   const [hasVoted, setHasVoted] = useState(false);
-  const isVoterMode = voterId.trim().length > 0;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [voteSuccessMessage, setVoteSuccessMessage] = useState("");
+
+  // Registration wizard: pick who you are first, then vote.
+  //   choose -> register | existing | participant -> vote
+  const [step, setStep] = useState("choose");
+  const [identityMode, setIdentityMode] = useState(null); // "voter" | "participant"
 
 
 
@@ -94,9 +100,13 @@ export default function AudienceVoting() {
 
     if (voterIdParam) {
       setVoterId(voterIdParam);
+      setIdentityMode("voter");
+      setStep("vote");
     } else if (modeParam === "participant" && regIdParam && nameParam) {
       setRegistrationId(regIdParam);
       setParticipantName(nameParam);
+      setIdentityMode("participant");
+      setStep("vote");
     }
   }, []);
 
@@ -173,11 +183,11 @@ export default function AudienceVoting() {
         throw new Error(data.message || "Failed to register voter.");
       }
       setVoterId(data.voter.voterId);
-      setVoteSuccessMessage(
-        data.voter.phone === phoneDigits && res.status === 200
-          ? `You're already registered! Your voter ID is ${data.voter.voterId}.`
-          : `Voter registered! Your voter ID is ${data.voter.voterId}. You can now cast your vote.`
-      );
+      // Registration done — jump straight to voting with the identity set.
+      // The Voter ID chip on the next screen is the confirmation.
+      setIdentityMode("voter");
+      setStep("vote");
+      setErrorMessage("");
       await fetchCurrent();
     } catch (err) {
       console.error("Failed to register voter:", err);
@@ -191,32 +201,29 @@ export default function AudienceVoting() {
     e?.preventDefault();
     if (!session) return;
 
-    const trimmedVoterCode = voterId.trim();
-    const trimmedRegId = registrationId.trim().toUpperCase();
-    const trimmedParticipantName = participantName.trim();
     const trimmedCandidateId = candidateRegistrationId.trim().toUpperCase();
 
-    // Determine voting mode: on-spot voter (volunteer / spectator) OR participant
-    const isVoterMode = trimmedVoterCode.length > 0;
-
-    if (isVoterMode) {
-      if (!trimmedCandidateId) {
-        setErrorMessage("Please select a candidate team to vote for.");
-        return;
-      }
-    } else {
-      if (!trimmedRegId) {
-        setErrorMessage("Please enter the Team Registration ID.");
-        return;
-      }
-      if (!trimmedParticipantName) {
-        setErrorMessage("Please enter the participant's full name.");
-        return;
-      }
-      if (!trimmedCandidateId) {
-        setErrorMessage("Please select a candidate team to vote for.");
-        return;
-      }
+    if (!trimmedCandidateId) {
+      setErrorMessage("Please select a candidate team to vote for.");
+      return;
+    }
+    if (!identityMode) {
+      setErrorMessage("Choose how you want to vote first.");
+      setStep("choose");
+      return;
+    }
+    if (identityMode === "voter" && !voterId.trim()) {
+      setErrorMessage("Enter your Voter ID first.");
+      setStep("existing");
+      return;
+    }
+    if (
+      identityMode === "participant" &&
+      (!registrationId.trim() || !participantName.trim())
+    ) {
+      setErrorMessage("Enter your Team Registration ID and name first.");
+      setStep("participant");
+      return;
     }
 
     setIsSubmitting(true);
@@ -228,9 +235,16 @@ export default function AudienceVoting() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
-          isVoterMode
-            ? { voterId: trimmedVoterCode, candidateRegistrationId: trimmedCandidateId }
-            : { registrationId: trimmedRegId, participantName: trimmedParticipantName, candidateRegistrationId: trimmedCandidateId }
+          identityMode === "voter"
+            ? {
+                voterId: voterId.trim(),
+                candidateRegistrationId: trimmedCandidateId,
+              }
+            : {
+                registrationId: registrationId.trim().toUpperCase(),
+                participantName: participantName.trim(),
+                candidateRegistrationId: trimmedCandidateId,
+              },
         ),
       });
       const data = await res.json();
@@ -246,6 +260,16 @@ export default function AudienceVoting() {
     } catch (err) {
       console.error("Failed to cast vote:", err);
       setErrorMessage(err.message || "Failed to cast vote.");
+      // Send the user back to the step where they can fix their details.
+      const msg = String(err.message || "");
+      if (msg.includes("Voter not found")) {
+        setStep("register");
+      } else if (
+        msg.includes("Registration ID not found") ||
+        msg.includes("does not match any member")
+      ) {
+        setStep("participant");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -353,134 +377,291 @@ export default function AudienceVoting() {
         {/* Voting panel */}
         <div className="lg:col-span-2">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-            <h3 className="text-2xl font-bold mb-2">Cast your vote</h3>
-            <p className="text-white/60 mb-6">
-              One vote per participant. Voting for a team that has already won
-              a top prize is not allowed.
-            </p>
-
             {voteSuccessMessage ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <CheckCircle2 className="text-emerald-400 mb-4" size={48} />
                 <p className="text-lg font-semibold">{voteSuccessMessage}</p>
               </div>
-            ) : (
-              <form onSubmit={handleVote} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Team Registration ID
-                  </label>
-                  <input
-                    type="text"
-                    value={registrationId}
-                    onChange={(e) => setRegistrationId(e.target.value)}
-                    placeholder="AURA2K26-XXXXXX"
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Participant Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={participantName}
-                    onChange={(e) => setParticipantName(e.target.value)}
-                    placeholder="Full name as registered"
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Voter ID (volunteers / spectators — from on-spot registration)
-                  </label>
-                  <input
-                    type="text"
-                    value={voterId}
-                    onChange={(e) => setVoterId(e.target.value)}
-                    placeholder="AURA-V-XXXXXX"
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Voter Name
-                  </label>
-                  <input
-                    type="text"
-                    value={voterName}
-                    onChange={(e) => setVoterName(e.target.value)}
-                    placeholder="Your name"
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={voterPhone}
-                    onChange={(e) => setVoterPhone(e.target.value)}
-                    placeholder="10-digit phone number"
-                    maxLength={15}
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                  />
-                  <p className="text-[11px] text-white/40 mt-1">
-                    Used to make sure each person gets only one vote.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm text-white/70 mb-1">
-                    Vote for
-                  </label>
-                  <select
-                    value={candidateRegistrationId}
-                    onChange={(e) => setCandidateRegistrationId(e.target.value)}
-                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/40"
+            ) : step === "choose" ? (
+              <>
+                <h3 className="text-2xl font-bold mb-2">Who's voting?</h3>
+                <p className="text-white/60 mb-6">
+                  Pick the option that fits you — new voters register in about
+                  10 seconds.
+                </p>
+                <div className="grid sm:grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage("");
+                      setStep("register");
+                    }}
+                    className="text-left rounded-xl border border-white/15 bg-black/30 p-5 hover:border-white/40 hover:bg-white/10 transition"
                   >
-                    <option value="">Select a team…</option>
-                    {candidates.map((c) => (
-                      <option
-                        key={c.registrationId}
-                        value={c.registrationId}
-                      >
-                        {c.teamName}
-                        {c.projectTitle ? ` — ${c.projectTitle}` : ""}
-                        {c.teamSize ? ` (Team of ${c.teamSize})` : ""}
-                      </option>
-                    ))}
-                  </select>
+                    <UserPlus className="text-amber-300 mb-2" size={24} />
+                    <p className="font-bold mb-1">I'm new — register</p>
+                    <p className="text-sm text-white/60">
+                      Name + phone → instant Voter ID
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage("");
+                      setStep("existing");
+                    }}
+                    className="text-left rounded-xl border border-white/15 bg-black/30 p-5 hover:border-white/40 hover:bg-white/10 transition"
+                  >
+                    <KeyRound className="text-amber-300 mb-2" size={24} />
+                    <p className="font-bold mb-1">I have a Voter ID</p>
+                    <p className="text-sm text-white/60">
+                      Registered earlier or got a ticket QR?
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage("");
+                      setStep("participant");
+                    }}
+                    className="text-left rounded-xl border border-white/15 bg-black/30 p-5 hover:border-white/40 hover:bg-white/10 transition"
+                  >
+                    <Users className="text-amber-300 mb-2" size={24} />
+                    <p className="font-bold mb-1">Team participant</p>
+                    <p className="text-sm text-white/60">
+                      Vote with your Team Registration ID
+                    </p>
+                  </button>
                 </div>
-
-                {errorMessage && (
-                  <div className="flex items-center gap-2 text-red-400 text-sm">
-                    <AlertCircle size={16} /> {errorMessage}
+              </>
+            ) : step === "register" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setStep("choose");
+                  }}
+                  className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white mb-4"
+                >
+                  <ArrowLeft size={14} /> Back
+                </button>
+                <h3 className="text-2xl font-bold mb-2">Register to vote</h3>
+                <p className="text-white/60 mb-6">
+                  Takes 10 seconds — you'll get your Voter ID immediately.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-1">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      value={voterName}
+                      onChange={(e) => setVoterName(e.target.value)}
+                      placeholder="Your name"
+                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                    />
                   </div>
-                )}
-
+                  <div>
+                    <label className="block text-sm text-white/70 mb-1">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      value={voterPhone}
+                      onChange={(e) => setVoterPhone(e.target.value)}
+                      placeholder="10-digit phone number"
+                      maxLength={15}
+                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                    />
+                    <p className="text-[11px] text-white/40 mt-1">
+                      Used to make sure each person gets only one vote.
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={handleRegisterVoter}
                   disabled={isSubmitting}
-                  className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/20 transition"
+                  className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/90 transition"
                 >
-                  {isSubmitting ? "Registering…" : "Register to get Voter ID"}
+                  {isSubmitting ? "Registering…" : "Get my Voter ID"}
                 </button>
-
+              </>
+            ) : step === "existing" ? (
+              <>
                 <button
-                  type="submit"
-                  disabled={isSubmitting || !session || session.status !== "active"}
-                  className="w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/90 transition"
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setStep("choose");
+                  }}
+                  className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white mb-4"
                 >
-                  {isSubmitting ? "Casting vote…" : "Cast Vote"}
+                  <ArrowLeft size={14} /> Back
                 </button>
-
-                {voterId.trim() && (
-                  <div className="flex flex-col items-center gap-2 pt-2">
+                <h3 className="text-2xl font-bold mb-2">Enter your Voter ID</h3>
+                <p className="text-white/60 mb-6">
+                  It's on your registration confirmation, or scan the ticket QR
+                  you were given.
+                </p>
+                <input
+                  type="text"
+                  value={voterId}
+                  onChange={(e) => setVoterId(e.target.value)}
+                  placeholder="AURA-V-XXXXXX"
+                  className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!voterId.trim()) {
+                      setErrorMessage("Enter your Voter ID to continue.");
+                      return;
+                    }
+                    setErrorMessage("");
+                    setIdentityMode("voter");
+                    setStep("vote");
+                  }}
+                  className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 transition"
+                >
+                  Continue →
+                </button>
+                <p className="text-sm text-white/50 mt-4">
+                  Don't have one?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setStep("register")}
+                    className="underline text-white hover:text-amber-300"
+                  >
+                    Register in 10 seconds
+                  </button>
+                </p>
+              </>
+            ) : step === "participant" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setStep("choose");
+                  }}
+                  className="inline-flex items-center gap-1 text-sm text-white/60 hover:text-white mb-4"
+                >
+                  <ArrowLeft size={14} /> Back
+                </button>
+                <h3 className="text-2xl font-bold mb-2">Team participant</h3>
+                <p className="text-white/60 mb-6">
+                  Use your Team Registration ID and your name exactly as it
+                  appears in the team's registration.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-white/70 mb-1">
+                      Team Registration ID
+                    </label>
+                    <input
+                      type="text"
+                      value={registrationId}
+                      onChange={(e) => setRegistrationId(e.target.value)}
+                      placeholder="AURA2K26-XXXXXX"
+                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-white/70 mb-1">
+                      Participant Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={participantName}
+                      onChange={(e) => setParticipantName(e.target.value)}
+                      placeholder="Full name as registered"
+                      className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!registrationId.trim() || !participantName.trim()) {
+                      setErrorMessage(
+                        "Enter both your Team Registration ID and your full name."
+                      );
+                      return;
+                    }
+                    setErrorMessage("");
+                    setIdentityMode("participant");
+                    setStep("vote");
+                  }}
+                  className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 transition"
+                >
+                  Continue →
+                </button>
+                <p className="text-sm text-white/50 mt-4">
+                  Not on a team?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setStep("register")}
+                    className="underline text-white hover:text-amber-300"
+                  >
+                    Register as a spectator
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+                  <div className="bg-black/40 border border-white/15 rounded-lg px-4 py-2">
+                    {identityMode === "voter" ? (
+                      <p className="text-sm text-white/70">
+                        Voting as{" "}
+                        <span className="font-mono font-bold text-white">
+                          {voterId.trim()}
+                        </span>
+                        {voterName.trim() && (
+                          <span className="text-white/50">
+                            {" "}
+                            · {voterName.trim()}
+                          </span>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-white/70">
+                        Voting as{" "}
+                        <span className="font-bold text-white">
+                          {participantName.trim()}
+                        </span>
+                        <span className="font-mono text-white/50">
+                          {" "}
+                          · {registrationId.trim().toUpperCase()}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage("");
+                      setStep("choose");
+                    }}
+                    className="text-sm border border-white/20 text-white/70 hover:text-white hover:border-white/50 rounded-lg px-3 py-1.5"
+                  >
+                    Change
+                  </button>
+                </div>
+                <h3 className="text-2xl font-bold mb-2">Cast your vote</h3>
+                <p className="text-white/60">
+                  Pick a team in the list below, then press{" "}
+                  <span className="text-white font-semibold">Cast Vote</span>.
+                  One vote per person.
+                </p>
+                {identityMode === "voter" && voterId.trim() && (
+                  <div className="flex flex-col items-center gap-2 pt-6">
                     <p className="text-xs text-white/50">
-                      Scan to open your voting ticket
+                      Save this QR — scanning it reopens your voting ticket
                     </p>
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
@@ -491,11 +672,13 @@ export default function AudienceVoting() {
                     />
                   </div>
                 )}
-              </form>
+              </>
             )}
           </div>
 
-          {/* Candidate list */}
+          {/* Candidate list — only shown once identity is confirmed */}
+          {step === "vote" && (
+            <>
           <div className="space-y-3">
             <h3 className="text-xl font-bold flex items-center gap-2">
               <Users size={20} /> Eligible teams for Audience Choice
@@ -536,6 +719,32 @@ export default function AudienceVoting() {
               })
             )}
           </div>
+
+              {!voteSuccessMessage && (
+                <button
+                  type="button"
+                  onClick={handleVote}
+                  disabled={
+                    isSubmitting ||
+                    !candidateRegistrationId ||
+                    hasVoted ||
+                    displayStatus !== "active"
+                  }
+                  className="mt-6 w-full bg-white text-black font-bold py-4 rounded-lg text-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/90 transition"
+                >
+                  {isSubmitting
+                    ? "Casting vote…"
+                    : candidateRegistrationId
+                    ? `Cast Vote for ${
+                        candidates.find(
+                          (c) => c.registrationId === candidateRegistrationId,
+                        )?.teamName || "selected team"
+                      }`
+                    : "Select a team to vote"}
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     );
