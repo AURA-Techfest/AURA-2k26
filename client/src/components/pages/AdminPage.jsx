@@ -33,6 +33,8 @@ const PRIZE_LABELS = {
   audience_choice: "Audience Choice",
 };
 
+const TOP_TYPES = ["first", "second", "third"];
+
 export default function AdminPage() {
   // Auth
   const [adminKey, setAdminKey] = useState("");
@@ -288,7 +290,18 @@ export default function AdminPage() {
 
   const runPodiumSearch = (qOverride) => {
     const q = cleanName(qOverride ?? podiumQuery ?? "").toLowerCase();
-    const list = (candidates || []).filter(
+    // Recorded holders stay visible (at the top of the list) so they can be
+    // re-selected or re-assigned even though prize winners are excluded from
+    // the eligible candidates.
+    const holderRows = (prizes || [])
+      .filter((p) => TOP_TYPES.includes(p.prizeType))
+      .map((p) => ({
+        registrationId: p.registrationId,
+        teamName: p.teamName,
+        heldRank: p.prizeType,
+      }));
+    const pool = [...holderRows, ...(candidates || [])];
+    const list = pool.filter(
       (c) =>
         !q ||
         cleanName(c.teamName).toLowerCase().startsWith(q) ||
@@ -321,7 +334,15 @@ export default function AdminPage() {
         }),
       });
       if (status === 201) {
-        ok(`Podium prize recorded: ${cleanName(podiumSelected.teamName)} → ${PRIZE_LABELS[podiumRank]}`);
+        const prevHolder = topPrizes.find(
+          (p) =>
+            p.prizeType === podiumRank &&
+            p.registrationId !== podiumSelected.registrationId,
+        );
+        ok(
+          `${PRIZE_LABELS[podiumRank]} → ${cleanName(podiumSelected.teamName)}` +
+            (prevHolder ? ` (replaced ${cleanName(prevHolder.teamName)})` : ""),
+        );
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
@@ -339,32 +360,54 @@ export default function AdminPage() {
     }
   };
 
-  const deletePodiumPrize = async () => {
-    if (!podiumSelected) {
-      fail("Select a team first.");
-      return;
-    }
+  const removeTopPrize = async (holder) => {
+    if (!holder) return;
     setDeleting(true);
     setErrorMessage("");
     setSuccessMessage("");
     try {
       const { status, data } = await adminFetch(
-        `/api/voting/prizes/${encodeURIComponent(podiumSelected.registrationId)}/${podiumRank}`,
+        `/api/voting/prizes/${encodeURIComponent(holder.registrationId)}/${holder.prizeType}`,
         { method: "DELETE" },
       );
       if (status === 200) {
-        ok("Podium prize deleted successfully.");
-        setPodiumSelected(null);
-        setPodiumQuery("");
-        setPodiumResults([]);
-        loadCurrent();
+        ok(
+          `${PRIZE_LABELS[holder.prizeType] || holder.prizeType} removed from ${cleanName(holder.teamName)}.`,
+        );
+        if (podiumSelected?.registrationId === holder.registrationId) {
+          setPodiumSelected(null);
+        }
         loadPrizes();
-        setTimeout(() => runPodiumSearch(""), 300);
+        loadCurrent();
       } else {
-        fail(data.message || "Failed to delete podium prize.");
+        fail(data.message || "Failed to remove prize.");
       }
     } catch {
-      fail("Failed to delete podium prize.");
+      fail("Failed to remove prize.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const removeAudiencePrize = async () => {
+    if (!audiencePrize) return;
+    setDeleting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const { status, data } = await adminFetch(
+        `/api/voting/prizes/${encodeURIComponent(audiencePrize.registrationId)}/audience_choice`,
+        { method: "DELETE" },
+      );
+      if (status === 200) {
+        ok("Audience Choice winner record removed.");
+        loadPrizes();
+        loadCurrent();
+      } else {
+        fail(data.message || "Failed to remove Audience Choice winner.");
+      }
+    } catch {
+      fail("Failed to remove Audience Choice winner.");
     } finally {
       setDeleting(false);
     }
@@ -397,7 +440,7 @@ export default function AdminPage() {
       runPodiumSearch(podiumQuery);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authed, candidates]);
+  }, [authed, candidates, prizes]);
 
   // ---------------- Derived ----------------
   const sessionStatus = !session
@@ -634,30 +677,30 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Recorded prizes */}
+          {/* Official Audience Choice winner */}
           <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-            <p className="text-sm text-white/70 mb-2">Recorded prizes</p>
-            {topPrizes.length === 0 && !audiencePrize && (
-              <p className="text-white/50 text-sm">No top-prize winners recorded yet.</p>
-            )}
-            <div className="space-y-1">
-              {topPrizes.map((p) => (
-                <p key={`${p.registrationId}-${p.prizeType}`} className="text-sm text-white/80">
-                  <span className="text-amber-300 font-semibold">
-                    {PRIZE_LABELS[p.prizeType] || p.prizeType}:
-                  </span>{" "}
-                  {cleanName(p.teamName)}{" "}
-                  <span className="text-white/40">({p.registrationId})</span>
-                </p>
-              ))}
-              {audiencePrize && (
+            <p className="text-sm text-white/70 mb-2">Official Audience Choice winner</p>
+            {audiencePrize ? (
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-white/80">
-                  <span className="text-emerald-300 font-semibold">Audience Choice:</span>{" "}
-                  {cleanName(audiencePrize.teamName)}{" "}
+                  <span className="text-emerald-300 font-semibold">
+                    {cleanName(audiencePrize.teamName)}
+                  </span>{" "}
                   <span className="text-white/40">({audiencePrize.registrationId})</span>
                 </p>
-              )}
-            </div>
+                <button
+                  onClick={removeAudiencePrize}
+                  disabled={deleting}
+                  className="shrink-0 text-xs border border-red-500/40 text-red-400 hover:text-red-300 rounded px-2 py-1 disabled:opacity-40"
+                >
+                  {deleting ? "…" : "Remove"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-white/50 text-sm">
+                Not recorded yet — it is decided by the vote tally above.
+              </p>
+            )}
           </div>
         </div>
 
@@ -666,6 +709,54 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Trophy size={22} /> Audience Choice Podium — Pick Winning Teams
           </h2>
+
+          {/* Podium slots — who holds each rank right now (click = choose rank, ✕ = remove) */}
+          <div className="grid sm:grid-cols-3 gap-3 mb-6">
+            {TOP_TYPES.map((type) => {
+              const holder = topPrizes.find((p) => p.prizeType === type);
+              const isSel = podiumRank === type;
+              return (
+                <div
+                  key={type}
+                  onClick={() => setPodiumRank(type)}
+                  role="button"
+                  tabIndex={0}
+                  className={`relative rounded-xl border p-4 cursor-pointer ${
+                    isSel
+                      ? "border-amber-400/60 bg-amber-400/10"
+                      : "border-white/10 bg-black/30 hover:border-white/30"
+                  }`}
+                >
+                  <p className="text-xs uppercase tracking-wider text-white/50 mb-1">
+                    {PRIZE_LABELS[type]}
+                    {isSel && <span className="ml-2 text-amber-300">· assigning here</span>}
+                  </p>
+                  {holder ? (
+                    <>
+                      <p className="font-bold truncate pr-6">{cleanName(holder.teamName)}</p>
+                      <p className="text-xs text-white/40 truncate">{holder.registrationId}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTopPrize(holder);
+                        }}
+                        disabled={deleting}
+                        aria-label={`Remove ${PRIZE_LABELS[type]}`}
+                        title={`Remove ${PRIZE_LABELS[type]}`}
+                        className="absolute top-2 right-2 px-1 text-white/40 hover:text-red-400 disabled:opacity-40"
+                      >
+                        ✕
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-white/40 font-semibold">Vacant</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <label className="block text-sm text-white/70 mb-1">Rank</label>
@@ -711,7 +802,14 @@ export default function AdminPage() {
                         : "border-white/10 bg-black/30 hover:border-white/30"
                     }`}
                   >
-                    <p className="font-semibold">{cleanName(c.teamName)}</p>
+                    <p className="font-semibold flex items-center gap-2 flex-wrap">
+                      <span className="truncate">{cleanName(c.teamName)}</span>
+                      {c.heldRank && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-400/15 text-amber-300 border border-amber-400/40 rounded px-1.5 py-0.5">
+                          Holds {PRIZE_LABELS[c.heldRank]}
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-white/50">{c.registrationId}</p>
                   </button>
                 ))}
@@ -725,6 +823,11 @@ export default function AdminPage() {
                   <>
                     <p className="font-bold">{cleanName(podiumSelected.teamName)}</p>
                     <p className="text-xs text-white/50">{podiumSelected.registrationId}</p>
+                    {podiumSelected.heldRank && (
+                      <p className="text-xs text-amber-300 mt-1">
+                        Currently holds {PRIZE_LABELS[podiumSelected.heldRank]}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <p className="text-white/50">No team selected yet.</p>
@@ -735,18 +838,15 @@ export default function AdminPage() {
                 disabled={recording || !podiumSelected}
                 className="w-full bg-amber-400/90 text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {recording ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Assign Winner & Record"}
-              </button>
-              <button
-                onClick={deletePodiumPrize}
-                disabled={deleting || !podiumSelected}
-                className="w-full bg-red-500/90 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed mt-3"
-              >
-                {deleting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Delete This Prize"}
+                {recording ? (
+                  <Loader2 className="animate-spin mx-auto" size={20} />
+                ) : (
+                  `Assign to ${PRIZE_LABELS[podiumRank]}`
+                )}
               </button>
               <p className="text-white/50 text-sm mt-4">
-                Records the chosen team as the podium winner and marks them ineligible for future
-                Audience Choice votes.
+                One team per rank — assigning replaces the previous holder automatically. Use ✕ on
+                a slot above to remove a prize. Winners become ineligible for Audience Choice votes.
               </p>
             </div>
           </div>

@@ -612,6 +612,25 @@ export const adminRecordPodiumPrizes = async (req, res) => {
 
     const savedPrizes = [];
     for (const p of cleanPrizes) {
+      if (!TOP_PRIZE_TYPES.includes(p.prizeType)) {
+        return res.status(400).json({
+          success: false,
+          message: "prizeType must be one of: first, second, third.",
+        });
+      }
+
+      // Keep the podium unambiguous:
+      // 1) Each rank can be held by only ONE team (assigning replaces the old holder).
+      await Prize.deleteMany({
+        prizeType: p.prizeType,
+        registrationId: { $ne: p.registrationId },
+      });
+      // 2) A team can hold only ONE podium rank (re-assigning moves them).
+      await Prize.deleteMany({
+        registrationId: p.registrationId,
+        prizeType: { $in: TOP_PRIZE_TYPES, $ne: p.prizeType },
+      });
+
       const saved = await Prize.findOneAndUpdate(
         { registrationId: p.registrationId, prizeType: p.prizeType },
         {
@@ -630,6 +649,7 @@ export const adminRecordPodiumPrizes = async (req, res) => {
       success: true,
       message: "Podium prizes recorded successfully.",
       prizes: savedPrizes,
+      allPrizes: await Prize.find().sort({ rank: 1, awardedAt: -1 }).lean(),
     });
   } catch (error) {
     console.error("Error in adminRecordPodiumPrizes:", error);
