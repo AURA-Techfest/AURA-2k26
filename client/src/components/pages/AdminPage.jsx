@@ -137,6 +137,14 @@ export default function AdminPage() {
       });
       if (status === 200) {
         setSession(data.session || null);
+        // Refresh results/session so the recorded winner is reflected.
+        const curRes = await fetch(`${API_URL}/api/voting/sessions/current`);
+        const curData = await curRes.json();
+        if (curRes.ok) {
+          setSession(curData.session || null);
+          setCandidates(curData.candidates || []);
+          setResults(curData.results || []);
+        }
         alert(`Audience Choice winner recorded: ${leader.candidateTeamName}`);
       } else {
         setErrorMessage(data.message || "Failed to record winner.");
@@ -168,7 +176,7 @@ export default function AdminPage() {
     setRecording(true);
     setErrorMessage("");
     try {
-      const res = await adminFetch("/api/voting/prizes", {
+      const { status, data } = await adminFetch("/api/voting/prizes", {
         method: "POST",
         body: JSON.stringify({
           prizes: [
@@ -181,15 +189,14 @@ export default function AdminPage() {
           ],
         }),
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (status === 201) {
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
         alert(`Podium prize recorded: ${podiumSelected.teamName} → ${podiumRank}`);
-        return;
+      } else {
+        setErrorMessage(data.message || "Failed to record podium prize.");
       }
-      setErrorMessage(data.message || "Failed to record podium prize.");
     } catch (err) {
       setErrorMessage("Failed to record podium prize.");
     } finally {
@@ -205,18 +212,18 @@ export default function AdminPage() {
     setDeleting(true);
     setErrorMessage("");
     try {
-      const res = await adminFetch(
+      const { status, data } = await adminFetch(
         `/api/voting/prizes/${encodeURIComponent(podiumSelected.registrationId)}/${podiumRank}`,
+        { method: "DELETE" },
       );
-      const data = await res.json();
-      if (res.ok) {
+      if (status === 200) {
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
         alert("Podium prize deleted successfully.");
-        return;
+      } else {
+        setErrorMessage(data.message || "Failed to delete podium prize.");
       }
-      setErrorMessage(data.message || "Failed to delete podium prize.");
     } catch (err) {
       setErrorMessage("Failed to delete podium prize.");
     } finally {

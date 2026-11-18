@@ -174,15 +174,20 @@ export const adminStartVotingSession = async (req, res) => {
  */
 export const getCurrentVotingSession = async (req, res) => {
   try {
-    const session = await VotingSession.findOne({
-      status: "active",
-    }).sort({ createdAt: -1 });
+    // Prefer an active session, but fall back to the most recent session so
+    // results stay visible after voting ends and a winner can still be recorded.
+    let session = await VotingSession.findOne({ status: "active" }).sort({
+      createdAt: -1,
+    });
+    if (!session) {
+      session = await VotingSession.findOne().sort({ createdAt: -1 });
+    }
 
     if (!session) {
       return res.status(200).json({
         success: true,
         session: null,
-        message: "No active Audience Choice voting session.",
+        message: "No Audience Choice voting session has been started yet.",
       });
     }
 
@@ -194,6 +199,25 @@ export const getCurrentVotingSession = async (req, res) => {
 
     const tally = buildTally(votes);
 
+    // Surface the officially recorded Audience Choice winner only once the
+    // session has ended (so a previous winner isn't shown for a new session).
+    let officialWinner = null;
+    if (activeSession.status === "closed") {
+      const winnerPrize = await Prize.findOne({ prizeType: "audience_choice" }).sort({
+        awardedAt: -1,
+      });
+      if (winnerPrize) {
+        officialWinner = {
+          candidateRegistrationId: winnerPrize.registrationId,
+          candidateTeamName: winnerPrize.teamName,
+          votes:
+            tally.results.find(
+              (r) => r.candidateRegistrationId === winnerPrize.registrationId,
+            )?.votes ?? 0,
+        };
+      }
+    }
+
     return res.status(200).json({
       success: true,
       session: activeSession,
@@ -202,7 +226,7 @@ export const getCurrentVotingSession = async (req, res) => {
       votesCast: tally.votesCast,
       results: tally.results,
       leader: tally.leader,
-      winner: tally.winner,
+      winner: officialWinner || tally.winner,
     });
   } catch (error) {
     console.error("Error in getCurrentVotingSession:", error);
@@ -702,29 +726,38 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
 
     const activeSession = await closeSessionIfExpired(session);
 
-    if (activeSession.status !== "active") {
+    // Winner may be recorded while active OR after the session has ended.
+    if (!["active", "closed"].includes(activeSession.status)) {
       return res.status(400).json({
         success: false,
-        message: "Voting session is not active. Start a new session to re-open voting.",
+        message: "Invalid voting session state.",
       });
     }
 
-    const candidate = await Registration.findOne({
-      registrationId: String(candidateRegistrationId || "")
-        .trim()
-        .toUpperCase(),
-    }).select("registrationId teamName");
+    // If no candidate was provided, derive the leader from this session's votes.
+    let winnerRegistrationId = candidateRegistrationId;
+    if (!winnerRegistrationId) {
+      const votes = await AudienceVote.find({ sessionId: activeSession._id });
+      const tally = buildTally(votes);
+      winnerRegistrationId = tally.leader?.candidateRegistrationId;
+    }
+
+    const candidate = winnerRegistrationId
+      ? await Registration.findOne({
+          registrationId: String(winnerRegistrationId).trim().toUpperCase(),
+        }).select("registrationId teamName")
+      : null;
 
     if (!candidate) {
       return res.status(404).json({
         success: false,
-        message: "The selected candidate team was not found.",
+        message: "No winning team could be determined. Cast votes or select a team first.",
       });
     }
 
     // Record the Audience Choice win
     const prize = await Prize.findOneAndUpdate(
-      { registrationId: candidate.registrationId },
+      { registrationId: candidate.registrationId, prizeType: "audience_choice" },
       {
         registrationId: candidate.registrationId,
         teamName: candidate.teamName,
