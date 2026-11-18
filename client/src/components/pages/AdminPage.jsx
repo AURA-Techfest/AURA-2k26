@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Loader2, Play, Square, Users, Trophy } from "lucide-react";
+import { ShieldCheck, Loader2, Play, Square, Users, Trophy, Eye, EyeOff } from "lucide-react";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
@@ -12,6 +12,7 @@ const API_URL =
 
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -61,17 +62,25 @@ export default function AdminPage() {
 
   const handleAdminLogin = async (e) => {
     e?.preventDefault();
+    if (!adminKey.trim()) {
+      setErrorMessage("Please enter the admin key.");
+      return;
+    }
     setLoading(true);
     setErrorMessage("");
     try {
       const { status } = await adminFetch("/api/voting/voters");
       if (status === 200) {
         setAuthed(true);
-      } else {
+      } else if (status === 401) {
         setErrorMessage("Invalid admin key.");
+      } else {
+        // 500 (e.g. cold start) — let them in, actions will still verify the key.
+        setAuthed(true);
       }
     } catch (err) {
-      setErrorMessage("Failed to verify admin key.");
+      // Network hiccup — allow entry so a slow backend doesn't block the panel.
+      setAuthed(true);
     } finally {
       setLoading(false);
     }
@@ -265,13 +274,23 @@ export default function AdminPage() {
             <form onSubmit={handleAdminLogin} className="space-y-4">
               <div>
                 <label className="block text-sm text-white/70 mb-1">Admin Key</label>
-                <input
-                  type="password"
-                  value={adminKey}
-                  onChange={(e) => setAdminKey(e.target.value)}
-                  placeholder="Enter admin key"
-                  className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
-                />
+                <div className="relative">
+                  <input
+                    type={showKey ? "text" : "password"}
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    placeholder="Enter admin key"
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 pr-12 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey((v) => !v)}
+                    aria-label={showKey ? "Hide key" : "Preview key"}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/50 hover:text-white"
+                  >
+                    {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
               {errorMessage && <div className="text-red-400 text-sm">{errorMessage}</div>}
               <button
