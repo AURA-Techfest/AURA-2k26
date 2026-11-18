@@ -1120,6 +1120,47 @@ export const adminListPrizes = async (req, res) => {
   }
 };
 
+// RFC 4180 CSV cell: quote only when the value contains a comma, quote or
+// line break; embedded quotes are doubled.
+export const csvCell = (value) => {
+  const str = value == null ? "" : String(value);
+  return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+};
+
+/**
+ * Teams export CSV: team name + topic (project title) ONLY — no member
+ * names, phone numbers or emails ever leave the server through this file
+ * (privacy requirement).
+ */
+export const teamsCsv = (rows = []) =>
+  ["Team Name,Topic"]
+    .concat(
+      rows.map((t) => `${csvCell(t?.teamName)},${csvCell(t?.projectTitle)}`),
+    )
+    .join("\r\n") + "\r\n";
+
+export const adminExportTeamsCsv = async (req, res) => {
+  try {
+    const teams = await Registration.find()
+      .select("teamName projectTitle")
+      .sort({ teamName: 1 })
+      .lean();
+
+    res.set("Content-Type", "text/csv; charset=utf-8");
+    res.set(
+      "Content-Disposition",
+      'attachment; filename="aura2k26-teams.csv"',
+    );
+    return res.status(200).send(teamsCsv(teams));
+  } catch (error) {
+    console.error("Error in adminExportTeamsCsv:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to export teams CSV.",
+    });
+  }
+};
+
 /**
  * Admin: Save/update the duration of the ACTIVE voting session.
  * Duration must be an integer between 10 and 20 minutes.

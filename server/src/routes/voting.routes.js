@@ -15,6 +15,7 @@ import {
   adminListVoters,
   adminDeleteVoter,
   adminCloseSession,
+  adminExportTeamsCsv,
 } from "../controllers/voting.controller.js";
 
 const router = express.Router();
@@ -48,6 +49,9 @@ router.patch("/sessions/:id", requireAdmin, adminUpdateVotingSession);
 
 // Admin: list all recorded prizes (podium 1st/2nd/3rd + Audience Choice)
 router.get("/prizes", requireAdmin, adminListPrizes);
+
+// Admin: export registered teams as CSV — team name + topic only
+router.get("/export/teams", requireAdmin, adminExportTeamsCsv);
 
 // Admin: record Audience Choice winner and close session
 router.post("/sessions/:id/winner", requireAdmin, adminRecordAudienceChoiceWinner);

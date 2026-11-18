@@ -14,6 +14,8 @@ import {
   buildTally,
   pickAudienceWinner,
   isSessionRunning,
+  csvCell,
+  teamsCsv,
   namesMatch,
 } from "../src/controllers/voting.controller.js";
 
@@ -150,6 +152,35 @@ async function testVoting() {
   assert(isSessionRunning(expiredSession) === false, "Expired active session is not running");
   assert(isSessionRunning(closedSession) === false, "Closed session is not running");
   assert(isSessionRunning(null) === false, "Missing session is not running");
+
+  // 5d. Teams CSV export (team name + topic only — privacy requirement)
+  assert(csvCell("Plain Team") === "Plain Team", "csvCell passes plain values through");
+  assert(csvCell("A,B") === '"A,B"', "csvCell quotes embedded commas");
+  assert(csvCell('Say "hi"') === '"Say ""hi"""', "csvCell doubles embedded quotes");
+  assert(csvCell("line\nbreak") === '"line\nbreak"', "csvCell quotes line breaks");
+  assert(csvCell(null) === "" && csvCell(undefined) === "", "csvCell maps null/undefined to empty");
+  const teamCsv = teamsCsv([
+    { teamName: '"TECHWALK"', projectTitle: "SMART BLIND STICK" },
+    { teamName: "Comma, Crew", projectTitle: 'Topic with "quotes"' },
+  ]);
+  const csvLines = teamCsv.split("\r\n").filter(Boolean);
+  assert(
+    csvLines[0] === "Team Name,Topic",
+    "CSV header is exactly 'Team Name,Topic'",
+  );
+  assert(
+    csvLines[0].split(",").length === 2,
+    "CSV header has exactly two columns (no personal data)",
+  );
+  assert(csvLines.length === 3, "CSV has header + one row per team");
+  assert(
+    csvLines[1] === '"""TECHWALK""",SMART BLIND STICK',
+    "Real-world quoted team names escape correctly",
+  );
+  assert(
+    csvLines[2] === '"Comma, Crew","Topic with ""quotes"""',
+    "Rows with commas and quotes are fully escaped",
+  );
 
   // 6. Participant name normalization
   assert(

@@ -15,6 +15,7 @@ import {
   Check,
   Trash2,
   Lock,
+  Download,
 } from "lucide-react";
 import { qrDataUrl } from "../ticketQr";
 
@@ -78,6 +79,7 @@ export default function AdminPage() {
   const [deskCopied, setDeskCopied] = useState(""); // "id" | "link"
   const [deskQr, setDeskQr] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
@@ -292,6 +294,39 @@ export default function AdminPage() {
       fail("Reset failed.");
     } finally {
       setResetting(false);
+    }
+  };
+
+  // Download the registered-teams CSV (team name + topic only — the server
+  // never includes member names or contacts in this file).
+  const exportTeamsCsv = async () => {
+    setExporting(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/voting/export/teams`, {
+        headers: { "x-admin-key": adminKey },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        fail(data.message || "Export failed.");
+        return;
+      }
+      const text = await res.text();
+      const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "aura2k26-teams.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      ok("aura2k26-teams.csv downloaded — team name + topic only.");
+    } catch {
+      fail("Export failed.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -1313,6 +1348,33 @@ export default function AdminPage() {
                 team can hold both).
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Registered teams export — team name + topic only */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="max-w-xl">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Download size={20} /> Registered teams
+              </h2>
+              <p className="text-sm text-white/60 mt-2">
+                Downloads a CSV of every registered team — team name and topic
+                only, never member names or contact details.
+              </p>
+            </div>
+            <button
+              onClick={exportTeamsCsv}
+              disabled={exporting}
+              className="bg-white text-black font-bold px-5 py-3 rounded-lg flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {exporting ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <Download size={18} />
+              )}
+              Export CSV
+            </button>
           </div>
         </div>
 
