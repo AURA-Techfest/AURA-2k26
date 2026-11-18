@@ -10,6 +10,8 @@ import {
   adminRecordPodiumPrizes,
   adminDeletePodiumPrize,
   adminResetVotingData,
+  adminListPrizes,
+  adminUpdateVotingSession,
   adminListVoters,
   adminCloseSession,
 } from "../controllers/voting.controller.js";
@@ -36,6 +38,12 @@ router.get("/voters", requireAdmin, adminListVoters);
 
 // Admin: close an Audience Choice voting session manually
 router.post("/sessions/:id/close", requireAdmin, adminCloseSession);
+
+// Admin: save/update the duration of the active voting session
+router.patch("/sessions/:id", requireAdmin, adminUpdateVotingSession);
+
+// Admin: list all recorded prizes (podium 1st/2nd/3rd + Audience Choice)
+router.get("/prizes", requireAdmin, adminListPrizes);
 
 // Admin: record Audience Choice winner and close session
 router.post("/sessions/:id/winner", requireAdmin, adminRecordAudienceChoiceWinner);

@@ -691,6 +691,79 @@ export const adminDeletePodiumPrize = async (req, res) => {
 };
 
 /**
+ * Admin: List all recorded prizes (podium 1st/2nd/3rd + Audience Choice).
+ */
+export const adminListPrizes = async (req, res) => {
+  try {
+    const prizes = await Prize.find().sort({ rank: 1, awardedAt: -1 }).lean();
+    return res.status(200).json({
+      success: true,
+      count: prizes.length,
+      prizes,
+    });
+  } catch (error) {
+    console.error("Error in adminListPrizes:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch prizes.",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Admin: Save/update the duration of the ACTIVE voting session.
+ * Duration must be an integer between 10 and 20 minutes.
+ * The new window is applied from the moment of saving.
+ */
+export const adminUpdateVotingSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const durationMinutes = Number((req.body || {}).durationMinutes);
+
+    if (!Number.isInteger(durationMinutes) || durationMinutes < MIN_VOTING_MINUTES || durationMinutes > MAX_VOTING_MINUTES) {
+      return res.status(400).json({
+        success: false,
+        message: `Duration must be a whole number between ${MIN_VOTING_MINUTES} and ${MAX_VOTING_MINUTES} minutes.`,
+      });
+    }
+
+    const session = await VotingSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Voting session not found.",
+      });
+    }
+
+    if (session.status !== "active") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update a closed session. Start a new session instead.",
+      });
+    }
+
+    session.durationMinutes = durationMinutes;
+    session.endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+    await session.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Session saved. Voting now ends in ${durationMinutes} minutes.`,
+      session,
+      timeRemainingSeconds: getTimeRemainingSeconds(session),
+    });
+  } catch (error) {
+    console.error("Error in adminUpdateVotingSession:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save voting session.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Admin: Reset all voting data (sessions, votes, voters, prizes).
  * Useful to clear test data before the real event. Registrations are untouched.
  */

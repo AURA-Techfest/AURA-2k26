@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, Loader2, Play, Square, Users, Trophy, Eye, EyeOff } from "lucide-react";
+import {
+  ShieldCheck,
+  Loader2,
+  Play,
+  Square,
+  Users,
+  Trophy,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
@@ -10,26 +19,54 @@ const API_URL =
     ? "http://localhost:5000"
     : "";
 
+const formatTime = (totalSeconds) => {
+  const s = Math.max(0, Number(totalSeconds) || 0);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+};
+
+const PRIZE_LABELS = {
+  first: "1st Place",
+  second: "2nd Place",
+  third: "3rd Place",
+  audience_choice: "Audience Choice",
+};
+
 export default function AdminPage() {
+  // Auth
   const [adminKey, setAdminKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
+  // Session / data
   const [duration, setDuration] = useState(15);
   const [session, setSession] = useState(null);
-  const [voters, setVoters] = useState([]);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [candidates, setCandidates] = useState([]);
   const [results, setResults] = useState([]);
+  const [votesCast, setVotesCast] = useState(0);
+  const [voters, setVoters] = useState([]);
+  const [prizes, setPrizes] = useState([]);
+
+  // Action flags
   const [starting, setStarting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [candidates, setCandidates] = useState([]);
+  const [deleting, setDeleting] = useState(false);
+
+  // Audience Choice winner picker
+  const [selectedWinner, setSelectedWinner] = useState(null);
+
+  // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
   const [podiumResults, setPodiumResults] = useState([]);
   const [podiumRank, setPodiumRank] = useState("first");
   const [podiumSelected, setPodiumSelected] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   const adminFetch = async (path, options = {}) => {
     const res = await fetch(`${API_URL}${path}`, {
@@ -40,26 +77,65 @@ export default function AdminPage() {
         ...(options.headers || {}),
       },
     });
-    const data = await res.json();
+    let data = {};
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
     return { status: res.status, data };
   };
 
-  const loadVoters = async () => {
-    const { status, data } = await adminFetch("/api/voting/voters");
-    if (status === 200) {
-      setVoters(data.voters || []);
-    }
+  const ok = (msg) => {
+    setErrorMessage("");
+    setSuccessMessage(msg);
+  };
+  const fail = (msg) => {
+    setSuccessMessage("");
+    setErrorMessage(msg);
   };
 
   const loadCurrent = async () => {
-    const res = await fetch(`${API_URL}/api/voting/sessions/current`);
-    const data = await res.json();
-    if (res.ok) {
-      setSession(data.session || null);
-      setResults(data.results || []);
+    try {
+      const res = await fetch(`${API_URL}/api/voting/sessions/current`);
+      const data = await res.json();
+      if (res.ok) {
+        setSession(data.session || null);
+        setTimeRemaining(data.timeRemainingSeconds || 0);
+        setCandidates(Array.isArray(data.candidates) ? data.candidates : []);
+        setResults(Array.isArray(data.results) ? data.results : []);
+        setVotesCast(Number(data.votesCast) || 0);
+      }
+    } catch {
+      /* network hiccup — keep last known data */
     }
   };
 
+  const loadVoters = async () => {
+    try {
+      const { status, data } = await adminFetch("/api/voting/voters");
+      if (status === 200) setVoters(data.voters || []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const loadPrizes = async () => {
+    try {
+      const { status, data } = await adminFetch("/api/voting/prizes");
+      if (status === 200) setPrizes(data.prizes || []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const loadAll = () => {
+    loadCurrent();
+    loadVoters();
+    loadPrizes();
+  };
+
+  // ---------------- Auth ----------------
   const handleAdminLogin = async (e) => {
     e?.preventDefault();
     if (!adminKey.trim()) {
@@ -70,15 +146,15 @@ export default function AdminPage() {
     setErrorMessage("");
     try {
       const { status } = await adminFetch("/api/voting/voters");
-      if (status === 200) {
+      if (status === 200 || status >= 500) {
+        // 500 (e.g. cold start) — let them in; each action still verifies the key.
         setAuthed(true);
       } else if (status === 401) {
         setErrorMessage("Invalid admin key.");
       } else {
-        // 500 (e.g. cold start) — let them in, actions will still verify the key.
         setAuthed(true);
       }
-    } catch (err) {
+    } catch {
       // Network hiccup — allow entry so a slow backend doesn't block the panel.
       setAuthed(true);
     } finally {
@@ -86,9 +162,11 @@ export default function AdminPage() {
     }
   };
 
+  // ---------------- Session actions ----------------
   const startSession = async () => {
     setStarting(true);
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const { status, data } = await adminFetch("/api/voting/sessions", {
         method: "POST",
@@ -96,75 +174,114 @@ export default function AdminPage() {
       });
       if (status === 201) {
         setSession(data.session || null);
-        alert("Voting session started!");
+        setSelectedWinner(null);
+        ok("Voting session started!");
+        loadCurrent();
       } else {
-        setErrorMessage(data.message || "Failed to start voting session.");
+        fail(data.message || "Failed to start voting session.");
       }
-    } catch (err) {
-      setErrorMessage("Failed to start voting session.");
+    } catch {
+      fail("Failed to start voting session.");
     } finally {
       setStarting(false);
     }
   };
 
+  const saveSession = async () => {
+    if (!session?._id) {
+      fail("No session to save. Start a voting session first.");
+      return;
+    }
+    if (session.status !== "active") {
+      fail("This session is already closed. Start a new session to change the duration.");
+      return;
+    }
+    setSaving(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const { status, data } = await adminFetch(`/api/voting/sessions/${session._id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ durationMinutes: Number(duration) || 15 }),
+      });
+      if (status === 200) {
+        setSession(data.session || null);
+        setTimeRemaining(data.timeRemainingSeconds || 0);
+        ok(data.message || "Session saved.");
+      } else {
+        fail(data.message || "Failed to save session.");
+      }
+    } catch {
+      fail("Failed to save session.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const closeSession = async () => {
     if (!session?._id) {
-      setErrorMessage("No active session found.");
+      fail("No active session found.");
       return;
     }
     setClosing(true);
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const { status, data } = await adminFetch(`/api/voting/sessions/${session._id}/close`, {
         method: "POST",
       });
       if (status === 200) {
         setSession(data.session || null);
-        alert("Voting session closed manually.");
+        ok("Voting session ended.");
       } else {
-        setErrorMessage(data.message || "Failed to close voting session.");
+        fail(data.message || "Failed to end voting session.");
       }
-    } catch (err) {
-      setErrorMessage("Failed to close voting session.");
+    } catch {
+      fail("Failed to end voting session.");
     } finally {
       setClosing(false);
     }
   };
 
-  const recordWinner = async () => {
-    const leader = results?.[0];
-    if (!leader) {
-      setErrorMessage("No results available yet.");
+  // ---------------- Audience Choice winner ----------------
+  const recordSelectedWinner = async () => {
+    if (!selectedWinner) {
+      fail("Select a team first — click the Winner button on a row.");
+      return;
+    }
+    if (!session?._id) {
+      fail("Start a voting session first.");
       return;
     }
     setRecording(true);
     setErrorMessage("");
+    setSuccessMessage("");
     try {
-      const { status, data } = await adminFetch(`/api/voting/sessions/${session?._id}/winner`, {
-        method: "POST",
-        body: JSON.stringify({ candidateRegistrationId: leader.candidateRegistrationId }),
-      });
+      const { status, data } = await adminFetch(
+        `/api/voting/sessions/${session._id}/winner`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            candidateRegistrationId: selectedWinner.registrationId,
+          }),
+        },
+      );
       if (status === 200) {
-        setSession(data.session || null);
-        // Refresh results/session so the recorded winner is reflected.
-        const curRes = await fetch(`${API_URL}/api/voting/sessions/current`);
-        const curData = await curRes.json();
-        if (curRes.ok) {
-          setSession(curData.session || null);
-          setCandidates(curData.candidates || []);
-          setResults(curData.results || []);
-        }
-        alert(`Audience Choice winner recorded: ${leader.candidateTeamName}`);
+        ok(`Audience Choice winner recorded: ${selectedWinner.teamName}`);
+        setSelectedWinner(null);
+        loadCurrent();
+        loadPrizes();
       } else {
-        setErrorMessage(data.message || "Failed to record winner.");
+        fail(data.message || "Failed to record winner.");
       }
-    } catch (err) {
-      setErrorMessage("Failed to record winner.");
+    } catch {
+      fail("Failed to record winner.");
     } finally {
       setRecording(false);
     }
   };
 
+  // ---------------- Podium ----------------
   const runPodiumSearch = (qOverride) => {
     const q = (qOverride ?? podiumQuery ?? "").trim().toLowerCase();
     const list = (candidates || []).filter(
@@ -175,12 +292,13 @@ export default function AdminPage() {
 
   const assignPodiumPrize = async () => {
     if (!podiumSelected) {
-      setErrorMessage("Please search and select a team from the dropdown first.");
+      fail("Search and select a team from the list first.");
       return;
     }
     const rankValue = podiumRank === "first" ? 1 : podiumRank === "second" ? 2 : 3;
     setRecording(true);
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const { status, data } = await adminFetch("/api/voting/prizes", {
         method: "POST",
@@ -196,15 +314,19 @@ export default function AdminPage() {
         }),
       });
       if (status === 201) {
+        ok(`Podium prize recorded: ${podiumSelected.teamName} → ${PRIZE_LABELS[podiumRank]}`);
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
-        alert(`Podium prize recorded: ${podiumSelected.teamName} → ${podiumRank}`);
+        loadCurrent();
+        loadPrizes();
+        // Repopulate dropdown with updated eligible candidates
+        setTimeout(() => runPodiumSearch(""), 300);
       } else {
-        setErrorMessage(data.message || "Failed to record podium prize.");
+        fail(data.message || "Failed to record podium prize.");
       }
-    } catch (err) {
-      setErrorMessage("Failed to record podium prize.");
+    } catch {
+      fail("Failed to record podium prize.");
     } finally {
       setRecording(false);
     }
@@ -212,50 +334,57 @@ export default function AdminPage() {
 
   const deletePodiumPrize = async () => {
     if (!podiumSelected) {
-      setErrorMessage("Select a team first.");
+      fail("Select a team first.");
       return;
     }
     setDeleting(true);
     setErrorMessage("");
+    setSuccessMessage("");
     try {
       const { status, data } = await adminFetch(
         `/api/voting/prizes/${encodeURIComponent(podiumSelected.registrationId)}/${podiumRank}`,
         { method: "DELETE" },
       );
       if (status === 200) {
+        ok("Podium prize deleted successfully.");
         setPodiumSelected(null);
         setPodiumQuery("");
         setPodiumResults([]);
-        alert("Podium prize deleted successfully.");
+        loadCurrent();
+        loadPrizes();
+        setTimeout(() => runPodiumSearch(""), 300);
       } else {
-        setErrorMessage(data.message || "Failed to delete podium prize.");
+        fail(data.message || "Failed to delete podium prize.");
       }
-    } catch (err) {
-      setErrorMessage("Failed to delete podium prize.");
+    } catch {
+      fail("Failed to delete podium prize.");
     } finally {
       setDeleting(false);
     }
   };
 
-  // Load data when authed
+  // ---------------- Data loading ----------------
   useEffect(() => {
     if (!authed) return;
-    const load = async () => {
-      const votersRes = await adminFetch("/api/voting/voters");
-      if (votersRes.status === 200) setVoters(votersRes.data.voters || []);
-      const curRes = await fetch(`${API_URL}/api/voting/sessions/current`);
-      const curData = await curRes.json();
-      if (curRes.ok) {
-        setSession(curData.session || null);
-        setCandidates(curData.candidates || []);
-        setResults(curData.results || []);
-      }
-    };
-    load();
+    loadAll();
+    const poll = setInterval(() => loadCurrent(), 10000);
+    return () => clearInterval(poll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
 
-  // Auto-populate podium candidate list once candidates load (after unlock).
+  // Live countdown while a session is active
+  useEffect(() => {
+    if (!authed || session?.status !== "active" || !session?.endsAt) return;
+    const tick = () => {
+      const ms = new Date(session.endsAt).getTime() - Date.now();
+      setTimeRemaining(Math.max(0, Math.ceil(ms / 1000)));
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [authed, session?.status, session?.endsAt]);
+
+  // Auto-populate podium candidate list once candidates load
   useEffect(() => {
     if (authed && Array.isArray(candidates)) {
       runPodiumSearch(podiumQuery);
@@ -263,6 +392,26 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed, candidates]);
 
+  // ---------------- Derived ----------------
+  const voteCountByRegId = new Map(results.map((r) => [r.candidateRegistrationId, r.votes]));
+  const winnerRows = [...(candidates || [])]
+    .map((c) => ({ ...c, votes: voteCountByRegId.get(c.registrationId) || 0 }))
+    .sort(
+      (a, b) =>
+        b.votes - a.votes ||
+        String(a.teamName || "").localeCompare(String(b.teamName || "")),
+    );
+
+  const sessionStatus = !session
+    ? "No Session Yet"
+    : session.status === "active"
+    ? `LIVE · ${formatTime(timeRemaining)} left`
+    : "Session Closed";
+
+  const topPrizes = (prizes || []).filter((p) => p.prizeType !== "audience_choice");
+  const audiencePrize = (prizes || []).find((p) => p.prizeType === "audience_choice");
+
+  // ---------------- Login screen ----------------
   if (!authed) {
     return (
       <div className="min-h-screen bg-[#0b0909] text-white">
@@ -312,15 +461,20 @@ export default function AdminPage() {
     );
   }
 
+  // ---------------- Admin panel ----------------
   return (
     <div className="min-h-screen bg-[#0b0909] text-white">
       <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="flex items-center justify-between mb-10">
-          <h1 className="text-4xl font-extrabold">AURA Admin — Audience Choice Voting</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl md:text-4xl font-extrabold">
+            AURA Admin — Audience Choice Voting
+          </h1>
           <button
             onClick={() => {
               setAuthed(false);
               setAdminKey("");
+              setSuccessMessage("");
+              setErrorMessage("");
             }}
             className="px-4 py-2 border border-white/20 rounded-lg text-white/70 hover:text-white"
           >
@@ -329,20 +483,49 @@ export default function AdminPage() {
         </div>
 
         {errorMessage && (
-          <div className="mb-8 flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3">
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3">
             {errorMessage}
           </div>
         )}
+        {successMessage && (
+          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg px-4 py-3">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+            <p className="text-xs uppercase tracking-wider text-white/50 mb-1">Session</p>
+            <p
+              className={`text-xl font-bold ${
+                session?.status === "active" ? "text-emerald-400" : "text-white/80"
+              }`}
+            >
+              {sessionStatus}
+            </p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+            <p className="text-xs uppercase tracking-wider text-white/50 mb-1">Candidates</p>
+            <p className="text-xl font-bold">{candidates.length}</p>
+          </div>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
+            <p className="text-xs uppercase tracking-wider text-white/50 mb-1">Votes</p>
+            <p className="text-xl font-bold">{votesCast}</p>
+          </div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Start / Close session */}
+          {/* Session control */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Play size={22} /> Voting Session Control
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-white/70 mb-1">Duration (minutes, 10–20)</label>
+                <label className="block text-sm text-white/70 mb-1">
+                  Duration (minutes, 10–20)
+                </label>
                 <input
                   type="number"
                   min={10}
@@ -355,17 +538,32 @@ export default function AdminPage() {
               <button
                 onClick={startSession}
                 disabled={starting}
-                className="w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full bg-white text-black font-bold py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {starting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Start Voting Session"}
+                {starting ? <Loader2 className="animate-spin" size={20} /> : <Play size={18} />}
+                Start Voting Session
               </button>
-              <button
-                onClick={closeSession}
-                disabled={closing || !session}
-                className="w-full bg-red-500/90 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {closing ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Close Voting Session"}
-              </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={saveSession}
+                  disabled={saving || !session}
+                  className="bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {saving ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Save Session"}
+                </button>
+                <button
+                  onClick={closeSession}
+                  disabled={closing || !session || session.status !== "active"}
+                  className="bg-red-500/90 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {closing ? <Loader2 className="animate-spin" size={20} /> : <Square size={16} />}
+                  End Session
+                </button>
+              </div>
+              <p className="text-white/50 text-sm">
+                Save Session applies the duration above to the running session (from now).
+                The public voting page updates automatically.
+              </p>
             </div>
           </div>
 
@@ -377,10 +575,15 @@ export default function AdminPage() {
             <div className="max-h-96 overflow-y-auto space-y-2">
               {voters.length === 0 && <p className="text-white/50">No voters registered yet.</p>}
               {voters.map((v) => (
-                <div key={v.voterId} className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-4 py-2">
+                <div
+                  key={v.voterId}
+                  className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-4 py-2"
+                >
                   <div>
                     <p className="font-semibold">{v.name}</p>
-                    <p className="text-xs text-white/50">{v.voterId} · {v.type}</p>
+                    <p className="text-xs text-white/50">
+                      {v.voterId} · {v.type}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -388,7 +591,91 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Podium / winner selection */}
+        {/* Audience Choice Winner */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Trophy size={22} /> Audience Choice Winner
+          </h2>
+
+          <div className="max-h-72 overflow-y-auto space-y-2 mb-4">
+            {winnerRows.length === 0 && (
+              <p className="text-white/50">No eligible candidate teams found.</p>
+            )}
+            {winnerRows.map((c) => {
+              const isSelected = selectedWinner?.registrationId === c.registrationId;
+              return (
+                <div
+                  key={c.registrationId}
+                  className={`flex items-center justify-between rounded-lg border px-4 py-2 ${
+                    isSelected
+                      ? "border-amber-400/60 bg-amber-400/10"
+                      : "border-white/10 bg-black/30"
+                  }`}
+                >
+                  <div className="min-w-0 pr-3">
+                    <p className="font-semibold truncate">{c.teamName}</p>
+                    <p className="text-xs text-white/50">
+                      {c.registrationId} · {c.votes} vote{c.votes === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedWinner(isSelected ? null : c)}
+                    className={`shrink-0 px-3 py-1.5 text-sm font-bold rounded-lg border ${
+                      isSelected
+                        ? "bg-amber-400 text-black border-amber-400"
+                        : "border-white/20 text-white/70 hover:text-white hover:border-white/50"
+                    }`}
+                  >
+                    {isSelected ? "Selected" : "Winner"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
+            <p className="text-sm text-white/60">
+              {selectedWinner
+                ? `Selected: ${selectedWinner.teamName}`
+                : "Click Winner on a row, then record it."}
+            </p>
+            <button
+              onClick={recordSelectedWinner}
+              disabled={recording || !selectedWinner}
+              className="px-6 py-3 bg-amber-400 text-black font-bold rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {recording ? <Loader2 className="animate-spin" size={20} /> : "Set As Winner"}
+            </button>
+          </div>
+
+          {/* Recorded prizes */}
+          <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+            <p className="text-sm text-white/70 mb-2">Recorded prizes</p>
+            {topPrizes.length === 0 && !audiencePrize && (
+              <p className="text-white/50 text-sm">No top-prize winners recorded yet.</p>
+            )}
+            <div className="space-y-1">
+              {topPrizes.map((p) => (
+                <p key={`${p.registrationId}-${p.prizeType}`} className="text-sm text-white/80">
+                  <span className="text-amber-300 font-semibold">
+                    {PRIZE_LABELS[p.prizeType] || p.prizeType}:
+                  </span>{" "}
+                  {p.teamName}{" "}
+                  <span className="text-white/40">({p.registrationId})</span>
+                </p>
+              ))}
+              {audiencePrize && (
+                <p className="text-sm text-white/80">
+                  <span className="text-emerald-300 font-semibold">Audience Choice:</span>{" "}
+                  {audiencePrize.teamName}{" "}
+                  <span className="text-white/40">({audiencePrize.registrationId})</span>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Podium */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Trophy size={22} /> Audience Choice Podium — Pick Winning Teams
@@ -472,27 +759,11 @@ export default function AdminPage() {
                 {deleting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Delete This Prize"}
               </button>
               <p className="text-white/50 text-sm mt-4">
-                Records the chosen team as the podium winner and marks them ineligible for future Audience Choice votes.
+                Records the chosen team as the podium winner and marks them ineligible for future
+                Audience Choice votes.
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Results / winner */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Trophy size={22} /> Results & Winner
-          </h2>
-          <button
-            onClick={recordWinner}
-            disabled={recording || !session}
-            className="w-full bg-amber-400/90 text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {recording ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Record Audience Choice Winner"}
-          </button>
-          <p className="text-white/50 text-sm mt-4">
-            Records the current leader as the Audience Choice winner and closes the session.
-          </p>
         </div>
       </div>
     </div>
