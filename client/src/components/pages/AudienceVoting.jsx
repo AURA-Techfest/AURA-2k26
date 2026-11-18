@@ -44,8 +44,6 @@ export default function AudienceVoting() {
   const [participantName, setParticipantName] = useState("");
   const [voterId, setVoterId] = useState("");
   const [voterName, setVoterName] = useState("");
-  const [adminKey, setAdminKey] = useState("");
-  const [startingFromVoting, setStartingFromVoting] = useState(false);
   const [candidateRegistrationId, setCandidateRegistrationId] =
     useState("");
   const [hasVoted, setHasVoted] = useState(false);
@@ -175,28 +173,6 @@ export default function AudienceVoting() {
     }
   };
 
-  const handleStartSessionFromVoting = async () => {
-    setStartingFromVoting(true);
-    setErrorMessage("");
-    try {
-      const res = await fetch(`${API_URL}/api/voting/sessions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-key": adminKey },
-        body: JSON.stringify({ durationMinutes: 15 }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setSession(data.session || null);
-      } else {
-        setErrorMessage(data.message || "Failed to start voting session.");
-      }
-    } catch (err) {
-      setErrorMessage("Failed to start voting session.");
-    } finally {
-      setStartingFromVoting(false);
-    }
-  };
-
   const handleVote = async (e) => {
     e?.preventDefault();
     if (!session) return;
@@ -279,13 +255,6 @@ export default function AudienceVoting() {
             The Audience Choice voting window has not started yet. The
             organizing committee will open voting shortly.
           </p>
-          <button
-            onClick={handleStartSessionFromVoting}
-            disabled={startingFromVoting}
-            className="mt-8 w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {startingFromVoting ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Start Voting Session"}
-          </button>
         </div>
       );
     }
