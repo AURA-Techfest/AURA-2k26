@@ -255,6 +255,14 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
 
+  // Auto-populate podium candidate list once candidates load (after unlock).
+  useEffect(() => {
+    if (authed && Array.isArray(candidates)) {
+      runPodiumSearch(podiumQuery);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, candidates]);
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-[#0b0909] text-white">
