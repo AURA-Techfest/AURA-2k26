@@ -691,6 +691,56 @@ export const adminDeletePodiumPrize = async (req, res) => {
 };
 
 /**
+ * Admin: Reset all voting data (sessions, votes, voters, prizes).
+ * Useful to clear test data before the real event. Registrations are untouched.
+ */
+export const adminResetVotingData = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const [sessions, votes, voters, prizes] = await Promise.all([
+      VotingSession.deleteMany({}),
+      AudienceVote.deleteMany({}),
+      Voter.deleteMany({}),
+      Prize.deleteMany({}),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "All voting data has been reset.",
+      deleted: {
+        sessions: sessions.deletedCount,
+        votes: votes.deletedCount,
+        voters: voters.deletedCount,
+        prizes: prizes.deletedCount,
+      },
+    });
+  } catch (error) {
+    console.error("Error in adminResetVotingData:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to reset voting data.",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * Admin: Record the Audience Choice winner for a voting session and close it.
  */
 export const adminRecordAudienceChoiceWinner = async (req, res) => {

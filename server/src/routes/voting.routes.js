@@ -9,6 +9,7 @@ import {
   adminRecordAudienceChoiceWinner,
   adminRecordPodiumPrizes,
   adminDeletePodiumPrize,
+  adminResetVotingData,
   adminListVoters,
   adminCloseSession,
 } from "../controllers/voting.controller.js";
@@ -44,5 +45,8 @@ router.post("/prizes", requireAdmin, adminRecordPodiumPrizes);
 
 // Admin: delete podium prize record (cleanup / corrections)
 router.delete("/prizes/:registrationId/:prizeType", requireAdmin, adminDeletePodiumPrize);
+
+// Admin: reset all voting data (cleanup before the real event)
+router.post("/reset", requireAdmin, adminResetVotingData);
 
 export default router;
