@@ -204,18 +204,18 @@ async function testVoting() {
   cleanupLimiter.reset();
   assert(cleanupLimiter.records.size === 0, "reset() clears all records");
 
-  // Production instances: 30 registrations / 150 votes per minute per IP,
-  // env-overridable without a redeploy.
+  // Production instances: 60 registrations / 300 votes per minute per IP,
+  // env-overridable without a redeploy (generous for venue NAT bursts).
   assert(
     voterRegisterLimiter instanceof WriteRateLimiter &&
       voterRegisterLimiter.maxRequests ===
-        Number(process.env.VOTER_REGISTER_RATE_MAX || 30),
-    "Voter registration limiter defaults to 30/min per IP (env-overridable)",
+        Number(process.env.VOTER_REGISTER_RATE_MAX || 60),
+    "Voter registration limiter defaults to 60/min per IP (env-overridable)",
   );
   assert(
     voteCastLimiter instanceof WriteRateLimiter &&
-      voteCastLimiter.maxRequests === Number(process.env.VOTE_CAST_RATE_MAX || 150),
-    "Vote casting limiter defaults to 150/min per IP (env-overridable)",
+      voteCastLimiter.maxRequests === Number(process.env.VOTE_CAST_RATE_MAX || 300),
+    "Vote casting limiter defaults to 300/min per IP (env-overridable)",
   );
 
   console.log("==================================================");

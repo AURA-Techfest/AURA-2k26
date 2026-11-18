@@ -17,6 +17,7 @@ import {
   ScanLine,
 } from "lucide-react";
 import QrScanner from "../QrScanner";
+import { qrDataUrl } from "../ticketQr";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
@@ -50,6 +51,18 @@ const extractVoterId = (raw) => {
     /* not a URL — bare text we don't recognize */
   }
   return null;
+};
+
+const TICKET_STORAGE_KEY = "aura2k26_voter_ticket";
+
+// The voter's ticket survives a refresh or a dead battery so they can
+// resume in one tap instead of re-registering (or hunting their QR).
+const readSavedTicket = () => {
+  try {
+    return JSON.parse(localStorage.getItem(TICKET_STORAGE_KEY) || "null");
+  } catch {
+    return null;
+  }
 };
 
 export default function AudienceVoting() {
@@ -93,6 +106,10 @@ export default function AudienceVoting() {
   nameRef.current = voterName;
   phoneRef.current = voterPhone;
 
+  // Saved ticket (localStorage) + locally generated QR image
+  const [savedTicket, setSavedTicket] = useState(null);
+  const [ticketQr, setTicketQr] = useState("");
+
 
 
   const fetchCurrent = useCallback(async () => {
@@ -132,6 +149,10 @@ export default function AudienceVoting() {
     const modeParam = params.get("mode");
     const regIdParam = params.get("regId");
     const nameParam = params.get("name");
+
+    // Restore a previously saved ticket (deep-link QR wins if both exist).
+    const saved = readSavedTicket();
+    if (saved) setSavedTicket(saved);
 
     if (voterIdParam) {
       setVoterId(voterIdParam);
@@ -248,6 +269,89 @@ export default function AudienceVoting() {
   }, [step]);
   useEffect(() => () => cancelAutoRegister(), []);
 
+  // Render the ticket QR locally whenever a voter ID is on the vote step.
+  useEffect(() => {
+    let alive = true;
+    const id = voterId.trim();
+    if (!id || step !== "vote") {
+      setTicketQr("");
+      return () => {
+        alive = false;
+      };
+    }
+    qrDataUrl(
+      `${window.location.origin}/voting?voterId=${encodeURIComponent(id)}`,
+      180,
+    )
+      .then((url) => {
+        if (alive) setTicketQr(url);
+      })
+      .catch(() => {
+        if (alive) setTicketQr("");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [voterId, step]);
+
+  // Persist the current identity so a refresh / dead battery doesn't cost
+  // the voter their place. hasVoted is scoped to the session it happened in.
+  const persistTicket = (overrides = {}) => {
+    try {
+      const base = readSavedTicket() || {};
+      localStorage.setItem(
+        TICKET_STORAGE_KEY,
+        JSON.stringify({
+          ...base,
+          mode: identityMode,
+          voterId: voterId.trim(),
+          voterName: voterName.trim(),
+          registrationId: registrationId.trim().toUpperCase(),
+          participantName: participantName.trim(),
+          sessionId: session?._id || null,
+          hasVoted: false,
+          ...overrides,
+        }),
+      );
+    } catch {
+      /* storage unavailable (private mode) — non-fatal */
+    }
+  };
+
+  const resumeTicket = () => {
+    if (!savedTicket) return;
+    setErrorMessage("");
+    if (savedTicket.mode === "participant") {
+      setRegistrationId(savedTicket.registrationId || "");
+      setParticipantName(savedTicket.participantName || "");
+      setIdentityMode("participant");
+    } else {
+      setVoterId(savedTicket.voterId || "");
+      setVoterName(savedTicket.voterName || "");
+      setIdentityMode("voter");
+    }
+    // "Already voted" only counts within the session it was cast in —
+    // a fresh session (or a pre-event reset) starts them clean.
+    const sameSession =
+      savedTicket.sessionId && session && savedTicket.sessionId === session._id;
+    if (sameSession && savedTicket.hasVoted) {
+      setHasVoted(true);
+      setVoteSuccessMessage(
+        "You've already voted — thank you! Your vote is counted.",
+      );
+    }
+    setStep("vote");
+  };
+
+  const forgetTicket = () => {
+    try {
+      localStorage.removeItem(TICKET_STORAGE_KEY);
+    } catch {
+      /* ignore */
+    }
+    setSavedTicket(null);
+  };
+
   // Scanner result: accept a real ticket (stops the camera), otherwise show
   // feedback in the overlay and keep scanning.
   const handleTicketScan = (raw) => {
@@ -257,6 +361,7 @@ export default function AudienceVoting() {
     }
     setVoterId(scannedId);
     setIdentityMode("voter");
+    persistTicket({ mode: "voter", voterId: scannedId, hasVoted: false });
     setStep("vote");
     setErrorMessage("");
     setScannerOpen(false);
@@ -297,6 +402,12 @@ export default function AudienceVoting() {
       // Registration done — jump straight to voting with the identity set.
       // The Voter ID chip on the next screen is the confirmation.
       setIdentityMode("voter");
+      persistTicket({
+        mode: "voter",
+        voterId: data.voter.voterId,
+        voterName: trimmedName,
+        hasVoted: false,
+      });
       setStep("vote");
       setErrorMessage("");
       await fetchCurrent();
@@ -367,19 +478,30 @@ export default function AudienceVoting() {
       setVoteSuccessMessage(
         "Vote counted! Your vote for the Audience Choice prize has been recorded."
       );
+      persistTicket({ hasVoted: true, sessionId: session._id });
       await fetchCurrent();
     } catch (err) {
       console.error("Failed to cast vote:", err);
-      setErrorMessage(err.message || "Failed to cast vote.");
-      // Send the user back to the step where they can fix their details.
-      const msg = String(err.message || "");
-      if (msg.includes("Voter not found")) {
-        setStep("register");
-      } else if (
-        msg.includes("Registration ID not found") ||
-        msg.includes("does not match any member")
-      ) {
-        setStep("participant");
+      const msg = String(err.message || "Failed to cast vote.");
+      // A duplicate attempt (refresh, second device, saved ticket) is not a
+      // failure — show the thank-you state instead of a red error.
+      if (msg.includes("already cast a vote")) {
+        setHasVoted(true);
+        setVoteSuccessMessage(
+          "You've already voted — thank you! Your vote is already counted.",
+        );
+        await fetchCurrent();
+      } else {
+        setErrorMessage(msg);
+        // Send the user back to the step where they can fix their details.
+        if (msg.includes("Voter not found")) {
+          setStep("register");
+        } else if (
+          msg.includes("Registration ID not found") ||
+          msg.includes("does not match any member")
+        ) {
+          setStep("participant");
+        }
       }
     } finally {
       setIsSubmitting(false);
@@ -500,6 +622,55 @@ export default function AudienceVoting() {
                   Pick the option that fits you — new voters register in about
                   10 seconds.
                 </p>
+                {savedTicket && (
+                  <div className="mb-6 rounded-xl border border-emerald-400/30 bg-emerald-400/5 p-4 flex items-center justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-emerald-300">
+                        {savedTicket.sessionId &&
+                        session &&
+                        savedTicket.sessionId === session._id &&
+                        savedTicket.hasVoted
+                          ? "You've already voted ✓"
+                          : "Welcome back!"}
+                      </p>
+                      <p className="text-sm text-white/60 truncate">
+                        {savedTicket.mode === "participant" ? (
+                          <>
+                            {savedTicket.participantName} ·{" "}
+                            <span className="font-mono">
+                              {savedTicket.registrationId}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-mono">
+                              {savedTicket.voterId}
+                            </span>
+                            {savedTicket.voterName
+                              ? ` · ${savedTicket.voterName}`
+                              : ""}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={resumeTicket}
+                        className="bg-white text-black text-sm font-bold rounded-lg px-4 py-2 hover:bg-white/90 transition"
+                      >
+                        Continue →
+                      </button>
+                      <button
+                        type="button"
+                        onClick={forgetTicket}
+                        className="text-sm border border-white/20 text-white/60 hover:text-white rounded-lg px-3 py-2"
+                      >
+                        Not you? Start over
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="grid sm:grid-cols-3 gap-3">
                   <button
                     type="button"
@@ -671,6 +842,11 @@ export default function AudienceVoting() {
                     }
                     setErrorMessage("");
                     setIdentityMode("voter");
+                    persistTicket({
+                      mode: "voter",
+                      voterId: voterId.trim(),
+                      hasVoted: false,
+                    });
                     setStep("vote");
                   }}
                   className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 transition"
@@ -742,6 +918,7 @@ export default function AudienceVoting() {
                     }
                     setErrorMessage("");
                     setIdentityMode("participant");
+                    persistTicket({ mode: "participant", hasVoted: false });
                     setStep("vote");
                   }}
                   className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 transition"
@@ -828,13 +1005,20 @@ export default function AudienceVoting() {
                     <p className="text-xs text-white/50">
                       Save this QR — scanning it reopens your voting ticket
                     </p>
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-                        `${window.location.origin}${window.location.pathname}?voterId=${voterId.trim()}`,
-                      )}`}
-                      alt="Voter QR code"
-                      className="w-40 h-40 rounded-lg border border-white/15 bg-white p-2"
-                    />
+                    {ticketQr ? (
+                      <img
+                        src={ticketQr}
+                        alt="Voter QR code"
+                        className="w-40 h-40 rounded-lg border border-white/15 bg-white p-2"
+                      />
+                    ) : (
+                      <div className="w-40 h-40 rounded-lg border border-white/15 bg-white/10 flex items-center justify-center">
+                        <Loader2
+                          className="animate-spin text-white/60"
+                          size={22}
+                        />
+                      </div>
+                    )}
                     <div className="flex gap-2">
                       <button
                         type="button"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   ShieldCheck,
@@ -13,7 +13,9 @@ import {
   UserPlus,
   Copy,
   Check,
+  Trash2,
 } from "lucide-react";
+import { qrDataUrl } from "../ticketQr";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
@@ -73,6 +75,8 @@ export default function AdminPage() {
   const [deskIssuing, setDeskIssuing] = useState(false);
   const [deskIssued, setDeskIssued] = useState(null); // { voterId, name, phone, type, isNew }
   const [deskCopied, setDeskCopied] = useState(""); // "id" | "link"
+  const [deskQr, setDeskQr] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
@@ -242,6 +246,54 @@ export default function AdminPage() {
     setSuccessMessage("");
   };
 
+  // Generate the desk QR locally — no third-party service on event day.
+  useEffect(() => {
+    let alive = true;
+    if (!deskIssued) {
+      setDeskQr("");
+      return () => {
+        alive = false;
+      };
+    }
+    qrDataUrl(deskTicketLink(deskIssued.voterId), 200)
+      .then((url) => {
+        if (alive) setDeskQr(url);
+      })
+      .catch(() => {
+        if (alive) setDeskQr("");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [deskIssued]);
+
+  // Wipe all voting data (pre-event test cleanup). Strong confirm because
+  // there is no undo — sessions, votes, voters and prizes are gone.
+  const resetVotingData = async () => {
+    const confirmed = window.confirm(
+      "⚠️ RESET ALL VOTING DATA?\n\nThis permanently deletes:\n• the voting session(s)\n• every vote cast\n• every registered voter\n• all recorded prizes\n\nEligible candidate teams are NOT affected.\n\nUse only BEFORE the real event to clear test data. There is no undo.",
+    );
+    if (!confirmed) return;
+
+    setResetting(true);
+    try {
+      const { status, data } = await adminFetch("/api/voting/reset", {
+        method: "POST",
+      });
+      if (status === 200) {
+        ok("All voting data reset — sessions, votes, voters and prizes cleared.");
+        setSelectedWinner(null);
+        await Promise.all([loadCurrent(), loadVoters(), loadPrizes()]);
+      } else {
+        fail(data.message || "Reset failed.");
+      }
+    } catch {
+      fail("Reset failed.");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const loadPrizes = async () => {
     try {
       const { status, data } = await adminFetch("/api/voting/prizes");
@@ -286,13 +338,28 @@ export default function AdminPage() {
 
   // ---------------- Session actions ----------------
   const startSession = async () => {
+    // Starting while a session exists swaps the live tally (votes belong to
+    // their session id) — confirm first so a stray click can never discard
+    // votes mid-event.
+    if (session) {
+      const running = session.status === "active";
+      const confirmed = window.confirm(
+        running
+          ? "⚠️ A voting session is still RUNNING.\n\nStarting a new one ends it immediately and starts a FRESH tally — votes from the current session will not carry over.\n\nStart a new session anyway?"
+          : "Start a NEW voting session?\n\nThe previous session's tally will no longer be shown. Record the Audience Choice winner first if you haven't yet.\n\nStart new session?",
+      );
+      if (!confirmed) return;
+    }
     setStarting(true);
     setErrorMessage("");
     setSuccessMessage("");
     try {
       const { status, data } = await adminFetch("/api/voting/sessions", {
         method: "POST",
-        body: JSON.stringify({ durationMinutes: Number(duration) || 15 }),
+        body: JSON.stringify({
+          durationMinutes: Number(duration) || 15,
+          ...(session ? { force: true } : {}),
+        }),
       });
       if (status === 201) {
         setSession(data.session || null);
@@ -709,13 +776,17 @@ export default function AdminPage() {
               <p className="text-sm text-white/60 mb-4">
                 {deskIssued.name} · {deskIssued.phone} · {deskIssued.type}
               </p>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                  deskTicketLink(deskIssued.voterId),
-                )}`}
-                alt={`QR for ${deskIssued.voterId}`}
-                className="w-44 h-44 mx-auto rounded-lg border border-white/15 bg-white p-2"
-              />
+              {deskQr ? (
+                <img
+                  src={deskQr}
+                  alt={`QR for ${deskIssued.voterId}`}
+                  className="w-44 h-44 mx-auto rounded-lg border border-white/15 bg-white p-2"
+                />
+              ) : (
+                <div className="w-44 h-44 mx-auto rounded-lg border border-white/15 bg-black/40 flex items-center justify-center">
+                  <Loader2 className="animate-spin text-white/60" size={24} />
+                </div>
+              )}
               <p className="text-xs text-white/50 mt-3">
                 Have the person scan this — it opens the voting page with their
                 Voter ID already filled in.
@@ -1192,6 +1263,32 @@ export default function AdminPage() {
                 a slot above to remove a prize. Winners become ineligible for Audience Choice votes.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Danger zone — pre-event test cleanup */}
+        <div className="bg-white/5 border border-red-500/25 rounded-2xl p-8 mt-8">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-red-300">
+            <Trash2 size={20} /> Danger zone
+          </h2>
+          <div className="flex items-center justify-between gap-4 flex-wrap mt-4">
+            <p className="text-sm text-white/60 max-w-xl">
+              Reset wipes every session, vote, voter and prize so test data
+              never reaches the real event — candidate teams stay untouched.
+              There is no undo.
+            </p>
+            <button
+              onClick={resetVotingData}
+              disabled={resetting}
+              className="bg-red-500/90 hover:bg-red-500 text-white font-bold px-5 py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {resetting ? (
+                <Loader2 className="animate-spin" size={18} />
+              ) : (
+                <Trash2 size={18} />
+              )}
+              Reset All Voting Data
+            </button>
           </div>
         </div>
       </div>

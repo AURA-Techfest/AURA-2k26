@@ -206,17 +206,20 @@ export class WriteRateLimiter {
   }
 }
 
-// On-spot registration: ~30 new voters per minute per IP is far above what a
-// real desk produces, while stopping scripted floods. Env-overridable so the
-// limit can be tuned on Render without a redeploy.
+// On-spot registration: 60 new voters per minute per IP — generous for a
+// venue where every phone shares one NAT IP (a busy desk + a burst of
+// self-registrations when voting opens), still far below anything a real
+// desk produces, and bounded against scripted floods. Env-overridable so
+// the limit can be tuned on Render without a redeploy.
 export const voterRegisterLimiter = new WriteRateLimiter({
   windowMs: Number(process.env.VOTER_REGISTER_RATE_WINDOW_MS) || 60 * 1000,
-  maxRequests: Number(process.env.VOTER_REGISTER_RATE_MAX) || 30,
+  maxRequests: Number(process.env.VOTER_REGISTER_RATE_MAX) || 60,
 });
 
-// Vote casting: higher ceiling (everyone votes inside one short window, all
-// behind the venue's NAT) but still bounded against a write flood.
+// Vote casting: higher ceiling — everyone votes inside one short window
+// behind the venue's NAT (a crowd opening the page at once), but still
+// bounded against a write flood.
 export const voteCastLimiter = new WriteRateLimiter({
   windowMs: Number(process.env.VOTE_CAST_RATE_WINDOW_MS) || 60 * 1000,
-  maxRequests: Number(process.env.VOTE_CAST_RATE_MAX) || 150,
+  maxRequests: Number(process.env.VOTE_CAST_RATE_MAX) || 300,
 });

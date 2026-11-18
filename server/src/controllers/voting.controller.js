@@ -218,6 +218,22 @@ export const adminStartVotingSession = async (req, res) => {
       });
     }
 
+    // Guard against silently discarding a LIVE tally: votes belong to their
+    // session id, so starting a new session while one is running resets the
+    // public count. Require an explicit force flag (the admin UI confirms
+    // with the operator first). An already-EXPIRED session is not "running"
+    // — it is closed below and never blocks.
+    const activeNow = await VotingSession.findOne({ status: "active" });
+    const stillRunning =
+      activeNow && new Date(activeNow.endsAt).getTime() > Date.now();
+    if (stillRunning && !req.body?.force) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "A voting session is already running. Close it first, or pass force: true to start a new one (the current tally will not carry over).",
+      });
+    }
+
     const now = new Date();
     const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
