@@ -413,6 +413,13 @@ export default function AdminPage() {
       fail("No active session found.");
       return;
     }
+    // One-way action: a closed session cannot be reopened, and continuing
+    // later requires a NEW session (fresh tally — current votes don't carry
+    // over). Confirm so a stray click can never end the window early.
+    const confirmed = window.confirm(
+      "⚠️ End voting now?\n\nThe audience will no longer be able to vote. A closed session cannot be reopened — if voting must continue, a NEW session has to be started and the current tally will NOT carry over.\n\nEnd the session?",
+    );
+    if (!confirmed) return;
     setClosing(true);
     setErrorMessage("");
     setSuccessMessage("");
