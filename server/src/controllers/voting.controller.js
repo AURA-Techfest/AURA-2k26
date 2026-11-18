@@ -207,6 +207,18 @@ export const pickAudienceWinner = (results = [], podiumRegIds = []) => {
 };
 
 /**
+ * Pure helper: is this session still accepting votes right now?
+ *
+ * "Running" = active AND its window has not ended. An expired-but-not-yet-
+ * closed session is NOT running (it is closed lazily by other endpoints)
+ * and never blocks.
+ */
+export const isSessionRunning = (session) =>
+  !!session &&
+  session.status === "active" &&
+  Number(new Date(session.endsAt).getTime()) > Date.now();
+
+/**
  * Admin: Start a new Audience Choice voting session.
  * Duration must be an integer between 10 and 20 minutes (decided on spot).
  */
@@ -247,8 +259,7 @@ export const adminStartVotingSession = async (req, res) => {
     // with the operator first). An already-EXPIRED session is not "running"
     // — it is closed below and never blocks.
     const activeNow = await VotingSession.findOne({ status: "active" });
-    const stillRunning =
-      activeNow && new Date(activeNow.endsAt).getTime() > Date.now();
+    const stillRunning = isSessionRunning(activeNow);
     if (stillRunning && !req.body?.force) {
       return res.status(400).json({
         success: false,
@@ -936,6 +947,18 @@ export const adminRecordPodiumPrizes = async (req, res) => {
       });
     }
 
+    // Event-day ordering lock: podium winners leave the LIVE ballot, so the
+    // podium cannot be changed while votes are still being cast. Record
+    // podium prizes (1st/2nd/3rd) only after the session closes.
+    const liveSession = await VotingSession.findOne({ status: "active" });
+    if (isSessionRunning(liveSession)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Voting is still open — podium prizes (1st/2nd/3rd) can only be recorded after the session closes. Podium winners leave the live ballot, so the podium is locked while votes are being cast.",
+      });
+    }
+
     const savedPrizes = [];
     const droppedAudience = [];
     for (const p of cleanPrizes) {
@@ -1032,9 +1055,26 @@ export const adminDeletePodiumPrize = async (req, res) => {
       });
     }
 
+    const cleanType = String(prizeType || "").trim().toLowerCase();
+
+    // Removing a podium prize re-adds that team to the LIVE ballot — same
+    // mutation hazard as assigning one, so it is locked while votes are
+    // being cast. Audience Choice removal is unaffected (that record is
+    // only displayed publicly after the session ends).
+    if (TOP_PRIZE_TYPES.includes(cleanType)) {
+      const liveSession = await VotingSession.findOne({ status: "active" });
+      if (isSessionRunning(liveSession)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Voting is still open — podium prizes cannot be changed while votes are being cast. Close the session first.",
+        });
+      }
+    }
+
     const deleted = await Prize.findOneAndDelete({
       registrationId: String(registrationId || "").trim().toUpperCase(),
-      prizeType: String(prizeType || "").trim().toLowerCase(),
+      prizeType: cleanType,
     });
 
     if (!deleted) {

@@ -13,6 +13,7 @@ import {
   matchTeamMember,
   buildTally,
   pickAudienceWinner,
+  isSessionRunning,
   namesMatch,
 } from "../src/controllers/voting.controller.js";
 
@@ -140,6 +141,15 @@ async function testVoting() {
     pickAudienceWinner(zeroVote, ["AURA2K26-BBB222"]) === null,
     "Zero-vote rows are never eligible even if not podiumed",
   );
+
+  // 5c. Session-running predicate (guards podium lock + start-session force)
+  const liveSession = { status: "active", endsAt: new Date(Date.now() + 60000) };
+  const expiredSession = { status: "active", endsAt: new Date(Date.now() - 1000) };
+  const closedSession = { status: "closed", endsAt: new Date(Date.now() + 60000) };
+  assert(isSessionRunning(liveSession) === true, "Active session with future end is running");
+  assert(isSessionRunning(expiredSession) === false, "Expired active session is not running");
+  assert(isSessionRunning(closedSession) === false, "Closed session is not running");
+  assert(isSessionRunning(null) === false, "Missing session is not running");
 
   // 6. Participant name normalization
   assert(

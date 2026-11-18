@@ -14,6 +14,7 @@ import {
   Copy,
   Check,
   Trash2,
+  Lock,
 } from "lucide-react";
 import { qrDataUrl } from "../ticketQr";
 
@@ -443,6 +444,14 @@ export default function AdminPage() {
       fail("No votes yet — the winner is decided once the audience votes.");
       return;
     }
+    // Recording the winner closes the session immediately — confirm while
+    // voting is still live so a stray click can't end the window early.
+    if (votingLive) {
+      const confirmed = window.confirm(
+        "⚠️ Voting is still LIVE.\n\nRecording the Audience Choice winner closes the session immediately — no more votes can be cast.\n\nRecord the winner and end voting now?",
+      );
+      if (!confirmed) return;
+    }
     setRecording(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -646,6 +655,9 @@ export default function AdminPage() {
 
   const topPrizes = (prizes || []).filter((p) => p.prizeType !== "audience_choice");
   const audiencePrize = (prizes || []).find((p) => p.prizeType === "audience_choice");
+  // Podium is locked while votes can still be cast (podium winners leave
+  // the live ballot — server enforces this too; this is the early notice).
+  const votingLive = session?.status === "active" && timeRemaining > 0;
 
   // ---------------- Login screen ----------------
   if (!authed) {
@@ -1140,6 +1152,14 @@ export default function AdminPage() {
             <Trophy size={22} /> Audience Choice Podium — Pick Winning Teams
           </h2>
 
+          {votingLive && (
+            <div className="mb-5 rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-200 flex items-center gap-2">
+              <Lock size={16} className="shrink-0" />
+              Voting is LIVE — the podium is locked until voting closes
+              (podium winners leave the live ballot).
+            </div>
+          )}
+
           {/* Podium slots — who holds each rank right now (click = choose rank, ✕ = remove) */}
           <div className="grid sm:grid-cols-3 gap-3 mb-6">
             {TOP_TYPES.map((type) => {
@@ -1171,10 +1191,14 @@ export default function AdminPage() {
                           e.stopPropagation();
                           removeTopPrize(holder);
                         }}
-                        disabled={deleting}
+                        disabled={deleting || votingLive}
                         aria-label={`Remove ${PRIZE_LABELS[type]}`}
-                        title={`Remove ${PRIZE_LABELS[type]}`}
-                        className="absolute top-2 right-2 px-1 text-white/40 hover:text-red-400 disabled:opacity-40"
+                        title={
+                          votingLive
+                            ? "Locked while voting is live"
+                            : `Remove ${PRIZE_LABELS[type]}`
+                        }
+                        className="absolute top-2 right-2 px-1 text-white/40 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         ✕
                       </button>
@@ -1265,7 +1289,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={assignPodiumPrize}
-                disabled={recording || !podiumSelected}
+                disabled={recording || !podiumSelected || votingLive}
                 className="w-full bg-amber-400/90 text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {recording ? (
@@ -1275,9 +1299,11 @@ export default function AdminPage() {
                 )}
               </button>
               <p className="text-white/50 text-sm mt-4">
-                One team per rank — assigning replaces the previous holder automatically. Use ✕ on
-                a slot above to remove a prize. Podium winners automatically give up Audience
-                Choice (no team can hold both).
+                Order: close voting first — the podium unlocks once the window
+                ends (podium winners leave the live ballot). One team per rank —
+                assigning replaces the previous holder; use ✕ on a slot above to
+                remove. Podium winners automatically give up Audience Choice (no
+                team can hold both).
               </p>
             </div>
           </div>
