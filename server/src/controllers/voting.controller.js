@@ -307,22 +307,22 @@ export const adminListVoters = async (req, res) => {
     const query = {};
     if (type) query.type = type;
 
-    const voters = await Voter.find(query).sort({ createdAt: -1 });
+    let voters = await Voter.find(query).sort({ createdAt: -1 }).lean();
 
     if (search) {
-      const regex = new RegExp(String(search).trim(), "i");
-      voters.data = voters.data.filter(
+      const term = String(search).trim().toLowerCase();
+      voters = voters.filter(
         (v) =>
-          v.name.toLowerCase().includes(String(search).trim().toLowerCase()) ||
-          v.voterId.toLowerCase().includes(String(search).trim().toLowerCase()) ||
-          (v.phone || "").toLowerCase().includes(String(search).trim().toLowerCase())
+          String(v.name || "").toLowerCase().includes(term) ||
+          String(v.voterId || "").toLowerCase().includes(term) ||
+          String(v.phone || "").toLowerCase().includes(term)
       );
     }
 
     return res.status(200).json({
       success: true,
-      count: voters.data.length,
-      voters: voters.data,
+      count: voters.length,
+      voters,
     });
   } catch (error) {
     console.error("Error in adminListVoters:", error);
