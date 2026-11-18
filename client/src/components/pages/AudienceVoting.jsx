@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Trophy,
@@ -11,7 +11,12 @@ import {
   ArrowLeft,
   Timer,
   Loader2,
+  Copy,
+  Check,
+  Share2,
+  ScanLine,
 } from "lucide-react";
+import QrScanner from "../QrScanner";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
 const API_URL =
@@ -28,6 +33,23 @@ const formatCountdown = (totalSeconds) => {
   const minutes = Math.floor(safeSeconds / 60);
   const seconds = safeSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
+// Pull an AURA voter ID out of a scanned QR payload — either a bare
+// AURA-V-XXXXXXXX or our deep link (.../voting?voterId=AURA-V-XXXXXXXX).
+const extractVoterId = (raw) => {
+  const text = String(raw || "").trim();
+  const direct = text.match(/AURA-V-[0-9A-F]{8}/i);
+  if (direct) return direct[0].toUpperCase();
+  try {
+    const url = new URL(text, window.location.origin);
+    const param = (url.searchParams.get("voterId") || "").trim();
+    const match = param.match(/^AURA-V-[0-9A-F]{8}$/i);
+    if (match) return match[0].toUpperCase();
+  } catch {
+    /* not a URL — bare text we don't recognize */
+  }
+  return null;
 };
 
 export default function AudienceVoting() {
@@ -57,6 +79,19 @@ export default function AudienceVoting() {
   //   choose -> register | existing | participant -> vote
   const [step, setStep] = useState("choose");
   const [identityMode, setIdentityMode] = useState(null); // "voter" | "participant"
+
+  // Ticket QR scanner + copy-to-clipboard feedback
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState(""); // "id" | "link"
+
+  // Auto-submit registration once name + 10-digit phone are complete:
+  // refs always hold the latest input so the pending timer can't fire on
+  // stale/edited values, and only one timer may be armed at a time.
+  const nameRef = useRef("");
+  const phoneRef = useRef("");
+  const autoTimerRef = useRef(null);
+  nameRef.current = voterName;
+  phoneRef.current = voterPhone;
 
 
 
@@ -151,6 +186,82 @@ export default function AudienceVoting() {
     results.forEach((r) => map.set(r.candidateRegistrationId, r));
     return map;
   }, [results]);
+
+  const ticketLink = voterId.trim()
+    ? `${window.location.origin}/voting?voterId=${encodeURIComponent(
+        voterId.trim(),
+      )}`
+    : "";
+
+  const copyText = async (text, field) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      window.setTimeout(() => {
+        setCopiedField((current) => (current === field ? "" : current));
+      }, 1600);
+    } catch {
+      setErrorMessage("Couldn't copy automatically — long-press the text to copy it.");
+    }
+  };
+
+  const shareTicket = async () => {
+    if (!ticketLink) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My AURA voting ticket",
+          url: ticketLink,
+        });
+      } catch {
+        /* dismissed by the user — do nothing */
+      }
+      return;
+    }
+    await copyText(ticketLink, "link");
+  };
+
+  const cancelAutoRegister = () => {
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
+  };
+
+  // Arm a single one-shot timer once both fields are complete; every
+  // keystroke either re-arms (fields incomplete) or leaves it alone, so a
+  // failed submission never loops on its own — only a fresh edit retries.
+  const scheduleAutoRegister = () => {
+    const digits = phoneRef.current.replace(/\D/g, "");
+    if (digits.length !== 10 || !nameRef.current.trim()) return;
+    if (autoTimerRef.current) return;
+    autoTimerRef.current = window.setTimeout(() => {
+      autoTimerRef.current = null;
+      handleRegisterVoter();
+    }, 600);
+  };
+
+  // Never let a pending auto-register fire after leaving the register step.
+  useEffect(() => {
+    if (step !== "register") cancelAutoRegister();
+  }, [step]);
+  useEffect(() => () => cancelAutoRegister(), []);
+
+  // Scanner result: accept a real ticket (stops the camera), otherwise show
+  // feedback in the overlay and keep scanning.
+  const handleTicketScan = (raw) => {
+    const scannedId = extractVoterId(raw);
+    if (!scannedId) {
+      return "That doesn't look like an AURA ticket — point at your own ticket QR.";
+    }
+    setVoterId(scannedId);
+    setIdentityMode("voter");
+    setStep("vote");
+    setErrorMessage("");
+    setScannerOpen(false);
+    return true;
+  };
 
   const handleRegisterVoter = async () => {
     const trimmedName = voterName.trim();
@@ -450,7 +561,13 @@ export default function AudienceVoting() {
                 <p className="text-white/60 mb-6">
                   Takes 10 seconds — you'll get your Voter ID immediately.
                 </p>
-                <div className="space-y-4">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleRegisterVoter();
+                  }}
+                  className="space-y-4"
+                >
                   <div>
                     <label className="block text-sm text-white/70 mb-1">
                       Your Name
@@ -458,7 +575,14 @@ export default function AudienceVoting() {
                     <input
                       type="text"
                       value={voterName}
-                      onChange={(e) => setVoterName(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setVoterName(v);
+                        nameRef.current = v;
+                        if (!v.trim()) cancelAutoRegister();
+                        else scheduleAutoRegister();
+                      }}
+                      autoComplete="name"
                       placeholder="Your name"
                       className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                     />
@@ -471,7 +595,18 @@ export default function AudienceVoting() {
                       type="tel"
                       inputMode="numeric"
                       value={voterPhone}
-                      onChange={(e) => setVoterPhone(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setVoterPhone(v);
+                        phoneRef.current = v;
+                        if (v.replace(/\D/g, "").length !== 10) {
+                          cancelAutoRegister();
+                        } else {
+                          scheduleAutoRegister();
+                        }
+                      }}
+                      autoComplete="tel"
+                      enterKeyHint="go"
                       placeholder="10-digit phone number"
                       maxLength={15}
                       className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
@@ -480,15 +615,18 @@ export default function AudienceVoting() {
                       Used to make sure each person gets only one vote.
                     </p>
                   </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleRegisterVoter}
-                  disabled={isSubmitting}
-                  className="mt-6 w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/90 transition"
-                >
-                  {isSubmitting ? "Registering…" : "Get my Voter ID"}
-                </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="mt-2 w-full bg-white text-black font-bold py-3 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white/90 transition"
+                  >
+                    {isSubmitting ? "Registering…" : "Get my Voter ID"}
+                  </button>
+                  <p className="text-[11px] text-white/40 text-center">
+                    Registers by itself once your name and 10-digit phone are
+                    filled in.
+                  </p>
+                </form>
               </>
             ) : step === "existing" ? (
               <>
@@ -503,10 +641,20 @@ export default function AudienceVoting() {
                   <ArrowLeft size={14} /> Back
                 </button>
                 <h3 className="text-2xl font-bold mb-2">Enter your Voter ID</h3>
-                <p className="text-white/60 mb-6">
+                <p className="text-white/60 mb-5">
                   It's on your registration confirmation, or scan the ticket QR
                   you were given.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage("");
+                    setScannerOpen(true);
+                  }}
+                  className="w-full mb-4 bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-white/20 transition"
+                >
+                  <ScanLine size={18} /> Scan ticket QR instead
+                </button>
                 <input
                   type="text"
                   value={voterId}
@@ -614,7 +762,7 @@ export default function AudienceVoting() {
             ) : (
               <>
                 <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-                  <div className="bg-black/40 border border-white/15 rounded-lg px-4 py-2">
+                  <div className="bg-black/40 border border-white/15 rounded-lg px-4 py-2 flex items-center gap-3 flex-wrap">
                     {identityMode === "voter" ? (
                       <p className="text-sm text-white/70">
                         Voting as{" "}
@@ -640,6 +788,23 @@ export default function AudienceVoting() {
                         </span>
                       </p>
                     )}
+                    {identityMode === "voter" && voterId.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => copyText(voterId.trim(), "id")}
+                        className="shrink-0 inline-flex items-center gap-1 text-xs border border-white/20 text-white/70 hover:text-white hover:border-white/50 rounded-md px-2 py-1"
+                      >
+                        {copiedField === "id" ? (
+                          <>
+                            <Check size={12} /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} /> Copy ID
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -659,7 +824,7 @@ export default function AudienceVoting() {
                   One vote per person.
                 </p>
                 {identityMode === "voter" && voterId.trim() && (
-                  <div className="flex flex-col items-center gap-2 pt-6">
+                  <div className="flex flex-col items-center gap-3 pt-6">
                     <p className="text-xs text-white/50">
                       Save this QR — scanning it reopens your voting ticket
                     </p>
@@ -670,6 +835,30 @@ export default function AudienceVoting() {
                       alt="Voter QR code"
                       className="w-40 h-40 rounded-lg border border-white/15 bg-white p-2"
                     />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyText(ticketLink, "link")}
+                        className="inline-flex items-center gap-1 text-xs border border-white/20 text-white/70 hover:text-white hover:border-white/50 rounded-md px-3 py-1.5"
+                      >
+                        {copiedField === "link" ? (
+                          <>
+                            <Check size={12} /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={12} /> Copy link
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={shareTicket}
+                        className="inline-flex items-center gap-1 text-xs border border-white/20 text-white/70 hover:text-white hover:border-white/50 rounded-md px-3 py-1.5"
+                      >
+                        <Share2 size={12} /> Share
+                      </button>
+                    </div>
                   </div>
                 )}
               </>
@@ -752,6 +941,12 @@ export default function AudienceVoting() {
 
   return (
     <div className="min-h-screen bg-[#0b0909] text-white">
+      {scannerOpen && (
+        <QrScanner
+          onScan={handleTicketScan}
+          onClose={() => setScannerOpen(false)}
+        />
+      )}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <Link
           to="/"

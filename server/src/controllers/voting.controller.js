@@ -15,6 +15,14 @@ export const clientIpOf = (req) =>
     .split(",")[0]
     .trim() || req.socket?.remoteAddress || "unknown";
 
+// Requests carrying the correct admin key come from the trusted desk UI
+// (Quick-Issue Desk) and may look voters up by phone alone.
+const isTrustedAdmin = (req) => {
+  const expectedKey = process.env.ADMIN_VOTING_KEY;
+  const providedKey = req.headers["x-admin-key"];
+  return Boolean(expectedKey && providedKey && providedKey === expectedKey);
+};
+
 export const MIN_VOTING_MINUTES = 10;
 export const MAX_VOTING_MINUTES = 20;
 const TOP_PRIZE_TYPES = ["first", "second", "third"];
@@ -59,6 +67,14 @@ export const normalizePersonName = (value) =>
     .replace(/[.,\-_/()]/g, " ") // other punctuation acts as a space
     .replace(/\s+/g, " ")
     .trim();
+
+// Same-person check used before handing a Voter ID back over the public
+// API: names must be non-empty and equal after normalization
+// ("Rahul's Kumar" == "rahul kumar", "Rahul  Kumar" == "rahul kumar").
+export const namesMatch = (a, b) => {
+  const normalizedA = normalizePersonName(a);
+  return normalizedA !== "" && normalizedA === normalizePersonName(b);
+};
 
 /**
  * Check whether a typed participant name belongs to a registered team and
@@ -335,21 +351,6 @@ export const createVoter = async (req, res) => {
     const { name, phone, email, type, registrationId } = req.body || {};
     const trimmedName = String(name || "").trim();
 
-    if (!trimmedName) {
-      return res.status(400).json({
-        success: false,
-        message: "Voter name is required.",
-      });
-    }
-
-    // Length cap keeps oversized payloads out of the DB and the admin list.
-    if (trimmedName.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Voter name must be 100 characters or fewer.",
-      });
-    }
-
     // Validate type explicitly — otherwise the mongoose enum error leaks out
     // as a 500 instead of a clean 400.
     const ALLOWED_VOTER_TYPES = ["participant", "volunteer", "spectator"];
@@ -381,29 +382,68 @@ export const createVoter = async (req, res) => {
       });
     }
 
-    const crypto = await import("crypto");
-    const voterId = `AURA-V-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
-
     // Deduplicate on-spot voters by contact (phone or email) so the same
     // person cannot register multiple voter identities (e.g. fake/different names).
     const contactFilters = [];
     if (normalizedPhone) contactFilters.push({ phone: normalizedPhone });
     if (normalizedEmail) contactFilters.push({ email: normalizedEmail });
 
-    let voter =
+    const existing =
       contactFilters.length > 0
         ? await Voter.findOne({ $or: contactFilters })
         : null;
 
-    if (voter) {
-      return res.status(200).json({
-        success: true,
-        message: "Voter already registered.",
-        voter,
+    if (existing) {
+      // The desk (holding the admin key) may look people up by phone alone —
+      // a returning voter's ID is read out / re-issued without retyping.
+      if (isTrustedAdmin(req)) {
+        return res.status(200).json({
+          success: true,
+          message: "Voter already registered.",
+          voter: existing,
+        });
+      }
+
+      // Public: the Voter ID is the voting credential, so it is only handed
+      // back when the caller also gives the name the voter signed up with.
+      // (Otherwise anyone who knows a phone number could steal that vote.)
+      if (trimmedName && namesMatch(existing.name, trimmedName)) {
+        return res.status(200).json({
+          success: true,
+          message: "Welcome back! Your Voter ID is ready.",
+          voter: existing,
+        });
+      }
+
+      return res.status(409).json({
+        success: false,
+        message: trimmedName
+          ? "This phone number is already registered with a different name. Enter the same name you signed up with to get your Voter ID."
+          : "This phone number is already registered. Enter the name you signed up with to get your Voter ID.",
       });
     }
 
-    voter = await Voter.create({
+    // New voter — name required (checked after the lookup so a returning
+    // phone is resolved above instead of erroring out).
+    if (!trimmedName) {
+      return res.status(400).json({
+        success: false,
+        message: "Voter name is required.",
+      });
+    }
+
+    // Length cap keeps oversized payloads out of the DB and the admin list.
+    if (trimmedName.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Voter name must be 100 characters or fewer.",
+      });
+    }
+
+    const crypto = await import("crypto");
+    const voterId = `AURA-V-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
+    const voter = await Voter.create({
       voterId,
       name: trimmedName,
       phone: normalizedPhone || undefined,

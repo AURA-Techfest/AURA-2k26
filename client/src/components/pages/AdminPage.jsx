@@ -10,6 +10,9 @@ import {
   Eye,
   EyeOff,
   X,
+  UserPlus,
+  Copy,
+  Check,
 } from "lucide-react";
 
 const rawApiUrl = import.meta.env.VITE_API_URL;
@@ -62,6 +65,14 @@ export default function AdminPage() {
   const [recording, setRecording] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [removingVoterId, setRemovingVoterId] = useState(null);
+
+  // Quick-Issue Desk: register on-spot voters straight from the queue
+  const [deskName, setDeskName] = useState("");
+  const [deskPhone, setDeskPhone] = useState("");
+  const [deskType, setDeskType] = useState("spectator");
+  const [deskIssuing, setDeskIssuing] = useState(false);
+  const [deskIssued, setDeskIssued] = useState(null); // { voterId, name, phone, type, isNew }
+  const [deskCopied, setDeskCopied] = useState(""); // "id" | "link"
 
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
@@ -147,6 +158,88 @@ export default function AdminPage() {
     } finally {
       setRemovingVoterId(null);
     }
+  };
+
+  // Quick-Issue Desk: issue (or look up) a voter ID in one submit. Sends the
+  // admin key so an already-registered phone returns its existing ID without
+  // needing a name match — the volunteer just reads it out.
+  const issueVoter = async (e) => {
+    e?.preventDefault();
+    const phoneDigits = deskPhone.replace(/\D/g, "");
+    const trimmedName = deskName.trim();
+
+    if (!trimmedName) {
+      fail("Enter the person's name.");
+      return;
+    }
+    if (!/^\d{7,15}$/.test(phoneDigits)) {
+      fail("Enter a valid phone number (7-15 digits).");
+      return;
+    }
+
+    setDeskIssuing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/voting/voters`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: phoneDigits,
+          type: deskType,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.voter) {
+        fail(data.message || "Failed to issue Voter ID.");
+        return;
+      }
+      setDeskIssued({
+        voterId: data.voter.voterId,
+        name: data.voter.name || trimmedName,
+        phone: data.voter.phone || phoneDigits,
+        type: data.voter.type || deskType,
+        isNew: res.status === 201,
+      });
+      setDeskCopied("");
+      ok(
+        res.status === 201
+          ? `Voter ID ${data.voter.voterId} issued.`
+          : `Already registered — showing existing Voter ID ${data.voter.voterId}.`,
+      );
+      loadVoters();
+    } catch {
+      fail("Failed to issue Voter ID.");
+    } finally {
+      setDeskIssuing(false);
+    }
+  };
+
+  const deskTicketLink = (voterId) =>
+    `${window.location.origin}/voting?voterId=${encodeURIComponent(voterId)}`;
+
+  const copyDeskText = async (text, field) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setDeskCopied(field);
+      window.setTimeout(() => {
+        setDeskCopied((current) => (current === field ? "" : current));
+      }, 1600);
+    } catch {
+      fail("Couldn't copy automatically — long-press the text to copy it.");
+    }
+  };
+
+  // Clear the desk for the next person in the queue.
+  const deskNextPerson = () => {
+    setDeskIssued(null);
+    setDeskName("");
+    setDeskPhone("");
+    setDeskCopied("");
+    setErrorMessage("");
+    setSuccessMessage("");
   };
 
   const loadPrizes = async () => {
@@ -589,6 +682,156 @@ export default function AdminPage() {
             <p className="text-xs uppercase tracking-wider text-white/50 mb-1">Votes</p>
             <p className="text-xl font-bold">{votesCast}</p>
           </div>
+        </div>
+
+        {/* Quick-Issue Desk — register on-spot voters from the queue */}
+        <div className="bg-white/5 border border-amber-400/25 rounded-2xl p-8 mb-8">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <UserPlus size={22} className="text-amber-300" /> Quick-Issue
+              Desk
+            </h2>
+            <p className="text-sm text-white/50">
+              Issue Voter IDs without leaving the panel — one person at a time
+            </p>
+          </div>
+
+          {deskIssued ? (
+            <div className="mt-5 rounded-xl border border-amber-400/30 bg-amber-400/5 p-6 text-center max-w-lg mx-auto">
+              <p className="text-xs uppercase tracking-widest text-white/50 mb-1">
+                {deskIssued.isNew
+                  ? "Voter ID issued"
+                  : "Already registered — existing Voter ID"}
+              </p>
+              <p className="font-mono text-2xl md:text-3xl font-bold text-white mb-1">
+                {deskIssued.voterId}
+              </p>
+              <p className="text-sm text-white/60 mb-4">
+                {deskIssued.name} · {deskIssued.phone} · {deskIssued.type}
+              </p>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                  deskTicketLink(deskIssued.voterId),
+                )}`}
+                alt={`QR for ${deskIssued.voterId}`}
+                className="w-44 h-44 mx-auto rounded-lg border border-white/15 bg-white p-2"
+              />
+              <p className="text-xs text-white/50 mt-3">
+                Have the person scan this — it opens the voting page with their
+                Voter ID already filled in.
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                <button
+                  type="button"
+                  onClick={() => copyDeskText(deskIssued.voterId, "id")}
+                  className="inline-flex items-center gap-1 text-sm border border-white/20 text-white/80 hover:text-white hover:border-white/50 rounded-lg px-3 py-2"
+                >
+                  {deskCopied === "id" ? (
+                    <>
+                      <Check size={14} /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} /> Copy ID
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyDeskText(deskTicketLink(deskIssued.voterId), "link")
+                  }
+                  className="inline-flex items-center gap-1 text-sm border border-white/20 text-white/80 hover:text-white hover:border-white/50 rounded-lg px-3 py-2"
+                >
+                  {deskCopied === "link" ? (
+                    <>
+                      <Check size={14} /> Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={14} /> Copy ticket link
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={deskNextPerson}
+                  className="bg-white text-black font-bold text-sm rounded-lg px-4 py-2 hover:bg-white/90 transition"
+                >
+                  Register next person ✓
+                </button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={issueVoter} className="mt-5">
+              <div className="grid md:grid-cols-[1fr_1fr_auto_auto] gap-3 items-end">
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={deskName}
+                    onChange={(e) => setDeskName(e.target.value)}
+                    autoComplete="off"
+                    placeholder="Person's name"
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={deskPhone}
+                    onChange={(e) => setDeskPhone(e.target.value)}
+                    autoComplete="off"
+                    placeholder="7-15 digits"
+                    maxLength={15}
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
+                    Type
+                  </label>
+                  <div className="flex rounded-lg overflow-hidden border border-white/15">
+                    {["spectator", "volunteer", "participant"].map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setDeskType(t)}
+                        className={`px-3 py-3 text-sm capitalize transition ${
+                          deskType === t
+                            ? "bg-white text-black font-bold"
+                            : "bg-black/40 text-white/60 hover:text-white"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={deskIssuing}
+                  className="bg-amber-400 text-black font-bold rounded-lg px-6 py-3 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-300 transition whitespace-nowrap"
+                >
+                  {deskIssuing ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    "Issue Voter ID"
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-white/40 mt-3">
+                Already registered phone? Submitting again shows their existing
+                Voter ID instead of making a new one.
+              </p>
+            </form>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">

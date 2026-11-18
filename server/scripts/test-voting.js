@@ -12,6 +12,7 @@ import {
   normalizePersonName,
   matchTeamMember,
   buildTally,
+  namesMatch,
 } from "../src/controllers/voting.controller.js";
 
 import {
@@ -143,6 +144,28 @@ async function testVoting() {
   assert(
     matchTeamMember({}, "Anyone") === null,
     "Missing registration records reject every name",
+  );
+
+  // ---- namesMatch: guards who gets a Voter ID back on re-registration ----
+  assert(
+    namesMatch("Rahul Kumar", "rahul kumar") === true,
+    "namesMatch: case + spacing differences still match",
+  );
+  assert(
+    namesMatch("Rahul's Kumar", "Rahul Kumar") === true,
+    "namesMatch: possessive apostrophe still matches",
+  );
+  assert(
+    namesMatch("O'Brien", "Obrien") === true,
+    "namesMatch: internal apostrophe still matches",
+  );
+  assert(
+    namesMatch("Rahul Kumar", "Rahul Sharma") === false,
+    "namesMatch: different names do not match",
+  );
+  assert(
+    namesMatch("Rahul Kumar", "") === false && namesMatch("", "") === false,
+    "namesMatch: blank name never matches (no ID handed out)",
   );
 
   // ---- Write rate limiter (public registration / vote endpoints) ----
