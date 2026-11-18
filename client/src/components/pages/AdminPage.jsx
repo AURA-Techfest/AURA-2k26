@@ -417,7 +417,12 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authed) return;
     loadAll();
-    const poll = setInterval(() => loadCurrent(), 10000);
+    // Refresh live data every tick — including the voter list so the
+    // "Registered Voters" count never shows stale data.
+    const poll = setInterval(() => {
+      loadCurrent();
+      loadVoters();
+    }, 10000);
     return () => clearInterval(poll);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
@@ -638,26 +643,78 @@ export default function AdminPage() {
             <Trophy size={22} /> Audience Choice Winner
           </h2>
 
-          <div className="max-h-72 overflow-y-auto space-y-2 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm uppercase tracking-widest text-white/50">
+              Live leaderboard
+            </p>
+            <p className="text-sm text-white/50">
+              {votesCast} vote{votesCast === 1 ? "" : "s"} cast
+            </p>
+          </div>
+
+          <div className="max-h-96 overflow-y-auto space-y-3 mb-4">
             {results.length === 0 && (
               <p className="text-white/50">
                 No votes yet — the winner will be decided by the audience's votes.
               </p>
             )}
-            {results.map((r) => (
-              <div
-                key={r.candidateRegistrationId}
-                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-4 py-2"
-              >
-                <div className="min-w-0 pr-3">
-                  <p className="font-semibold truncate">{cleanName(r.candidateTeamName)}</p>
-                  <p className="text-xs text-white/50">{r.candidateRegistrationId}</p>
+            {results.map((r, idx) => {
+              const pct = Number(r.percentage) || 0;
+              const isLeader = idx === 0 && r.votes > 0;
+              const rankColors =
+                idx === 0
+                  ? "bg-amber-400 text-black"
+                  : idx === 1
+                  ? "bg-neutral-300 text-black"
+                  : idx === 2
+                  ? "bg-orange-700/80 text-white"
+                  : "bg-white/10 text-white/60";
+              return (
+                <div
+                  key={r.candidateRegistrationId}
+                  className={`rounded-xl border px-4 py-3 ${
+                    isLeader
+                      ? "border-amber-400/50 bg-amber-400/5"
+                      : "border-white/10 bg-black/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${rankColors}`}
+                      >
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate">
+                          {cleanName(r.candidateTeamName)}
+                        </p>
+                        <p className="text-xs text-white/50">
+                          {r.candidateRegistrationId}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-bold text-amber-300">{pct}%</p>
+                      <p className="text-xs text-white/50">
+                        {r.votes} vote{r.votes === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Bar length = live vote percentage */}
+                  <div className="h-2.5 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        isLeader ? "bg-amber-400" : "bg-amber-400/40"
+                      }`}
+                      style={{
+                        width: `${r.votes > 0 ? Math.max(pct, 1.5) : 0}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <p className="shrink-0 text-sm font-bold text-amber-300">
-                  {r.votes} vote{r.votes === 1 ? "" : "s"} · {r.percentage}%
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
