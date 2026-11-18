@@ -12,6 +12,7 @@ import {
   normalizePersonName,
   matchTeamMember,
   buildTally,
+  pickAudienceWinner,
   namesMatch,
 } from "../src/controllers/voting.controller.js";
 
@@ -100,6 +101,44 @@ async function testVoting() {
   assert(
     quarterTally.results[0].percentage === 25,
     "Percentage is computed correctly (1/4 = 25%)",
+  );
+
+  // 5b. Audience Choice / podium mutual exclusivity (pure picker)
+  const ranked = tally.results; // Alpha 3, Beta 2, Gamma 1
+  assert(
+    pickAudienceWinner(ranked, []).candidateRegistrationId ===
+      "AURA2K26-AAA111",
+    "Picker returns the vote leader when no podium exists",
+  );
+  assert(
+    pickAudienceWinner(ranked, ["AURA2K26-AAA111"]).candidateRegistrationId ===
+      "AURA2K26-BBB222",
+    "Picker skips the podiumed vote leader (1st place ≠ Audience Choice)",
+  );
+  assert(
+    pickAudienceWinner(ranked, ["aura2k26-aaa111", "AURA2K26-BBB222"])
+      .candidateRegistrationId === "AURA2K26-CCC333",
+    "Picker skips multiple podiumed teams case-insensitively",
+  );
+  assert(
+    pickAudienceWinner(ranked, [
+      "AURA2K26-AAA111",
+      "AURA2K26-BBB222",
+      "AURA2K26-CCC333",
+    ]) === null,
+    "Picker returns null when every voted team holds a podium prize",
+  );
+  assert(
+    pickAudienceWinner([], ["AURA2K26-AAA111"]) === null,
+    "Picker returns null when there are no votes",
+  );
+  const zeroVote = [
+    { candidateRegistrationId: "AURA2K26-AAA111", votes: 0 },
+    { candidateRegistrationId: "AURA2K26-BBB222", votes: 2 },
+  ];
+  assert(
+    pickAudienceWinner(zeroVote, ["AURA2K26-BBB222"]) === null,
+    "Zero-vote rows are never eligible even if not podiumed",
   );
 
   // 6. Participant name normalization

@@ -34,6 +34,14 @@ const prizeSchema = new mongoose.Schema(
   },
 );
 
+// At most ONE Audience Choice prize may ever exist. Partial index: only
+// audience_choice docs are covered, so any number of podium prizes coexist.
+// (0 audience_choice docs exist in prod today — safe to build on deploy.)
+prizeSchema.index(
+  { prizeType: 1 },
+  { unique: true, partialFilterExpression: { prizeType: "audience_choice" } },
+);
+
 const Prize = mongoose.model("Prize", prizeSchema);
 
 export default Prize;

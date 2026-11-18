@@ -184,6 +184,29 @@ export const buildTally = (votes = []) => {
 };
 
 /**
+ * Pure helper: pick the Audience Choice winner from a tally's results.
+ *
+ * Rule (event-day, server-enforced): 1st/2nd/3rd and Audience Choice are
+ * MUTUALLY EXCLUSIVE — any team already holding a podium prize is skipped,
+ * and the highest-voted remaining team wins. Returns null when every team
+ * with votes is podiumed (or there are no votes at all).
+ */
+export const pickAudienceWinner = (results = [], podiumRegIds = []) => {
+  const podiumed = new Set(
+    (podiumRegIds || []).map((id) => String(id || "").trim().toUpperCase()),
+  );
+  return (
+    (results || []).find(
+      (entry) =>
+        Number(entry?.votes) > 0 &&
+        !podiumed.has(
+          String(entry?.candidateRegistrationId || "").trim().toUpperCase(),
+        ),
+    ) || null
+  );
+};
+
+/**
  * Admin: Start a new Audience Choice voting session.
  * Duration must be an integer between 10 and 20 minutes (decided on spot).
  */
@@ -914,12 +937,23 @@ export const adminRecordPodiumPrizes = async (req, res) => {
     }
 
     const savedPrizes = [];
+    const droppedAudience = [];
     for (const p of cleanPrizes) {
       if (!TOP_PRIZE_TYPES.includes(p.prizeType)) {
         return res.status(400).json({
           success: false,
           message: "prizeType must be one of: first, second, third.",
         });
+      }
+
+      // Mutual exclusivity: taking a podium slot means this team can no
+      // longer hold Audience Choice — drop that record if present.
+      const dropped = await Prize.findOneAndDelete({
+        registrationId: p.registrationId,
+        prizeType: "audience_choice",
+      });
+      if (dropped) {
+        droppedAudience.push(dropped.teamName || p.teamName);
       }
 
       // Keep the podium unambiguous:
@@ -950,7 +984,11 @@ export const adminRecordPodiumPrizes = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Podium prizes recorded successfully.",
+      message:
+        "Podium prizes recorded successfully." +
+        (droppedAudience.length
+          ? ` Audience Choice was removed from ${droppedAudience.join(", ")} — record the winner again to award the next eligible team.`
+          : ""),
       prizes: savedPrizes,
       allPrizes: await Prize.find().sort({ rank: 1, awardedAt: -1 }).lean(),
     });
@@ -959,7 +997,6 @@ export const adminRecordPodiumPrizes = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to record podium prizes.",
-      error: error.message,
     });
   }
 };
@@ -1187,19 +1224,52 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
       });
     }
 
-    // The Audience Choice winner is decided ONLY by votes: always derive the
-    // leader from this session's tally — no manual team selection is possible.
+    // The Audience Choice winner is decided ONLY by votes: derive the leader
+    // from this session's tally — no manual team selection is possible —
+    // then skip any team that already holds a podium prize. 1st/2nd/3rd and
+    // Audience Choice are mutually exclusive (server-enforced rule).
     const votes = await AudienceVote.find({ sessionId: activeSession._id });
     const tally = buildTally(votes);
-    const winnerRegistrationId = tally.leader?.candidateRegistrationId;
 
-    if (!winnerRegistrationId) {
+    if (!tally.votesCast) {
       return res.status(400).json({
         success: false,
         message:
           "No votes have been cast yet — the Audience Choice winner is decided by the audience's votes.",
       });
     }
+
+    const podiumPrizes = await Prize.find({
+      prizeType: { $in: TOP_PRIZE_TYPES },
+    }).select("registrationId teamName");
+
+    const winnerPick = pickAudienceWinner(
+      tally.results,
+      podiumPrizes.map((p) => p.registrationId),
+    );
+
+    if (!winnerPick) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Every team with votes already holds a podium prize (1st/2nd/3rd) — there is no eligible Audience Choice winner.",
+      });
+    }
+
+    const winnerRegistrationId = winnerPick.candidateRegistrationId;
+
+    // Podium teams the raw vote leader would have been (transparency for the
+    // operator: "why didn't the top row win?").
+    const skippedTeams = podiumPrizes
+      .filter((p) =>
+        tally.results.some(
+          (r) =>
+            Number(r.votes) > 0 &&
+            String(r.candidateRegistrationId || "").trim().toUpperCase() ===
+              String(p.registrationId || "").trim().toUpperCase(),
+        ),
+      )
+      .map((p) => p.teamName);
 
     const candidate = await Registration.findOne({
       registrationId: String(winnerRegistrationId).trim().toUpperCase(),
@@ -1211,6 +1281,10 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
         message: "The vote leader's team could not be found in registrations.",
       });
     }
+
+    // Exactly one Audience Choice record may exist — clear any previous one
+    // before upserting (re-recording after new votes must never duplicate).
+    await Prize.deleteMany({ prizeType: "audience_choice" });
 
     // Record the Audience Choice win
     const prize = await Prize.findOneAndUpdate(
@@ -1232,7 +1306,11 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Audience Choice winner recorded successfully!",
+      message:
+        `Audience Choice winner recorded: ${candidate.teamName} (${winnerPick.votes} vote${winnerPick.votes === 1 ? "" : "s"}).` +
+        (skippedTeams.length
+          ? ` Podium teams skipped: ${skippedTeams.join(", ")}.`
+          : ""),
       prize,
       session: activeSession,
     });
@@ -1241,7 +1319,6 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to record Audience Choice winner.",
-      error: error.message,
     });
   }
 };

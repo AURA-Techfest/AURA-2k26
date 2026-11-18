@@ -1018,6 +1018,14 @@ export default function AdminPage() {
             {results.map((r, idx) => {
               const pct = Number(r.percentage) || 0;
               const isLeader = idx === 0 && r.votes > 0;
+              // Podium holders can never also win Audience Choice — flag it
+              // right on the leaderboard so the skip is never a surprise.
+              const podiumHold = (prizes || []).find(
+                (p) =>
+                  TOP_TYPES.includes(p.prizeType) &&
+                  String(p.registrationId || "").trim().toUpperCase() ===
+                    String(r.candidateRegistrationId || "").trim().toUpperCase(),
+              );
               const rankColors =
                 idx === 0
                   ? "bg-amber-400 text-black"
@@ -1049,6 +1057,12 @@ export default function AdminPage() {
                         <p className="text-xs text-white/50">
                           {r.candidateRegistrationId}
                         </p>
+                        {podiumHold && (
+                          <span className="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300">
+                            Holds {PRIZE_LABELS[podiumHold.prizeType]} — not
+                            eligible
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
@@ -1076,7 +1090,8 @@ export default function AdminPage() {
 
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
             <p className="text-sm text-white/60">
-              The winner is decided only by votes — this records the current vote leader.
+              Decided only by votes — records the highest-voted team that
+              doesn't already hold 1st/2nd/3rd.
             </p>
             <button
               onClick={recordVoteLeader}
@@ -1112,7 +1127,8 @@ export default function AdminPage() {
               </div>
             ) : (
               <p className="text-white/50 text-sm">
-                Not recorded yet — it is decided by the vote tally above.
+                Not recorded yet — decided by the vote tally above. Teams that
+                hold 1st/2nd/3rd are skipped automatically.
               </p>
             )}
           </div>
@@ -1260,7 +1276,8 @@ export default function AdminPage() {
               </button>
               <p className="text-white/50 text-sm mt-4">
                 One team per rank — assigning replaces the previous holder automatically. Use ✕ on
-                a slot above to remove a prize. Winners become ineligible for Audience Choice votes.
+                a slot above to remove a prize. Podium winners automatically give up Audience
+                Choice (no team can hold both).
               </p>
             </div>
           </div>
