@@ -44,6 +44,7 @@ export default function AudienceVoting() {
   const [participantName, setParticipantName] = useState("");
   const [voterId, setVoterId] = useState("");
   const [voterName, setVoterName] = useState("");
+  const [voterPhone, setVoterPhone] = useState("");
   const [candidateRegistrationId, setCandidateRegistrationId] =
     useState("");
   const [hasVoted, setHasVoted] = useState(false);
@@ -143,8 +144,15 @@ export default function AudienceVoting() {
 
   const handleRegisterVoter = async () => {
     const trimmedName = voterName.trim();
+    const phoneDigits = voterPhone.replace(/\D/g, "");
     if (!trimmedName) {
       setErrorMessage("Please enter your name to register.");
+      return;
+    }
+    if (phoneDigits.length !== 10) {
+      setErrorMessage(
+        "Please enter a valid 10-digit phone number — it is used to make sure each person registers only once."
+      );
       return;
     }
     setIsSubmitting(true);
@@ -154,7 +162,11 @@ export default function AudienceVoting() {
       const res = await fetch(`${API_URL}/api/voting/voters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, type: "spectator" }),
+        body: JSON.stringify({
+          name: trimmedName,
+          phone: phoneDigits,
+          type: "spectator",
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -162,7 +174,9 @@ export default function AudienceVoting() {
       }
       setVoterId(data.voter.voterId);
       setVoteSuccessMessage(
-        `Voter registered! Your voter ID is ${data.voter.voterId}. You can now cast your vote.`
+        data.voter.phone === phoneDigits && res.status === 200
+          ? `You're already registered! Your voter ID is ${data.voter.voterId}.`
+          : `Voter registered! Your voter ID is ${data.voter.voterId}. You can now cast your vote.`
       );
       await fetchCurrent();
     } catch (err) {
@@ -402,6 +416,23 @@ export default function AudienceVoting() {
                 </div>
                 <div>
                   <label className="block text-sm text-white/70 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={voterPhone}
+                    onChange={(e) => setVoterPhone(e.target.value)}
+                    placeholder="10-digit phone number"
+                    maxLength={15}
+                    className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+                  />
+                  <p className="text-[11px] text-white/40 mt-1">
+                    Used to make sure each person gets only one vote.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm text-white/70 mb-1">
                     Vote for
                   </label>
                   <select
@@ -448,9 +479,13 @@ export default function AudienceVoting() {
 
                 {voterId.trim() && (
                   <div className="flex flex-col items-center gap-2 pt-2">
-                    <p className="text-xs text-white/50">Scan to open your voting ticket</p>
+                    <p className="text-xs text-white/50">
+                      Scan to open your voting ticket
+                    </p>
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(voterId.trim())}`}
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                        `${window.location.origin}${window.location.pathname}?voterId=${voterId.trim()}`,
+                      )}`}
                       alt="Voter QR code"
                       className="w-40 h-40 rounded-lg border border-white/15 bg-white p-2"
                     />

@@ -9,6 +9,8 @@ import {
   MIN_VOTING_MINUTES,
   MAX_VOTING_MINUTES,
   normalizeVoterKey,
+  normalizePersonName,
+  matchTeamMember,
   buildTally,
 } from "../src/controllers/voting.controller.js";
 
@@ -91,6 +93,50 @@ async function testVoting() {
   assert(
     quarterTally.results[0].percentage === 25,
     "Percentage is computed correctly (1/4 = 25%)",
+  );
+
+  // 6. Participant name normalization
+  assert(
+    normalizePersonName("  Rahul's  Sharma. ") === "rahul sharma",
+    "Person name normalization strips punctuation and collapses spaces",
+  );
+
+  // 7. Team member matching against registration records
+  const reg = {
+    teamLeaderName: "Rahul Sharma",
+    teamMemberDetails:
+      "Ananya Das | Aliah University | CSE | 3rd | 9876543210\n" +
+      "Rahul Sharma Maity | Aliah University | ECE | 2nd | 9876543211",
+  };
+
+  assert(
+    matchTeamMember(reg, "rahul sharma") === "Rahul Sharma",
+    "Leader name matches case-insensitively",
+  );
+  assert(
+    matchTeamMember(reg, "Ananya Das") === "Ananya Das",
+    "Member name from pipe-separated row matches",
+  );
+  assert(
+    matchTeamMember(reg, "Ananya  Das ") === "Ananya Das",
+    "Extra whitespace in typed name still matches",
+  );
+  assert(
+    matchTeamMember(reg, "Rahul Maity") === "Rahul Sharma Maity",
+    "Partial multi-word name matches recorded full name",
+  );
+  assert(
+    matchTeamMember(reg, "Rahul") === null,
+    "Single first name alone is rejected (blocks extra votes)",
+  );
+  assert(
+    matchTeamMember(reg, "Fake Person") === null,
+    "Name not on the team is rejected",
+  );
+  assert(matchTeamMember(reg, "   ") === null, "Blank name is rejected");
+  assert(
+    matchTeamMember({}, "Anyone") === null,
+    "Missing registration records reject every name",
   );
 
   console.log("==================================================");

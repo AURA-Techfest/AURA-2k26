@@ -38,6 +38,61 @@ export const normalizeVoterKey = (registrationId, participantName) =>
     .trim()
     .toLowerCase()}`;
 
+// Normalize a person's name for matching against registration records:
+// lowercase, strip punctuation, collapse whitespace.
+export const normalizePersonName = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .replace(/['’]s\b/g, "") // possessive: "Rahul's" -> "rahul"
+    .replace(/[''`´]/g, "") // remaining apostrophes: "O'Brien" -> "obrien"
+    .replace(/[.,\-_/()]/g, " ") // other punctuation acts as a space
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * Check whether a typed participant name belongs to a registered team and
+ * return the canonical name from the team's records (so the voter key is
+ * built from the recorded spelling, not free-typed text).
+ *
+ * Registration records hold `teamLeaderName` plus `teamMemberDetails` as
+ * newline-separated rows of "Member Name | Institution | Dept | Year | Phone".
+ */
+export const matchTeamMember = (registration, rawName) => {
+  const target = normalizePersonName(rawName);
+  if (!target) return null;
+
+  const recordedNames = [];
+  const leader = String(registration?.teamLeaderName || "").trim();
+  if (leader) recordedNames.push(leader);
+
+  for (const line of String(registration?.teamMemberDetails || "").split(/\r?\n/)) {
+    const nameSegment = line.split("|")[0];
+    if (nameSegment && nameSegment.trim()) recordedNames.push(nameSegment);
+  }
+
+  const targetTokens = target.split(" ").filter(Boolean);
+
+  for (const recorded of recordedNames) {
+    const normalized = normalizePersonName(recorded);
+    if (!normalized) continue;
+    if (normalized === target) return recorded.trim();
+
+    // Tolerate minor variations ("Rahul Sharma" vs "Rahul Sharma Maity") but
+    // only when BOTH sides are multi-word, so single first names can't be
+    // used to sneak in extra votes from the same team.
+    const recordedTokens = normalized.split(" ").filter(Boolean);
+    if (
+      targetTokens.length >= 2 &&
+      recordedTokens.length >= 2 &&
+      targetTokens.every((token) => recordedTokens.includes(token))
+    ) {
+      return recorded.trim();
+    }
+  }
+
+  return null;
+};
+
 const getTimeRemainingSeconds = (session) => {
   if (!session) return 0;
   const endsAtMs = new Date(session.endsAt).getTime();
@@ -54,7 +109,11 @@ const closeSessionIfExpired = async (session) => {
     session.status = "closed";
     session.closedAt = new Date();
     await session.save();
-    return { ...session.toObject(), autoClosed: true };
+    // Return the mongoose document itself. Returning a plain object here used
+    // to break every caller that later calls .save() on the result — most
+    // notably recording the Audience Choice winner after the timer expired
+    // threw a 500 instead of succeeding.
+    return session;
   }
   return session;
 };
@@ -263,22 +322,50 @@ export const createVoter = async (req, res) => {
       });
     }
 
+    // Validate type explicitly — otherwise the mongoose enum error leaks out
+    // as a 500 instead of a clean 400.
+    const ALLOWED_VOTER_TYPES = ["participant", "volunteer", "spectator"];
+    const normalizedType = String(type || "spectator").trim().toLowerCase();
+    if (!ALLOWED_VOTER_TYPES.includes(normalizedType)) {
+      return res.status(400).json({
+        success: false,
+        message: `type must be one of: ${ALLOWED_VOTER_TYPES.join(", ")}.`,
+      });
+    }
+
+    const normalizedPhone = String(phone || "").replace(/[\s\-()]/g, "");
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+
+    if (normalizedPhone && !/^\+?\d{7,15}$/.test(normalizedPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid phone number (7-15 digits).",
+      });
+    }
+
+    // One person = one voter identity. A contact detail is required so the
+    // same person can't register unlimited voter IDs with fake names.
+    if (!normalizedPhone && !normalizedEmail) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "A phone number or email is required so each person registers only once.",
+      });
+    }
+
     const crypto = await import("crypto");
     const voterId = `AURA-V-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
     // Deduplicate on-spot voters by contact (phone or email) so the same
     // person cannot register multiple voter identities (e.g. fake/different names).
-    const filter = {};
-    if (phone) {
-      filter.phone = String(phone).trim();
-    } else if (email) {
-      filter.email = String(email).trim().toLowerCase();
-    }
+    const contactFilters = [];
+    if (normalizedPhone) contactFilters.push({ phone: normalizedPhone });
+    if (normalizedEmail) contactFilters.push({ email: normalizedEmail });
 
-    let voter;
-    if (Object.keys(filter).length > 0) {
-      voter = await Voter.findOne({ ...filter });
-    }
+    let voter =
+      contactFilters.length > 0
+        ? await Voter.findOne({ $or: contactFilters })
+        : null;
 
     if (voter) {
       return res.status(200).json({
@@ -291,9 +378,9 @@ export const createVoter = async (req, res) => {
     voter = await Voter.create({
       voterId,
       name: trimmedName,
-      phone: phone ? String(phone).trim() : undefined,
-      email: email ? String(email).trim().toLowerCase() : undefined,
-      type: type || "spectator",
+      phone: normalizedPhone || undefined,
+      email: normalizedEmail || undefined,
+      type: normalizedType,
       registrationId: registrationId
         ? String(registrationId).trim().toUpperCase()
         : undefined,
@@ -455,10 +542,38 @@ export const castAudienceVote = async (req, res) => {
             "registrationId, participantName and candidateRegistrationId are required.",
         });
       }
-      voterContext.voterKey = normalizeVoterKey(registrationId, participantName);
-      voterContext.registrationId = String(registrationId || "").trim().toUpperCase();
-      voterContext.participantName = String(participantName || "").trim();
-      voterContext.teamName = String(req.body?.teamName || "").trim();
+
+      const normalizedRegId = String(registrationId).trim().toUpperCase();
+
+      // The participant must belong to a real registered team…
+      const registration = await Registration.findOne({
+        registrationId: normalizedRegId,
+      }).select("registrationId teamName teamLeaderName teamMemberDetails");
+
+      if (!registration) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Team Registration ID not found. Double-check the ID from your registration confirmation.",
+        });
+      }
+
+      // …and the typed name must match a member of THAT team. Without this
+      // check anyone could vote unlimited times by inventing names on a real
+      // team's registration ID.
+      const canonicalName = matchTeamMember(registration, participantName);
+      if (!canonicalName) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "This name does not match any member of the registered team. Enter your exact name as it appears in the team's registration.",
+        });
+      }
+
+      voterContext.voterKey = normalizeVoterKey(normalizedRegId, canonicalName);
+      voterContext.registrationId = normalizedRegId;
+      voterContext.participantName = canonicalName;
+      voterContext.teamName = registration.teamName;
     }
 
     const session = await VotingSession.findById(id);
@@ -549,6 +664,15 @@ export const castAudienceVote = async (req, res) => {
       vote,
     });
   } catch (error) {
+    // Unique index { sessionId, voterKey }: if two requests from the same
+    // voter race each other, the loser gets a duplicate-key error — report
+    // it as "already voted" instead of a 500.
+    if (error?.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "This participant has already cast a vote in this session.",
+      });
+    }
     console.error("Error in castAudienceVote:", error);
     return res.status(500).json({
       success: false,
@@ -865,8 +989,6 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { candidateRegistrationId, candidateTeamName, participantName } =
-      req.body || {};
 
     const session = await VotingSession.findById(id);
     if (!session) {
@@ -886,24 +1008,28 @@ export const adminRecordAudienceChoiceWinner = async (req, res) => {
       });
     }
 
-    // If no candidate was provided, derive the leader from this session's votes.
-    let winnerRegistrationId = candidateRegistrationId;
+    // The Audience Choice winner is decided ONLY by votes: always derive the
+    // leader from this session's tally — no manual team selection is possible.
+    const votes = await AudienceVote.find({ sessionId: activeSession._id });
+    const tally = buildTally(votes);
+    const winnerRegistrationId = tally.leader?.candidateRegistrationId;
+
     if (!winnerRegistrationId) {
-      const votes = await AudienceVote.find({ sessionId: activeSession._id });
-      const tally = buildTally(votes);
-      winnerRegistrationId = tally.leader?.candidateRegistrationId;
+      return res.status(400).json({
+        success: false,
+        message:
+          "No votes have been cast yet — the Audience Choice winner is decided by the audience's votes.",
+      });
     }
 
-    const candidate = winnerRegistrationId
-      ? await Registration.findOne({
-          registrationId: String(winnerRegistrationId).trim().toUpperCase(),
-        }).select("registrationId teamName")
-      : null;
+    const candidate = await Registration.findOne({
+      registrationId: String(winnerRegistrationId).trim().toUpperCase(),
+    }).select("registrationId teamName");
 
     if (!candidate) {
       return res.status(404).json({
         success: false,
-        message: "No winning team could be determined. Cast votes or select a team first.",
+        message: "The vote leader's team could not be found in registrations.",
       });
     }
 
