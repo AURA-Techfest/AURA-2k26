@@ -48,7 +48,7 @@ function HomePage({ showRegistrationForm, setShowRegistrationForm }) {
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.03)_1.5px,transparent_1.5px)] [background-size:28px_28px] pointer-events-none z-10" />
 
       {/* Main Sticky Navbar */}
-      <Navbar onRegisterClick={() => setShowRegistrationForm(true)} />
+      <Navbar />
 
       {/* Left Sidebar */}
       <Sidebar />
