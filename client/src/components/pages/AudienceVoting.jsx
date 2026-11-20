@@ -15,7 +15,10 @@ import {
   Check,
   Share2,
   ScanLine,
+  Medal,
+  Sparkles,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import QrScanner from "../QrScanner";
 import { qrDataUrl } from "../ticketQr";
 
@@ -34,6 +37,13 @@ const formatCountdown = (totalSeconds) => {
   const minutes = Math.floor(safeSeconds / 60);
   const seconds = safeSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
+// Percentage display for the leaderboard: whole numbers stay clean (50),
+// fractional ones drop trailing zeros (33.33 -> 33.3).
+const formatPct = (pct) => {
+  const n = Number(pct) || 0;
+  return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(1)));
 };
 
 // Pull an AURA voter ID out of a scanned QR payload — either a bare
@@ -210,6 +220,25 @@ export default function AudienceVoting() {
     results.forEach((r) => map.set(r.candidateRegistrationId, r));
     return map;
   }, [results]);
+
+  // Final standings for the closing board: every team that received votes
+  // (already ranked by the server), followed by finalists with zero votes —
+  // so the board always shows the whole field, not just the voted teams.
+  const leaderboard = React.useMemo(() => {
+    const seen = new Set(results.map((r) => r.candidateRegistrationId));
+    const zeros = candidates
+      .filter((c) => !seen.has(c.registrationId))
+      .sort((a, b) =>
+        String(a.teamName || "").localeCompare(String(b.teamName || "")),
+      )
+      .map((c) => ({
+        candidateRegistrationId: c.registrationId,
+        candidateTeamName: c.teamName,
+        votes: 0,
+        percentage: 0,
+      }));
+    return [...results, ...zeros];
+  }, [results, candidates]);
 
   const ticketLink = voterId.trim()
     ? `${window.location.origin}/voting?voterId=${encodeURIComponent(
@@ -546,58 +575,228 @@ export default function AudienceVoting() {
     }
 
     if (displayStatus === "closed") {
+      const scoredTeams = results.filter((r) => r.votes > 0).length;
+      const winnerEntry = winner
+        ? results.find(
+            (r) =>
+              r.candidateRegistrationId === winner.candidateRegistrationId,
+          ) || null
+        : null;
+      const winnerPct = winnerEntry?.percentage ?? 0;
+
       return (
-        <div>
-          {/* Results */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <Trophy className="text-amber-400" size={32} />
-              <h3 className="text-2xl font-bold">Audience Choice Results</h3>
+        <div className="max-w-3xl mx-auto">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-center text-center mb-8"
+          >
+            <span className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-amber-300 border border-amber-400/30 bg-amber-400/10 rounded-full px-4 py-1.5 mb-4">
+              <Sparkles size={13} /> Voting closed · Final results
+            </span>
+            <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+              Audience Choice Leaderboard
+            </h3>
+            <div className="flex flex-wrap justify-center gap-2 mt-5">
+              <span className="text-xs font-semibold bg-white/10 border border-white/10 rounded-full px-3.5 py-1.5 tabular-nums">
+                {votesCast} vote{votesCast === 1 ? "" : "s"} cast
+              </span>
+              <span className="text-xs font-semibold bg-white/10 border border-white/10 rounded-full px-3.5 py-1.5 tabular-nums">
+                {scoredTeams} of {candidates.length || leaderboard.length}{" "}
+                teams scored
+              </span>
+              <span className="text-xs font-semibold bg-white/10 border border-white/10 rounded-full px-3.5 py-1.5">
+                1 vote per person
+              </span>
             </div>
-            <p className="text-white/60 mb-6">
-              Total votes cast: <span className="text-white font-semibold">{votesCast}</span>
-            </p>
+          </motion.div>
 
-            {winner ? (
-              <div className="bg-amber-400/10 border border-amber-400/40 rounded-xl p-6 text-center">
-                <Trophy className="mx-auto mb-3 text-amber-400" size={44} />
-                <p className="text-sm uppercase tracking-widest text-amber-300 mb-2">
-                  Audience Choice Winner
-                </p>
-                <h4 className="text-3xl font-extrabold">{winner.candidateTeamName}</h4>
-                <p className="text-white/60 mt-2">{winner.votes} votes</p>
-              </div>
-            ) : (
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                <p className="text-white/60">No votes were cast in this session.</p>
-              </div>
-            )}
-          </div>
-
-          {/* Tally list */}
-          <div className="space-y-3">
-            {results.map((r, idx) => (
-              <div
-                key={r.candidateRegistrationId}
-                className={`flex items-center justify-between rounded-xl border p-4 ${
-                  winner?.candidateRegistrationId === r.candidateRegistrationId
-                    ? "border-amber-400/50 bg-amber-400/10"
-                    : "border-white/10 bg-white/5"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <p className="font-semibold">{r.candidateTeamName}</p>
-                    <p className="text-xs text-white/50">{r.votes} votes</p>
+          {votesCast > 0 ? (
+            <>
+              {/* Winner hero */}
+              {winner && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="relative overflow-hidden rounded-3xl p-[1.5px] bg-gradient-to-b from-amber-300/90 via-amber-500/40 to-amber-500/10 mb-8"
+                >
+                  <div className="pointer-events-none absolute -top-28 left-1/2 h-64 w-72 -translate-x-1/2 rounded-full bg-amber-400/25 blur-3xl" />
+                  <div className="relative rounded-3xl bg-[#121010] px-6 py-10 text-center">
+                    <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-yellow-200 via-amber-300 to-amber-500 shadow-[0_0_45px_rgba(251,191,36,0.55)]">
+                      <Trophy
+                        className="text-black"
+                        size={30}
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.35em] text-amber-300">
+                      Audience Choice Winner
+                    </p>
+                    <h4 className="text-3xl sm:text-5xl font-extrabold tracking-tight break-words">
+                      {winner.candidateTeamName}
+                    </h4>
+                    <div className="mt-6 flex items-center justify-center gap-5 sm:gap-8">
+                      <div>
+                        <p className="text-2xl font-extrabold tabular-nums">
+                          {winner.votes}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-white/50">
+                          votes
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-white/15" />
+                      <div>
+                        <p className="text-2xl font-extrabold tabular-nums text-amber-300">
+                          {formatPct(winnerPct)}%
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-white/50">
+                          of all votes
+                        </p>
+                      </div>
+                      <div className="h-8 w-px bg-white/15" />
+                      <div>
+                        <p className="text-2xl font-extrabold tabular-nums">
+                          {scoredTeams}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-white/50">
+                          teams scored
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <span className="text-white/80 font-medium">{r.percentage}%</span>
+                </motion.div>
+              )}
+
+              {/* Full standings */}
+              <div className="mb-3 flex items-center justify-between">
+                <h4 className="flex items-center gap-2 text-lg font-bold">
+                  <Medal size={18} className="text-amber-300" /> Full standings
+                </h4>
+                <p className="text-xs text-white/50 tabular-nums">
+                  {leaderboard.length} team{leaderboard.length === 1 ? "" : "s"}
+                </p>
               </div>
-            ))}
-          </div>
+
+              <div className="space-y-2.5">
+                {leaderboard.map((r, idx) => {
+                  const pct = Number(r.percentage) || 0;
+                  const isZero = r.votes <= 0;
+                  const isWinnerRow =
+                    winner?.candidateRegistrationId ===
+                    r.candidateRegistrationId;
+                  // Gold / silver / bronze badges — only for teams that
+                  // actually scored (a zero-vote row never inherits a medal).
+                  const rankBadge = isZero
+                    ? "bg-white/10 text-white/50"
+                    : idx === 0
+                    ? "bg-gradient-to-br from-yellow-200 via-amber-300 to-amber-500 text-black shadow-[0_0_14px_rgba(251,191,36,0.45)]"
+                    : idx === 1
+                    ? "bg-gradient-to-br from-slate-100 via-slate-300 to-slate-400 text-black"
+                    : idx === 2
+                    ? "bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 text-white"
+                    : "bg-white/10 text-white/60";
+                  return (
+                    <motion.div
+                      key={r.candidateRegistrationId}
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.35,
+                        delay: Math.min(0.15 + idx * 0.05, 0.6),
+                      }}
+                      className={`rounded-xl border px-4 py-3.5 sm:px-5 ${
+                        isWinnerRow
+                          ? "border-amber-400/60 bg-amber-400/[0.07] ring-1 ring-amber-400/30"
+                          : isZero
+                          ? "border-white/10 bg-white/[0.02]"
+                          : "border-white/10 bg-white/5"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black tabular-nums ${rankBadge}`}
+                        >
+                          {idx + 1}
+                        </span>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-1.5 flex items-center gap-2">
+                            <p
+                              className={`truncate font-semibold ${
+                                isZero ? "text-white/45" : "text-white"
+                              }`}
+                            >
+                              {r.candidateTeamName}
+                            </p>
+                            {isWinnerRow && (
+                              <span className="shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black tracking-widest text-black">
+                                WINNER
+                              </span>
+                            )}
+                          </div>
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                            <motion.div
+                              className={`h-full rounded-full ${
+                                idx === 0 && !isZero
+                                  ? "bg-gradient-to-r from-amber-300 to-amber-500"
+                                  : isZero
+                                  ? "bg-white/20"
+                                  : "bg-amber-400/50"
+                              }`}
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${isZero ? 0 : Math.max(pct, 1.5)}%`,
+                              }}
+                              transition={{
+                                duration: 0.8,
+                                delay: Math.min(0.3 + idx * 0.06, 0.8),
+                                ease: "easeOut",
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="w-16 shrink-0 text-right sm:w-20">
+                          <p
+                            className={`text-xl font-extrabold tabular-nums ${
+                              isZero ? "text-white/35" : "text-white"
+                            }`}
+                          >
+                            {formatPct(pct)}
+                            <span className="text-sm font-bold text-white/45">
+                              %
+                            </span>
+                          </p>
+                          <p className="text-[11px] tabular-nums text-white/50">
+                            {r.votes} vote{r.votes === 1 ? "" : "s"}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            /* Window closed without a single vote */
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-10 text-center">
+              <Trophy className="mx-auto mb-3 text-white/25" size={44} />
+              <p className="mb-1 text-lg font-semibold">
+                No votes were cast
+              </p>
+              <p className="text-sm text-white/50">
+                The Audience Choice window has closed without any votes.
+              </p>
+            </div>
+          )}
+
+          <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-white/40">
+            Decided by the audience alone — one vote per person. Teams that
+            take 1st, 2nd or 3rd place are not eligible for Audience Choice.
+          </p>
         </div>
       );
     }
@@ -1150,7 +1349,9 @@ export default function AudienceVoting() {
         <div className="mb-10">
           <h1 className="text-4xl font-extrabold mb-2">Audience Choice Voting</h1>
           <p className="text-white/60">
-            Vote for the Audience Choice prize winner among eligible teams.
+            {displayStatus === "closed"
+              ? "Voting has closed — here are the final standings."
+              : "Vote for the Audience Choice prize winner among eligible teams."}
           </p>
         </div>
 
