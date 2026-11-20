@@ -16,6 +16,8 @@ import {
   adminDeleteVoter,
   adminCloseSession,
   adminExportTeamsCsv,
+  adminListTeams,
+  adminSetFinalist,
 } from "../controllers/voting.controller.js";
 
 const router = express.Router();
@@ -52,6 +54,12 @@ router.get("/prizes", requireAdmin, adminListPrizes);
 
 // Admin: export registered teams as CSV — team name + topic only
 router.get("/export/teams", requireAdmin, adminExportTeamsCsv);
+
+// Admin: all registered teams with finalist flags (finalist picker)
+router.get("/teams", requireAdmin, adminListTeams);
+
+// Admin: add/remove a team from the voting options (finalist shortlist)
+router.put("/finalists", requireAdmin, adminSetFinalist);
 
 // Admin: record Audience Choice winner and close session
 router.post("/sessions/:id/winner", requireAdmin, adminRecordAudienceChoiceWinner);

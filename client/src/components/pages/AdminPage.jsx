@@ -16,6 +16,7 @@ import {
   Trash2,
   Lock,
   Download,
+  Star,
 } from "lucide-react";
 import { qrDataUrl } from "../ticketQr";
 
@@ -80,6 +81,8 @@ export default function AdminPage() {
   const [deskQr, setDeskQr] = useState("");
   const [resetting, setResetting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [teamsAll, setTeamsAll] = useState([]); // every registered team + finalist flag
+  const [finalistQuery, setFinalistQuery] = useState("");
 
   // Podium
   const [podiumQuery, setPodiumQuery] = useState("");
@@ -343,6 +346,46 @@ export default function AdminPage() {
     loadCurrent();
     loadVoters();
     loadPrizes();
+    loadTeams();
+  };
+
+  // All registered teams (with finalist flags) for the finalist picker.
+  const loadTeams = async () => {
+    try {
+      const { status, data } = await adminFetch("/api/voting/teams");
+      if (status === 200) setTeamsAll(data.teams || []);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Add/remove a team from the voting options (the ballot = finalists).
+  const toggleFinalist = async (team, makeFinalist) => {
+    try {
+      const { status, data } = await adminFetch("/api/voting/finalists", {
+        method: "PUT",
+        body: JSON.stringify({
+          registrationId: team.registrationId,
+          isFinalist: makeFinalist,
+        }),
+      });
+      if (status === 200) {
+        ok(data.message || "Voting options updated.");
+        setTeamsAll((prev) =>
+          prev.map((t) =>
+            t.registrationId === team.registrationId
+              ? { ...t, isFinalist: makeFinalist }
+              : t,
+          ),
+        );
+        setFinalistQuery("");
+        loadCurrent(); // the public ballot changed
+      } else {
+        fail(data.message || "Failed to update voting options.");
+      }
+    } catch {
+      fail("Failed to update voting options.");
+    }
   };
 
   // ---------------- Auth ----------------
@@ -708,6 +751,21 @@ export default function AdminPage() {
   // Podium is locked while votes can still be cast (podium winners leave
   // the live ballot — server enforces this too; this is the early notice).
   const votingLive = session?.status === "active" && timeRemaining > 0;
+  // The ballot: teams flagged as finalists. Podium holders stay listed here
+  // but drop off the public voting list automatically.
+  const finalistTeams = (teamsAll || []).filter((t) => t.isFinalist);
+  const finalistSearchResults = (() => {
+    const q = finalistQuery.trim().toLowerCase();
+    if (!q) return [];
+    return (teamsAll || [])
+      .filter((t) => !t.isFinalist)
+      .filter(
+        (t) =>
+          cleanName(t.teamName).toLowerCase().startsWith(q) ||
+          String(t.registrationId || "").toLowerCase().startsWith(q),
+      )
+      .slice(0, 8);
+  })();
 
   // ---------------- Login screen ----------------
   if (!authed) {
@@ -1054,6 +1112,88 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Voting finalists — the only teams shown as voting options */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mt-8">
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Star size={22} /> Voting finalists ({finalistTeams.length})
+            </h2>
+            <p className="text-sm text-white/50">
+              Only these teams appear as voting options
+            </p>
+          </div>
+
+          {finalistTeams.length === 0 && (
+            <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              No finalists selected — the public voting page shows NO teams
+              until at least one team is added here.
+            </div>
+          )}
+
+          {/* Current finalists */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {finalistTeams.map((t) => {
+              const held = topPrizes.find(
+                (p) => p.registrationId === t.registrationId,
+              );
+              return (
+                <span
+                  key={t.registrationId}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-1.5 text-sm"
+                >
+                  <span className="font-semibold">{cleanName(t.teamName)}</span>
+                  {held && (
+                    <span className="text-[11px] text-amber-300">
+                      · holds {PRIZE_LABELS[held.prizeType]}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => toggleFinalist(t, false)}
+                    title="Remove from voting options"
+                    className="text-white/40 hover:text-red-400"
+                  >
+                    ✕
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+
+          {/* Add a team */}
+          <div className="relative">
+            <input
+              type="text"
+              value={finalistQuery}
+              onChange={(e) => setFinalistQuery(e.target.value)}
+              autoComplete="off"
+              placeholder="Search any registered team to add to voting…"
+              className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
+            />
+            {finalistSearchResults.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-black/95 border border-white/15 rounded-lg overflow-hidden shadow-xl">
+                {finalistSearchResults.map((t) => (
+                  <button
+                    key={t.registrationId}
+                    type="button"
+                    onClick={() => toggleFinalist(t, true)}
+                    className="w-full text-left px-4 py-2.5 hover:bg-white/10 flex items-center justify-between gap-3"
+                  >
+                    <span className="truncate">{cleanName(t.teamName)}</span>
+                    <span className="text-xs text-white/40 font-mono shrink-0">
+                      {t.registrationId}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-white/50 text-sm mt-3">
+            Set this once before the event. Podium winners drop off the ballot
+            automatically but stay listed here.
+          </p>
         </div>
 
         {/* Audience Choice Winner */}

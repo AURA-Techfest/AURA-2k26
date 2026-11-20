@@ -28,8 +28,9 @@ export const MAX_VOTING_MINUTES = 20;
 const TOP_PRIZE_TYPES = ["first", "second", "third"];
 
 const getEligibleCandidates = async () => {
-  // Teams that have already won a top prize (1st / 2nd / 3rd) are not eligible
-  // for the Audience Choice vote.
+  // The ballot = teams flagged as finalists (admin panel), EXCLUDING any
+  // team that already holds a top prize (1st / 2nd / 3rd) — podium and
+  // Audience Choice are mutually exclusive.
   const winners = await Prize.find({
     prizeType: { $in: TOP_PRIZE_TYPES },
   }).select("registrationId");
@@ -38,9 +39,10 @@ const getEligibleCandidates = async () => {
     .map((w) => String(w.registrationId || "").trim().toUpperCase())
     .filter(Boolean);
 
-  const filter = excludedIds.length
-    ? { registrationId: { $nin: excludedIds } }
-    : {};
+  const filter = { isFinalist: true };
+  if (excludedIds.length) {
+    filter.registrationId = { $nin: excludedIds };
+  }
 
   const candidates = await Registration.find(filter)
     .select("registrationId teamName teamSize projectTitle")
@@ -1157,6 +1159,81 @@ export const adminExportTeamsCsv = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to export teams CSV.",
+    });
+  }
+};
+
+// Pure: parse/validate a finalist toggle request. Strict boolean — the
+// string "true" or 1 must not silently flag a team.
+export const parseFinalistUpdate = (body) => {
+  const registrationId = String(body?.registrationId || "").trim().toUpperCase();
+  const isFinalist = body?.isFinalist;
+  if (!registrationId || typeof isFinalist !== "boolean") return null;
+  return { registrationId, isFinalist };
+};
+
+// Admin: every registered team with its finalist flag (no personal data) —
+// powers the admin "Voting finalists" picker.
+export const adminListTeams = async (req, res) => {
+  try {
+    const teams = await Registration.find()
+      .select("registrationId teamName projectTitle isFinalist")
+      .sort({ teamName: 1 })
+      .lean();
+    return res.status(200).json({
+      success: true,
+      count: teams.length,
+      teams,
+    });
+  } catch (error) {
+    console.error("Error in adminListTeams:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch teams.",
+    });
+  }
+};
+
+// Admin: add/remove a team from the voting options (finalist shortlist).
+export const adminSetFinalist = async (req, res) => {
+  try {
+    const update = parseFinalistUpdate(req.body);
+    if (!update) {
+      return res.status(400).json({
+        success: false,
+        message: "registrationId and a boolean isFinalist flag are required.",
+      });
+    }
+
+    const team = await Registration.findOneAndUpdate(
+      { registrationId: update.registrationId },
+      { isFinalist: update.isFinalist },
+      { new: true },
+    ).select("registrationId teamName isFinalist");
+
+    if (!team) {
+      return res.status(404).json({
+        success: false,
+        message: "Team not found.",
+      });
+    }
+
+    const finalists = await Registration.find({ isFinalist: true })
+      .select("registrationId teamName")
+      .sort({ teamName: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: `${team.teamName} ${update.isFinalist ? "added to" : "removed from"} voting options.`,
+      team,
+      finalists,
+    });
+  } catch (error) {
+    console.error("Error in adminSetFinalist:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update finalist.",
     });
   }
 };

@@ -16,6 +16,7 @@ import {
   isSessionRunning,
   csvCell,
   teamsCsv,
+  parseFinalistUpdate,
   namesMatch,
 } from "../src/controllers/voting.controller.js";
 
@@ -180,6 +181,33 @@ async function testVoting() {
   assert(
     csvLines[2] === '"Comma, Crew","Topic with ""quotes"""',
     "Rows with commas and quotes are fully escaped",
+  );
+
+  // 5e. Finalist toggle request parsing (strict — no truthy coercion)
+  const addUpdate = parseFinalistUpdate({
+    registrationId: " aura2k26-abc123 ",
+    isFinalist: true,
+  });
+  assert(
+    addUpdate !== null &&
+      addUpdate.registrationId === "AURA2K26-ABC123" &&
+      addUpdate.isFinalist === true,
+    "Finalist update trims/uppercases the id and keeps boolean true",
+  );
+  assert(
+    parseFinalistUpdate({ registrationId: "AURA2K26-ABC123", isFinalist: false })
+      ?.isFinalist === false,
+    "Finalist update accepts explicit false (removal)",
+  );
+  assert(
+    parseFinalistUpdate({ isFinalist: true }) === null &&
+      parseFinalistUpdate({ registrationId: "AURA2K26-ABC123" }) === null,
+    "Finalist update rejects missing id or missing flag",
+  );
+  assert(
+    parseFinalistUpdate({ registrationId: "AURA2K26-ABC123", isFinalist: "true" }) === null &&
+      parseFinalistUpdate({ registrationId: "AURA2K26-ABC123", isFinalist: 1 }) === null,
+    "Finalist update rejects non-boolean flags (no truthy coercion)",
   );
 
   // 6. Participant name normalization

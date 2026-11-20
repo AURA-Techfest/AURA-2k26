@@ -14,6 +14,13 @@ const registrationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    // Finalist shortlist: ONLY teams flagged true appear as Audience Choice
+    // voting options. Managed from the admin panel (set once before the
+    // event); existing records default to false (not votable).
+    isFinalist: {
+      type: Boolean,
+      default: false,
+    },
     teamSize: {
       type: Number,
       enum: [2, 3, 4],
