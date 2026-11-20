@@ -35,23 +35,57 @@ export const isPrivateIp = (ip) => {
   return false;
 };
 
+// Cloudflare address blocks — in a forwarded-for chain these are relay/VPN
+// infrastructure (test egress, WARP clients), NOT the client. Used to skip
+// past them when picking the real client hop. Format: [a, bMin, bMax, cMin, cMax].
+const CF_RANGES = [
+  [104, 16, 23, 0, 255], // 104.16.0.0/13
+  [172, 64, 71, 0, 255], // 172.64.0.0/13
+  [162, 158, 159, 0, 255], // 162.158.0.0/15
+  [141, 101, 101, 64, 127], // 141.101.64.0/18
+  [198, 41, 41, 128, 255], // 198.41.128.0/17
+  [173, 245, 245, 48, 63], // 173.245.48.0/20
+  [188, 114, 114, 96, 111], // 188.114.96.0/20
+  [190, 93, 93, 240, 255], // 190.93.240.0/20
+  [197, 234, 234, 240, 243], // 197.234.240.0/22
+  [131, 0, 0, 72, 75], // 131.0.72.0/22
+  [103, 21, 21, 244, 247], // 103.21.244.0/22
+  [103, 22, 22, 200, 203], // 103.22.200.0/22
+  [103, 31, 31, 4, 7], // 103.31.4.0/22
+];
+
+export const isCloudflareIp = (ip) => {
+  const m = String(ip || "")
+    .trim()
+    .match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b, c] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  return CF_RANGES.some(
+    (r) => a === r[0] && b >= r[1] && b <= r[2] && c >= r[3] && c <= r[4],
+  );
+};
+
 // Client IP behind Render's proxy chain. x-forwarded-for grows like:
-//   [client-supplied entries (spoofable, LEFT)], REAL public IP (edge),
-//   internal private hops (RIGHT)
-// Scanning right-to-left for the first PUBLIC hop therefore skips the
-// infrastructure, ignores anything the client forged (those sit left of the
-// edge-appended real IP), and returns the actual client address. Falls back
-// to the rightmost hop, then the socket address.
+//   [client-supplied entries (spoofable, LEFT)], REAL client IP (appended
+//   by the first infrastructure hop), Cloudflare relay hops, private
+//   internal hops (RIGHT)
+// Scanning right-to-left for the first PUBLIC hop skips the private
+// infrastructure; skipping Cloudflare hops as well avoids landing on a
+// relay/VPN exit that rotates per request — the client-spoofed entries
+// always sit LEFT of the real appended IP, so they can never win. Falls
+// back to the rightmost hop, then the socket address.
 export const clientIpOf = (req) => {
   const hops = String(req.headers["x-forwarded-for"] || "")
     .split(",")
     .map((hop) => hop.trim())
     .filter(Boolean);
   if (!hops.length) return req.socket?.remoteAddress || "unknown";
-  for (let i = hops.length - 1; i >= 0; i--) {
-    if (!isPrivateIp(hops[i])) return hops[i];
-  }
-  return hops[hops.length - 1];
+
+  const publics = hops.filter((hop) => !isPrivateIp(hop));
+  if (!publics.length) return hops[hops.length - 1];
+
+  const nonRelay = publics.filter((hop) => !isCloudflareIp(hop));
+  return nonRelay.length ? nonRelay[nonRelay.length - 1] : publics[publics.length - 1];
 };
 
 // Votes allowed per IP per voting session (env VOTE_IP_SESSION_MAX).

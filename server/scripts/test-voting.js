@@ -24,6 +24,7 @@ import {
   clientIpOf,
   resolveIpVoteCap,
   isPrivateIp,
+  isCloudflareIp,
 } from "../src/controllers/voting.controller.js";
 
 import {
@@ -372,6 +373,41 @@ async function testVoting() {
     isPrivateIp("::ffff:192.168.0.1") === true &&
       isPrivateIp("::ffff:8.8.8.8") === false,
     "IPv4-mapped IPv6 addresses classify correctly",
+  );
+
+  // 5i-3. Cloudflare relay ranges (skip these when picking the client hop)
+  assert(
+    isCloudflareIp("172.71.198.44") && isCloudflareIp("104.22.66.168"),
+    "Observed prod relay hops (172.71.x, 104.22.x) are Cloudflare",
+  );
+  assert(
+    isCloudflareIp("104.16.0.1") && isCloudflareIp("172.64.0.1"),
+    "Cloudflare 104.16/13 and 172.64/13 ranges match",
+  );
+  assert(
+    !isCloudflareIp("152.58.181.160") && !isCloudflareIp("8.8.8.8"),
+    "Real client IP and public IPs are not Cloudflare",
+  );
+  assert(
+    !isCloudflareIp("172.72.0.1") && !isCloudflareIp("104.15.255.255"),
+    "Boundary: 172.72 (outside 172.64/13) and 104.15 (below 104.16/13) are NOT CF",
+  );
+
+  // 5i-4. Real captured prod chains (via /api/voting/debug-ip)
+  assert(
+    clientIpOf(fakeReq("152.58.181.160, 172.71.198.44, 10.31.122.138")) ===
+      "152.58.181.160",
+    "Prod baseline chain resolves to the real client IP",
+  );
+  assert(
+    clientIpOf(
+      fakeReq("203.0.113.77,152.58.181.160, 104.22.66.168, 10.25.213.90"),
+    ) === "152.58.181.160",
+    "Prod chain with a forged XFF entry still resolves to the real client IP",
+  );
+  assert(
+    clientIpOf(fakeReq("172.71.198.44, 10.31.122.138")) === "172.71.198.44",
+    "CF-only public hop (pure WARP egress) falls back to the CF exit",
   );
 
   // 5j. One-vote-per-IP cap resolution (env VOTE_IP_SESSION_MAX)
