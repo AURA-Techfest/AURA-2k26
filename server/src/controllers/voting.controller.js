@@ -9,19 +9,49 @@ import {
   voteCastLimiter,
 } from "../middleware/rateLimiter.middleware.js";
 
-// Client IP behind Render's proxy. x-forwarded-for is a comma list: entries
-// on the LEFT are client-supplied and spoofable, while the RIGHTMOST entry
-// is appended by the nearest trusted proxy — so take the last one. (Taking
-// the first would let anyone rotate fake IPs straight past the rate limits
-// and the one-vote-per-IP cap.) Falls back to the socket address.
+// Is this a private/loopback/link-local/CGNAT address? Internal proxy hops
+// live in these ranges; the REAL client IP appended by the trusted edge
+// never does. Used to pick the right x-forwarded-for hop.
+export const isPrivateIp = (ip) => {
+  let v = String(ip || "")
+    .trim()
+    .toLowerCase()
+    .split("%")[0];
+  if (!v) return true;
+  if (v.startsWith("::ffff:")) v = v.slice(7); // IPv4-mapped IPv6
+  if (v === "::1" || v === "::") return true;
+  // fc00::/7 (unique local) and fe80::/10 (link local)
+  if (/^(fc|fd|fe[89ab])/.test(v)) return true;
+  const m = v.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false; // unknown format — don't discard it
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  if (a === 10 || a === 127 || a === 0) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 169 && b === 254) return true;
+  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
+  if (a >= 224) return true; // multicast / reserved
+  return false;
+};
+
+// Client IP behind Render's proxy chain. x-forwarded-for grows like:
+//   [client-supplied entries (spoofable, LEFT)], REAL public IP (edge),
+//   internal private hops (RIGHT)
+// Scanning right-to-left for the first PUBLIC hop therefore skips the
+// infrastructure, ignores anything the client forged (those sit left of the
+// edge-appended real IP), and returns the actual client address. Falls back
+// to the rightmost hop, then the socket address.
 export const clientIpOf = (req) => {
   const hops = String(req.headers["x-forwarded-for"] || "")
     .split(",")
     .map((hop) => hop.trim())
     .filter(Boolean);
-  return hops.length
-    ? hops[hops.length - 1]
-    : req.socket?.remoteAddress || "unknown";
+  if (!hops.length) return req.socket?.remoteAddress || "unknown";
+  for (let i = hops.length - 1; i >= 0; i--) {
+    if (!isPrivateIp(hops[i])) return hops[i];
+  }
+  return hops[hops.length - 1];
 };
 
 // Votes allowed per IP per voting session (env VOTE_IP_SESSION_MAX).
@@ -811,6 +841,23 @@ export const adminPurgeIp = async (req, res) => {
       message: "Failed to purge IP.",
     });
   }
+};
+
+/**
+ * Admin: diagnostic — show the proxy chain exactly as this request saw it.
+ * Used to verify which x-forwarded-for hop carries the trustworthy client
+ * IP (rate limits, one-vote-per-IP cap and purge all depend on it).
+ */
+export const adminDebugIp = async (req, res) => {
+  const raw = String(req.headers["x-forwarded-for"] || "");
+  const hops = raw.split(",").map((h) => h.trim()).filter(Boolean);
+  return res.status(200).json({
+    success: true,
+    rawXForwardedFor: raw || null,
+    hops,
+    resolvedClientIp: clientIpOf(req),
+    socketIp: req.socket?.remoteAddress || null,
+  });
 };
 
 /**

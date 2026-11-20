@@ -23,6 +23,7 @@ import {
   verifyRecaptcha,
   clientIpOf,
   resolveIpVoteCap,
+  isPrivateIp,
 } from "../src/controllers/voting.controller.js";
 
 import {
@@ -327,6 +328,50 @@ async function testVoting() {
     clientIpOf(fakeReq(undefined, "10.0.0.1")) === "10.0.0.1" &&
       clientIpOf(fakeReq(undefined, undefined)) === "unknown",
     "Falls back to socket address, then 'unknown'",
+  );
+  // Real proxy shape: spoofed entries LEFT of the edge-appended public IP,
+  // internal private hops RIGHT of it — scanning right-to-left for the
+  // first public hop must land on the real client address.
+  assert(
+    clientIpOf(fakeReq("203.0.113.77, 8.8.8.8, 10.25.213.90")) === "8.8.8.8",
+    "Private infra hops are skipped; spoofed entry left of the real IP is ignored",
+  );
+  assert(
+    clientIpOf(fakeReq("1.2.3.4, 10.0.0.5")) === "1.2.3.4",
+    "Public hop wins over a trailing private hop",
+  );
+  assert(
+    clientIpOf(fakeReq("10.1.2.3", "9.9.9.9")) === "10.1.2.3",
+    "All-private chain falls back to the rightmost hop",
+  );
+
+  // 5i-2. Private address classification (drives hop selection)
+  assert(
+    isPrivateIp("10.25.213.90") &&
+      isPrivateIp("172.16.5.5") &&
+      isPrivateIp("172.31.255.255") &&
+      isPrivateIp("192.168.1.1") &&
+      isPrivateIp("127.0.0.1") &&
+      isPrivateIp("100.64.0.1") &&
+      isPrivateIp("169.254.1.1"),
+    "IPv4 private/loopback/CGNAT/link-local ranges are private",
+  );
+  assert(
+    !isPrivateIp("8.8.8.8") && !isPrivateIp("49.36.100.200"),
+    "Public IPv4 addresses are not private",
+  );
+  assert(
+    isPrivateIp("172.32.0.1") === false && isPrivateIp("172.15.0.1") === false,
+    "172.32+ and 172.15- are OUTSIDE 172.16/12 (boundary check)",
+  );
+  assert(
+    isPrivateIp("::1") && isPrivateIp("fd00::1") && isPrivateIp("fe80::1"),
+    "IPv6 loopback/ULA/link-local are private",
+  );
+  assert(
+    isPrivateIp("::ffff:192.168.0.1") === true &&
+      isPrivateIp("::ffff:8.8.8.8") === false,
+    "IPv4-mapped IPv6 addresses classify correctly",
   );
 
   // 5j. One-vote-per-IP cap resolution (env VOTE_IP_SESSION_MAX)

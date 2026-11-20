@@ -15,6 +15,7 @@ import {
   adminListVoters,
   adminDeleteVoter,
   adminPurgeIp,
+  adminDebugIp,
   adminCloseSession,
   adminExportTeamsCsv,
   adminListTeams,
@@ -46,6 +47,9 @@ router.delete("/voters/:voterId", requireAdmin, adminDeleteVoter);
 
 // Admin: purge an IP — all voters registered from it + all votes cast from it
 router.delete("/voters/by-ip/:ip", requireAdmin, adminPurgeIp);
+
+// Admin: proxy-chain diagnostic (which x-forwarded-for hop is trustworthy)
+router.get("/debug-ip", requireAdmin, adminDebugIp);
 
 // Admin: close an Audience Choice voting session manually
 router.post("/sessions/:id/close", requireAdmin, adminCloseSession);
