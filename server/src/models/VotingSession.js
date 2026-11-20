@@ -12,7 +12,7 @@ const votingSessionSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 10,
-      max: 20,
+      max: 480,
     },
     startsAt: {
       type: Date,

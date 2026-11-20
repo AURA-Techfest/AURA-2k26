@@ -53,7 +53,7 @@ async function testVoting() {
 
   // 1. Voting duration bounds (10-20 minutes decided on spot)
   assert(
-    MIN_VOTING_MINUTES === 10 && MAX_VOTING_MINUTES === 20,
+    MIN_VOTING_MINUTES === 10 && MAX_VOTING_MINUTES === 480,
     "Voting window bounds are 10-20 minutes",
   );
 

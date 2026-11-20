@@ -1078,12 +1078,12 @@ export default function AdminPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-white/70 mb-1">
-                  Duration (minutes, 10–20)
+                  Duration (minutes, 10–480 / up to 8 hrs)
                 </label>
                 <input
                   type="number"
                   min={10}
-                  max={20}
+                  max={480}
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value) || 15)}
                   className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-white/40"

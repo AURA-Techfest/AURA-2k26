@@ -24,7 +24,7 @@ import {
 
 const router = express.Router();
 
-// Admin: start Audience Choice voting session (duration 10-20 min)
+// Admin: start Audience Choice voting session (duration 10 min - 8 hrs)
 router.post("/sessions", requireAdmin, adminStartVotingSession);
 
 // Public: current session status, candidates and tally

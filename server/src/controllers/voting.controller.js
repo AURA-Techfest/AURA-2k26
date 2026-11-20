@@ -109,7 +109,7 @@ const isTrustedAdmin = (req) => {
 };
 
 export const MIN_VOTING_MINUTES = 10;
-export const MAX_VOTING_MINUTES = 20;
+export const MAX_VOTING_MINUTES = 480; // 8 hours
 const TOP_PRIZE_TYPES = ["first", "second", "third"];
 
 const getEligibleCandidates = async () => {
@@ -359,7 +359,7 @@ export const isSessionRunning = (session) =>
 
 /**
  * Admin: Start a new Audience Choice voting session.
- * Duration must be an integer between 10 and 20 minutes (decided on spot).
+ * Duration must be an integer between 10 minutes and 8 hours (decided on spot).
  */
 export const adminStartVotingSession = async (req, res) => {
   try {
@@ -1501,7 +1501,7 @@ export const adminSetFinalist = async (req, res) => {
 
 /**
  * Admin: Save/update the duration of the ACTIVE voting session.
- * Duration must be an integer between 10 and 20 minutes.
+ * Duration must be an integer between 10 minutes and 8 hours.
  * The new window is applied from the moment of saving.
  */
 export const adminUpdateVotingSession = async (req, res) => {
