@@ -9,11 +9,32 @@ import {
   voteCastLimiter,
 } from "../middleware/rateLimiter.middleware.js";
 
-// First hop of x-forwarded-for — Render/Express set this behind the proxy.
-export const clientIpOf = (req) =>
-  String(req.headers["x-forwarded-for"] || "")
-    .split(",")[0]
-    .trim() || req.socket?.remoteAddress || "unknown";
+// Client IP behind Render's proxy. x-forwarded-for is a comma list: entries
+// on the LEFT are client-supplied and spoofable, while the RIGHTMOST entry
+// is appended by the nearest trusted proxy — so take the last one. (Taking
+// the first would let anyone rotate fake IPs straight past the rate limits
+// and the one-vote-per-IP cap.) Falls back to the socket address.
+export const clientIpOf = (req) => {
+  const hops = String(req.headers["x-forwarded-for"] || "")
+    .split(",")
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  return hops.length
+    ? hops[hops.length - 1]
+    : req.socket?.remoteAddress || "unknown";
+};
+
+// Votes allowed per IP per voting session (env VOTE_IP_SESSION_MAX).
+// Default 1 — one network, one vote. "0" disables the cap; invalid or
+// empty values fall back to the default instead of disabling protection.
+export const resolveIpVoteCap = (raw) => {
+  const source = raw === undefined ? process.env.VOTE_IP_SESSION_MAX : raw;
+  if (source === undefined || source === null || String(source).trim() === "") {
+    return 1;
+  }
+  const n = Number(source);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 1;
+};
 
 // Requests carrying the correct admin key come from the trusted desk UI
 // (Quick-Issue Desk) and may look voters up by phone alone.
@@ -571,6 +592,7 @@ export const createVoter = async (req, res) => {
       phone: normalizedPhone || undefined,
       email: normalizedEmail || undefined,
       type: normalizedType,
+      registeredIp: clientIpOf(req),
       registrationId: registrationId
         ? String(registrationId).trim().toUpperCase()
         : undefined,
@@ -723,6 +745,70 @@ export const adminDeleteVoter = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete voter.",
+    });
+  }
+};
+
+/**
+ * Admin: purge an IP in one click — delete every voter registered from it
+ * AND every vote cast from it (participant votes included, matched on the
+ * recorded castIp). This is the event-day response to a "different browser,
+ * random number" burst: remove the fake voters and their votes together,
+ * which also re-opens the one-vote-per-IP slot for that network.
+ */
+export const adminPurgeIp = async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    const expectedKey = process.env.ADMIN_VOTING_KEY;
+
+    if (!expectedKey) {
+      return res.status(500).json({
+        success: false,
+        message: "Admin voting key is not configured on the server.",
+      });
+    }
+
+    if (!adminKey || adminKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized. A valid admin key is required.",
+      });
+    }
+
+    const ip = String(req.params.ip || "").trim();
+    if (!ip || ip.length > 45) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid IP address is required.",
+      });
+    }
+
+    const voters = await Voter.find({ registeredIp: ip })
+      .select("voterId")
+      .lean();
+    const voterKeys = voters.map((v) => v.voterId).filter(Boolean);
+
+    // Remove votes cast FROM this IP (any voter type) plus votes belonging
+    // to voters REGISTERED from it (they may have voted from elsewhere).
+    const voteFilter = { $or: [{ castIp: ip }] };
+    if (voterKeys.length) {
+      voteFilter.$or.push({ voterKey: { $in: voterKeys } });
+    }
+
+    const deletedVotes = await AudienceVote.deleteMany(voteFilter);
+    const deletedVoters = await Voter.deleteMany({ registeredIp: ip });
+
+    return res.status(200).json({
+      success: true,
+      message: `Removed ${deletedVoters.deletedCount} voter(s) and ${deletedVotes.deletedCount} vote(s) from ${ip}.`,
+      removedVoters: deletedVoters.deletedCount,
+      removedVotes: deletedVotes.deletedCount,
+    });
+  } catch (error) {
+    console.error("Error in adminPurgeIp:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to purge IP.",
     });
   }
 };
@@ -926,6 +1012,29 @@ export const castAudienceVote = async (req, res) => {
       });
     }
 
+    // One vote per IP per session — stops the "different browser, random
+    // number" burst: only the first vote from a network counts, extra
+    // voter IDs from the same connection are rejected here. The trusted
+    // desk path (admin key) bypasses the cap. Tuned by env
+    // VOTE_IP_SESSION_MAX (default 1; 0 disables).
+    const castIp = clientIpOf(req);
+    if (!isTrustedAdmin(req)) {
+      const ipCap = resolveIpVoteCap();
+      if (ipCap > 0) {
+        const ipVotes = await AudienceVote.countDocuments({
+          sessionId: activeSession._id,
+          castIp,
+        });
+        if (ipVotes >= ipCap) {
+          return res.status(409).json({
+            success: false,
+            message:
+              "This network has already voted in this session — one vote per network. If that wasn't you, try again on mobile data.",
+          });
+        }
+      }
+    }
+
     const vote = await AudienceVote.create({
       sessionId: activeSession._id,
       voterKey: voterContext.voterKey,
@@ -934,6 +1043,7 @@ export const castAudienceVote = async (req, res) => {
       teamName: String(voterContext.teamName || candidate.teamName || "").trim(),
       candidateRegistrationId: candidate.registrationId,
       candidateTeamName: candidate.teamName,
+      castIp,
       createdAt: new Date(),
     });
 

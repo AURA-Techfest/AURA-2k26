@@ -21,6 +21,8 @@ import {
   normalizeIndianMobile,
   parseSiteVerifyResponse,
   verifyRecaptcha,
+  clientIpOf,
+  resolveIpVoteCap,
 } from "../src/controllers/voting.controller.js";
 
 import {
@@ -302,6 +304,44 @@ async function testVoting() {
     "Secret configured + missing token -> rejected (fail closed)",
   );
   delete process.env.RECAPTCHA_SECRET_KEY;
+
+  // 5i. Client IP extraction — rightmost x-forwarded-for hop wins, so
+  // client-spoofed left entries can't rotate past rate limits / IP caps.
+  const fakeReq = (fwd, socketIp) => ({
+    headers: fwd === undefined ? {} : { "x-forwarded-for": fwd },
+    socket: socketIp === undefined ? {} : { remoteAddress: socketIp },
+  });
+  assert(
+    clientIpOf(fakeReq("1.2.3.4, 5.6.7.8", "10.0.0.1")) === "5.6.7.8",
+    "Rightmost forwarded-for hop (proxy-appended) wins",
+  );
+  assert(
+    clientIpOf(fakeReq("203.0.113.77, 99.99.99.99", "10.0.0.1")) === "99.99.99.99",
+    "Spoofed left entry is ignored",
+  );
+  assert(
+    clientIpOf(fakeReq("203.0.113.77", "10.0.0.1")) === "203.0.113.77",
+    "Single hop is used as-is",
+  );
+  assert(
+    clientIpOf(fakeReq(undefined, "10.0.0.1")) === "10.0.0.1" &&
+      clientIpOf(fakeReq(undefined, undefined)) === "unknown",
+    "Falls back to socket address, then 'unknown'",
+  );
+
+  // 5j. One-vote-per-IP cap resolution (env VOTE_IP_SESSION_MAX)
+  delete process.env.VOTE_IP_SESSION_MAX;
+  assert(resolveIpVoteCap(undefined) === 1, "Unset cap defaults to 1 per IP");
+  assert(resolveIpVoteCap("") === 1, "Empty cap falls back to default 1");
+  assert(resolveIpVoteCap("0") === 0, "Cap 0 disables the IP limit");
+  assert(resolveIpVoteCap("3") === 3, "Cap value is read from config");
+  assert(resolveIpVoteCap("abc") === 1, "Garbage cap falls back to default 1");
+  assert(resolveIpVoteCap("-2") === 1, "Negative cap falls back to default 1");
+  delete process.env.VOTE_IP_SESSION_MAX;
+  assert(resolveIpVoteCap() === 1, "No env -> default cap of 1");
+  process.env.VOTE_IP_SESSION_MAX = "5";
+  assert(resolveIpVoteCap() === 5, "Env value is honored when no arg given");
+  delete process.env.VOTE_IP_SESSION_MAX;
 
   // 6. Participant name normalization
   assert(

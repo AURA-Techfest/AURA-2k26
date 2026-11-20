@@ -28,6 +28,14 @@ const voterSchema = new mongoose.Schema(
       enum: ["participant", "volunteer", "spectator"],
       default: "spectator",
     },
+    // Network the registration came from — powers the admin "shared IP"
+    // warning and one-click purge when someone floods registrations from
+    // one connection using multiple browsers.
+    registeredIp: {
+      type: String,
+      trim: true,
+      index: true,
+    },
     registrationId: {
       type: String,
       trim: true,

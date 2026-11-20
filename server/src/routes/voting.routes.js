@@ -14,6 +14,7 @@ import {
   adminUpdateVotingSession,
   adminListVoters,
   adminDeleteVoter,
+  adminPurgeIp,
   adminCloseSession,
   adminExportTeamsCsv,
   adminListTeams,
@@ -42,6 +43,9 @@ router.get("/voters", requireAdmin, adminListVoters);
 
 // Admin: delete a voter and their vote (test-data cleanup / corrections)
 router.delete("/voters/:voterId", requireAdmin, adminDeleteVoter);
+
+// Admin: purge an IP — all voters registered from it + all votes cast from it
+router.delete("/voters/by-ip/:ip", requireAdmin, adminPurgeIp);
 
 // Admin: close an Audience Choice voting session manually
 router.post("/sessions/:id/close", requireAdmin, adminCloseSession);

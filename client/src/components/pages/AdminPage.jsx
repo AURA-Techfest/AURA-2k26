@@ -70,6 +70,7 @@ export default function AdminPage() {
   const [recording, setRecording] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [removingVoterId, setRemovingVoterId] = useState(null);
+  const [purgingIp, setPurgingIp] = useState("");
 
   // Quick-Issue Desk: register on-spot voters straight from the queue
   const [deskName, setDeskName] = useState("");
@@ -167,6 +168,35 @@ export default function AdminPage() {
       fail("Failed to delete voter.");
     } finally {
       setRemovingVoterId(null);
+    }
+  };
+
+  // Purge an abusive IP: deletes every voter registered from it AND every
+  // vote cast from it — the one-click answer to a multi-browser,
+  // random-number burst. Confirm first: this changes the tally.
+  const purgeIp = async (ip, count) => {
+    const confirmed = window.confirm(
+      `Purge IP ${ip}?\n\n` +
+        `This removes ${count} voter(s) registered from this network and EVERY vote cast from it. This cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    setPurgingIp(ip);
+    try {
+      const { status, data } = await adminFetch(
+        `/api/voting/voters/by-ip/${encodeURIComponent(ip)}`,
+        { method: "DELETE" },
+      );
+      if (status === 200) {
+        ok(data.message || "IP purged.");
+        await Promise.all([loadVoters(), loadCurrent()]);
+      } else {
+        fail(data.message || "Failed to purge IP.");
+      }
+    } catch {
+      fail("Failed to purge IP.");
+    } finally {
+      setPurgingIp(null);
     }
   };
 
@@ -751,6 +781,20 @@ export default function AdminPage() {
   // Podium is locked while votes can still be cast (podium winners leave
   // the live ballot — server enforces this too; this is the early notice).
   const votingLive = session?.status === "active" && timeRemaining > 0;
+  // IPs with multiple registrations — the signature of a "different
+  // browser, random number" burst. Shown as a warning with one-click purge.
+  const ipClusters = React.useMemo(() => {
+    const counts = new Map();
+    (voters || []).forEach((v) => {
+      const ip = String(v.registeredIp || "").trim();
+      if (!ip || ip === "unknown") return;
+      counts.set(ip, (counts.get(ip) || 0) + 1);
+    });
+    return [...counts.entries()]
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .map(([ip, count]) => ({ ip, count }));
+  }, [voters]);
   // The ballot: teams flagged as finalists. Podium holders stay listed here
   // but drop off the public voting list automatically.
   const finalistTeams = (teamsAll || []).filter((t) => t.isFinalist);
@@ -1082,6 +1126,43 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Users size={22} /> Registered Voters ({voters.length})
             </h2>
+
+            {/* Shared-IP warning — multiple registrations from one network */}
+            {ipClusters.length > 0 && (
+              <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3">
+                <p className="mb-2 text-sm font-semibold text-red-300">
+                  ⚠ {ipClusters.length} network
+                  {ipClusters.length === 1 ? "" : "s"} with multiple
+                  registrations — possible multi-browser voting
+                </p>
+                <div className="space-y-1.5">
+                  {ipClusters.map((c) => (
+                    <div
+                      key={c.ip}
+                      className="flex items-center justify-between gap-3"
+                    >
+                      <span className="truncate font-mono text-xs text-red-200/90">
+                        {c.ip} — {c.count} voter{c.count === 1 ? "" : "s"}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => purgeIp(c.ip, c.count)}
+                        disabled={purgingIp === c.ip}
+                        title="Delete these voters and every vote cast from this IP"
+                        className="shrink-0 rounded-md border border-red-400/50 px-2.5 py-1 text-xs font-semibold text-red-300 hover:bg-red-500/20 transition disabled:opacity-40"
+                      >
+                        {purgingIp === c.ip ? (
+                          <Loader2 size={12} className="animate-spin" />
+                        ) : (
+                          "Purge IP"
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="max-h-96 overflow-y-auto space-y-2">
               {voters.length === 0 && <p className="text-white/50">No voters registered yet.</p>}
               {voters.map((v) => (
@@ -1093,6 +1174,12 @@ export default function AdminPage() {
                     <p className="font-semibold">{v.name}</p>
                     <p className="text-xs text-white/50">
                       {v.voterId} · {v.type}
+                      {v.registeredIp && (
+                        <span className="font-mono text-white/40">
+                          {" "}
+                          · {v.registeredIp}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <button
