@@ -346,15 +346,6 @@ export default function AudienceVoting() {
     setStep("vote");
   };
 
-  const forgetTicket = () => {
-    try {
-      localStorage.removeItem(TICKET_STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
-    setSavedTicket(null);
-  };
-
   // Scanner result: accept a real ticket (stops the camera), otherwise show
   // feedback in the overlay and keep scanning.
   const handleTicketScan = (raw) => {
@@ -684,13 +675,6 @@ export default function AudienceVoting() {
                         className="bg-white text-black text-sm font-bold rounded-lg px-4 py-2 hover:bg-white/90 transition"
                       >
                         Continue →
-                      </button>
-                      <button
-                        type="button"
-                        onClick={forgetTicket}
-                        className="text-sm border border-white/20 text-white/60 hover:text-white rounded-lg px-3 py-2"
-                      >
-                        Not you? Start over
                       </button>
                     </div>
                   </div>
