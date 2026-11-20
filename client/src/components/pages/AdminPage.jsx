@@ -979,7 +979,7 @@ export default function AdminPage() {
                     value={deskPhone}
                     onChange={(e) => setDeskPhone(e.target.value)}
                     autoComplete="off"
-                    placeholder="7-15 digits"
+                    placeholder="10-digit mobile"
                     maxLength={15}
                     className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                   />

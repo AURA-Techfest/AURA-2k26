@@ -78,6 +78,58 @@ export const namesMatch = (a, b) => {
   return normalizedA !== "" && normalizedA === normalizePersonName(b);
 };
 
+// Strict Indian mobile normalization — the only phone format the voting
+// system accepts. Strips separators and international prefixes (+91, 0091,
+// leading 0), then requires exactly 10 digits starting with 6-9. Returns the
+// bare digits, or null when the input cannot be a real Indian mobile.
+// One canonical form means "098765 43210", "+919876543210" and
+// "9876543210" all store the same value AND hit the same dedupe check.
+export const normalizeIndianMobile = (raw) => {
+  let digits = String(raw ?? "").replace(/[\s\-().]/g, "");
+  if (digits.startsWith("+91")) digits = digits.slice(3);
+  else if (digits.startsWith("0091")) digits = digits.slice(4);
+  if (/^91\d{10}$/.test(digits)) digits = digits.slice(2);
+  else if (/^0\d{10}$/.test(digits)) digits = digits.slice(1);
+  return /^[6-9]\d{9}$/.test(digits) ? digits : null;
+};
+
+// Pure: decide whether a reCAPTCHA v3 siteverify payload passes. `success`
+// must be true; a numeric score below minScore fails; a payload without a
+// score (non-v3 response) passes on `success` alone.
+export const parseSiteVerifyResponse = (payload, minScore = 0.5) => {
+  if (!payload || payload.success !== true) return false;
+  if (typeof payload.score === "number" && payload.score < minScore) {
+    return false;
+  }
+  return true;
+};
+
+// Server-side reCAPTCHA v3 verification against Google's siteverify endpoint.
+// Opt-in: returns true immediately when RECAPTCHA_SECRET_KEY is unset, so
+// environments without the key behave exactly as before. Fails closed when
+// the token is missing/invalid or Google is unreachable — a client controls
+// its own network, so a network error must not become a bypass.
+export const verifyRecaptcha = async (token) => {
+  const secret = process.env.RECAPTCHA_SECRET_KEY;
+  if (!secret) return true;
+  if (!token || typeof token !== "string") return false;
+  try {
+    const body = new URLSearchParams({ secret, response: token });
+    const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+    });
+    const payload = await resp.json();
+    const configured = Number(process.env.RECAPTCHA_MIN_SCORE);
+    const minScore = Number.isFinite(configured) ? configured : 0.5;
+    return parseSiteVerifyResponse(payload, minScore);
+  } catch (error) {
+    console.error("reCAPTCHA verification error:", error);
+    return false;
+  }
+};
+
 /**
  * Check whether a typed participant name belongs to a registered team and
  * return the canonical name from the team's records (so the voter key is
@@ -400,6 +452,19 @@ export const createVoter = async (req, res) => {
   }
 
   try {
+    // Invisible reCAPTCHA v3 — enforced only when RECAPTCHA_SECRET_KEY is
+    // configured on the server (Render env var). The Quick-Issue Desk
+    // carries the admin key and is trusted, so desk registrations skip it.
+    if (!isTrustedAdmin(req)) {
+      const captchaOk = await verifyRecaptcha(req.body?.recaptchaToken);
+      if (!captchaOk) {
+        return res.status(400).json({
+          success: false,
+          message: "Verification failed — please try again.",
+        });
+      }
+    }
+
     const { name, phone, email, type, registrationId } = req.body || {};
     const trimmedName = String(name || "").trim();
 
@@ -414,13 +479,18 @@ export const createVoter = async (req, res) => {
       });
     }
 
-    const normalizedPhone = String(phone || "").replace(/[\s\-()]/g, "");
+    // Strict Indian mobile format: separators and +91/0091/0 prefixes
+    // collapse to bare 10 digits starting with 6-9. One canonical form for
+    // storage AND dedupe — the same person cannot register twice by typing
+    // the number in two different formats.
+    const normalizedPhone = normalizeIndianMobile(phone);
     const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    if (normalizedPhone && !/^\+?\d{7,15}$/.test(normalizedPhone)) {
+    if (String(phone ?? "").trim() && !normalizedPhone) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid phone number (7-15 digits).",
+        message:
+          "Please enter a valid 10-digit Indian mobile number (starts with 6-9).",
       });
     }
 

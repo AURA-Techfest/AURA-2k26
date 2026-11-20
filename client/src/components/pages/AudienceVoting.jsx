@@ -32,6 +32,51 @@ const API_URL =
 
 const VOTE_POLL_INTERVAL_MS = 5000;
 
+// Invisible reCAPTCHA v3 — opt-in via VITE_RECAPTCHA_SITE_KEY (Vercel env).
+// With no key configured the registration flow is unchanged and no script
+// is ever loaded.
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
+let recaptchaLoadPromise = null;
+
+const getRecaptchaToken = async () => {
+  if (!RECAPTCHA_SITE_KEY) return null;
+  if (!window.grecaptcha) {
+    if (!recaptchaLoadPromise) {
+      recaptchaLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(
+          RECAPTCHA_SITE_KEY,
+        )}`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        script.onerror = () =>
+          reject(new Error("Verification script failed to load."));
+        document.head.appendChild(script);
+      }).catch((err) => {
+        recaptchaLoadPromise = null; // let the next attempt retry the load
+        throw err;
+      });
+    }
+    await recaptchaLoadPromise;
+  }
+  await new Promise((resolve) => window.grecaptcha.ready(resolve));
+  return await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, {
+    action: "register",
+  });
+};
+
+// Canonical10-digit mobile from whatever the user typed — mirrors the
+// server's normalizeIndianMobile so "+91 98765 43210", "09876543210" and
+// "9876543210" all validate and auto-register the same way.
+const phoneDigitsOf = (raw) => {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0"))
+    digits = digits.slice(1);
+  return digits;
+};
+
 const formatCountdown = (totalSeconds) => {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds || 0));
   const minutes = Math.floor(safeSeconds / 60);
@@ -393,14 +438,14 @@ export default function AudienceVoting() {
 
   const handleRegisterVoter = async () => {
     const trimmedName = voterName.trim();
-    const phoneDigits = voterPhone.replace(/\D/g, "");
+    const phoneDigits = phoneDigitsOf(voterPhone);
     if (!trimmedName) {
       setErrorMessage("Please enter your name to register.");
       return;
     }
-    if (phoneDigits.length !== 10) {
+    if (phoneDigits.length !== 10 || !/^[6-9]/.test(phoneDigits)) {
       setErrorMessage(
-        "Please enter a valid 10-digit phone number — it is used to make sure each person registers only once."
+        "Please enter a valid 10-digit Indian mobile number starting with 6-9 — it is used to make sure each person registers only once."
       );
       return;
     }
@@ -408,6 +453,18 @@ export default function AudienceVoting() {
     setErrorMessage("");
     setVoteSuccessMessage("");
     try {
+      // Invisible bot check — only when a site key is configured. A script
+      // glitch must never block the form: if the token can't be obtained we
+      // submit without it and the server replies with a clear error only
+      // when enforcement is actually turned on.
+      let recaptchaToken = null;
+      if (RECAPTCHA_SITE_KEY) {
+        try {
+          recaptchaToken = await getRecaptchaToken();
+        } catch {
+          /* fall through — server-side gate decides */
+        }
+      }
       const res = await fetch(`${API_URL}/api/voting/voters`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -415,6 +472,7 @@ export default function AudienceVoting() {
           name: trimmedName,
           phone: phoneDigits,
           type: "spectator",
+          ...(recaptchaToken ? { recaptchaToken } : {}),
         }),
       });
       const data = await res.json();
@@ -977,7 +1035,8 @@ export default function AudienceVoting() {
                         const v = e.target.value;
                         setVoterPhone(v);
                         phoneRef.current = v;
-                        if (v.replace(/\D/g, "").length !== 10) {
+                        const digits = phoneDigitsOf(v);
+                        if (digits.length !== 10 || !/^[6-9]/.test(digits)) {
                           cancelAutoRegister();
                         } else {
                           scheduleAutoRegister();
@@ -985,7 +1044,7 @@ export default function AudienceVoting() {
                       }}
                       autoComplete="tel"
                       enterKeyHint="go"
-                      placeholder="10-digit phone number"
+                      placeholder="10-digit mobile number"
                       maxLength={15}
                       className="w-full bg-black/40 border border-white/15 rounded-lg px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-white/40"
                     />

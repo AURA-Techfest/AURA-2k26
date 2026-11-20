@@ -18,6 +18,9 @@ import {
   teamsCsv,
   parseFinalistUpdate,
   namesMatch,
+  normalizeIndianMobile,
+  parseSiteVerifyResponse,
+  verifyRecaptcha,
 } from "../src/controllers/voting.controller.js";
 
 import {
@@ -209,6 +212,96 @@ async function testVoting() {
       parseFinalistUpdate({ registrationId: "AURA2K26-ABC123", isFinalist: 1 }) === null,
     "Finalist update rejects non-boolean flags (no truthy coercion)",
   );
+
+  // 5f. Strict Indian mobile normalization (one canonical form for
+  // storage + dedupe; everything else is rejected)
+  assert(
+    normalizeIndianMobile("9876543210") === "9876543210",
+    "Bare 10-digit mobile passes unchanged",
+  );
+  assert(
+    normalizeIndianMobile("+91 98765 43210") === "9876543210" &&
+      normalizeIndianMobile("+919876543210") === "9876543210",
+    "+91 prefix (spaced or compact) normalizes to bare digits",
+  );
+  assert(
+    normalizeIndianMobile("00919876543210") === "9876543210",
+    "0091 prefix normalizes",
+  );
+  assert(
+    normalizeIndianMobile("09876543210") === "9876543210",
+    "Leading 0 trunk prefix normalizes",
+  );
+  assert(
+    normalizeIndianMobile("98765-43210") === "9876543210" &&
+      normalizeIndianMobile("98765 43210") === "9876543210" &&
+      normalizeIndianMobile("(98765) 43210") === "9876543210",
+    "Dashes, spaces and parentheses are stripped",
+  );
+  assert(
+    normalizeIndianMobile("1234567890") === null &&
+      normalizeIndianMobile("5876543210") === null,
+    "Numbers not starting 6-9 are rejected",
+  );
+  assert(
+    normalizeIndianMobile("987654321") === null &&
+      normalizeIndianMobile("98765432101") === null &&
+      normalizeIndianMobile("987654321012") === null,
+    "Wrong lengths (9, 11, 12 digits) are rejected",
+  );
+  assert(
+    normalizeIndianMobile("98765abc210") === null &&
+      normalizeIndianMobile("987654321!") === null,
+    "Letters and symbols are rejected",
+  );
+  assert(
+    normalizeIndianMobile("") === null && normalizeIndianMobile(null) === null,
+    "Empty input is rejected",
+  );
+  assert(
+    normalizeIndianMobile("+91 1234567890") === null,
+    "Invalid number after prefix strip is still rejected",
+  );
+
+  // 5g. reCAPTCHA siteverify payload parsing (pure)
+  assert(
+    parseSiteVerifyResponse({ success: true, score: 0.9 }) === true,
+    "High score passes",
+  );
+  assert(
+    parseSiteVerifyResponse({ success: true, score: 0.3 }) === false,
+    "Score below the 0.5 default fails",
+  );
+  assert(
+    parseSiteVerifyResponse({ success: true, score: 0.3 }, 0.2) === true,
+    "Custom min score is respected",
+  );
+  assert(
+    parseSiteVerifyResponse({ success: false, score: 0.9 }) === false,
+    "success:false fails regardless of score",
+  );
+  assert(
+    parseSiteVerifyResponse(null) === false,
+    "Empty payload fails",
+  );
+  assert(
+    parseSiteVerifyResponse({ success: true }) === true,
+    "Payload without a score passes on success alone (non-v3 response)",
+  );
+
+  // 5h. reCAPTCHA gate is opt-in: off with no secret, fail-closed with one
+  delete process.env.RECAPTCHA_SECRET_KEY;
+  assert(
+    (await verifyRecaptcha(null)) === true,
+    "No RECAPTCHA_SECRET_KEY configured -> verification skipped (feature off)",
+  );
+  process.env.RECAPTCHA_SECRET_KEY = "test-secret-key";
+  assert(
+    (await verifyRecaptcha(null)) === false &&
+      (await verifyRecaptcha("")) === false,
+    "Secret configured + missing token -> rejected (fail closed)",
+  );
+  delete process.env.RECAPTCHA_SECRET_KEY;
 
   // 6. Participant name normalization
   assert(
